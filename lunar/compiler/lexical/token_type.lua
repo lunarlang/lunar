@@ -1,0 +1,3 @@
+return {
+  none = 0,
+}
