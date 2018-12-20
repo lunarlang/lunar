@@ -13,3 +13,5 @@ end
 function TokenInfo:__tostring()
   return ("%d %s"):format(self.token_type, self.value)
 end
+
+return TokenInfo
