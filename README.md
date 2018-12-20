@@ -1,4 +1,4 @@
-<center>![](https://i.imgur.com/xVujd8N.png)</center>
+<div align="center"><img src="https://i.imgur.com/xVujd8N.png"/></div>
 
 # Lunar
 The Lua 5.1 superset programming language.
