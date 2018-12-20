@@ -33,4 +33,11 @@ function BaseLexer:move(by)
   self.position = self.position + by
 end
 
+--- Asserts whether the following string matches the given string
+-- @tparam string str The string to match with the following string
+-- @treturn boolean true if the following string matches the given string, otherwise false
+function BaseLexer:match(str)
+  return self.source:sub(self.position, self.position + #str - 1) == str
+end
+
 return BaseLexer

@@ -1,4 +1,6 @@
 local BaseLexer = require "lunar.compiler.lexical.base_lexer"
+local TokenInfo = require "lunar.compiler.lexical.token_info"
+local TokenType = require "lunar.compiler.lexical.token_type"
 
 local Lexer = {}
 Lexer.__index = Lexer
@@ -33,10 +35,30 @@ function Lexer:tokenize()
   return tokens
 end
 
-function Lexer:next_token() -- luacheck: ignore 212 will use self when we add tokenization methods
-  local token = nil
+function Lexer:next_token()
+  local token = self:next_trivia()
 
   return token ~= nil, token
+end
+
+function Lexer:next_trivia()
+  -- we need to guarantee the order (pitfalls of lua hashmaps, yay...)
+  -- so we don't end up falsly match \r in \r\n
+  -- thanks a lot, old macOS, DOS, and linux: not helping the case of https://xkcd.com/927/
+  local trivias = {
+    { value = "\r\n", type = TokenType.end_of_line_trivia }, -- CRLF
+    { value = "\n", type = TokenType.end_of_line_trivia }, -- LF
+    { value = "\r", type = TokenType.end_of_line_trivia }, -- CR
+    -- now that we have support for spaces AND tabs, we're feeding into the classic spaces vs tabs flame wars.
+    { value = " ", type = TokenType.whitespace_trivia },
+    { value = "\t", type = TokenType.whitespace_trivia }
+  }
+
+  for _, trivia in pairs(trivias) do
+    if self:match(trivia.value) then
+      return TokenInfo.new(trivia.type, trivia.value, self.position)
+    end
+  end
 end
 
 return Lexer
