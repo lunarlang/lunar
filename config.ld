@@ -1,7 +1,7 @@
 -- project info
 project = "Lunar"
 title = "Lunar Compiler API Reference"
-description = "Lunar - the superset programming language of Lua, implementing type checking."
+description = "The Lua 5.1 superset programming language."
 
 -- ldoc config
 all = true
