@@ -7,6 +7,7 @@ description = "Lunar - the superset programming language of Lua, implementing ty
 all = true
 dir = "docs"
 file = "lunar"
+ignore = true
 no_lua_ref = true
 no_space_before_args = true
 no_summary = false
