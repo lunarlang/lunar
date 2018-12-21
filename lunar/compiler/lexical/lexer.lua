@@ -1,4 +1,5 @@
 local BaseLexer = require "lunar.compiler.lexical.base_lexer"
+local StringUtils = require "lunar.utils.string_utils"
 local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
@@ -58,6 +59,25 @@ function Lexer:next_trivia()
     if self:match(trivia.value) then
       return TokenInfo.new(trivia.type, trivia.value, self.position)
     end
+  end
+end
+
+function Lexer:next_identifier()
+  local c = self:peek()
+
+  if StringUtils.is_letter(c) or c == "_" then
+    local start_pos = self.position -- to reset to when we finish scanning series of valid characters
+    local buffer = ""
+    local lookahead
+
+    repeat
+      buffer = buffer .. self:peek()
+      self:move(1)
+      lookahead = self:peek()
+    until not (StringUtils.is_letter(lookahead) or lookahead == "_" or StringUtils.is_digit(lookahead))
+
+    self.position = start_pos
+    return TokenInfo.new(TokenType.string, buffer, self.position)
   end
 end
 
