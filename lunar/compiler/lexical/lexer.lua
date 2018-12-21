@@ -50,6 +50,7 @@ end
 
 function Lexer:next_token()
   local token = self:next_trivia()
+    or self:next_identifier()
 
   return token ~= nil, token
 end
