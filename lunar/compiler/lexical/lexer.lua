@@ -12,6 +12,18 @@ function Lexer.new(source, file_name)
   local super = BaseLexer.new(source, file_name)
   local self = setmetatable(super, Lexer)
 
+  -- we need to guarantee the order (pitfalls of lua hashmaps, yay...)
+  -- so we don't end up falsly match \r in \r\n
+  -- thanks a lot, old macOS, DOS, and linux: not helping the case of https://xkcd.com/927/
+  self.trivias = {
+    { value = "\r\n", type = TokenType.end_of_line_trivia }, -- CRLF
+    { value = "\n", type = TokenType.end_of_line_trivia }, -- LF
+    { value = "\r", type = TokenType.end_of_line_trivia }, -- CR
+    -- now that we have support for spaces AND tabs, we're feeding into the classic spaces vs tabs flame wars.
+    { value = " ", type = TokenType.whitespace_trivia },
+    { value = "\t", type = TokenType.whitespace_trivia }
+  }
+
   return self
 end
 
@@ -43,19 +55,7 @@ function Lexer:next_token()
 end
 
 function Lexer:next_trivia()
-  -- we need to guarantee the order (pitfalls of lua hashmaps, yay...)
-  -- so we don't end up falsly match \r in \r\n
-  -- thanks a lot, old macOS, DOS, and linux: not helping the case of https://xkcd.com/927/
-  local trivias = {
-    { value = "\r\n", type = TokenType.end_of_line_trivia }, -- CRLF
-    { value = "\n", type = TokenType.end_of_line_trivia }, -- LF
-    { value = "\r", type = TokenType.end_of_line_trivia }, -- CR
-    -- now that we have support for spaces AND tabs, we're feeding into the classic spaces vs tabs flame wars.
-    { value = " ", type = TokenType.whitespace_trivia },
-    { value = "\t", type = TokenType.whitespace_trivia }
-  }
-
-  for _, trivia in pairs(trivias) do
+  for _, trivia in pairs(self.trivias) do
     if self:match(trivia.value) then
       return TokenInfo.new(trivia.type, trivia.value, self.position)
     end
