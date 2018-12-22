@@ -27,6 +27,11 @@ function StringUtils.is_uppercase(t)
   return StringUtils.is_in_range(t, "A", "Z")
 end
 
+function StringUtils.is_letter(t)
+  return StringUtils.is_uppercase(t)
+      or StringUtils.is_lowercase(t)
+end
+
 function StringUtils.is_digit(t)
   return StringUtils.is_in_range(t, "0", "9")
 end
