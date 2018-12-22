@@ -3,7 +3,7 @@ local StringUtils = require "lunar.utils.string_utils"
 local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
-local Lexer = {}
+local Lexer = setmetatable({}, BaseLexer)
 Lexer.__index = Lexer
 
 function Lexer.new(source, file_name)
