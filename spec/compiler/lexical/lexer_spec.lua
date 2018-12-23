@@ -19,4 +19,15 @@ describe("Lexer tokenization for trivial tokens", function()
       TokenInfo.new(TokenType.whitespace_trivia, " ", 2)
     }, tokens)
   end)
+
+  it("should return four TokenType.whitespace_trivia with mixed spaces and tabs", function()
+    local tokens = Lexer.new(" \t \t"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1),
+      TokenInfo.new(TokenType.whitespace_trivia, "\t", 2),
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 3),
+      TokenInfo.new(TokenType.whitespace_trivia, "\t", 4)
+    }, tokens)
+  end)
 end)
