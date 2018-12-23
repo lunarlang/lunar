@@ -78,7 +78,7 @@ function Lexer:next_identifier()
     until not (StringUtils.is_letter(lookahead) or lookahead == "_" or StringUtils.is_digit(lookahead))
 
     self.position = start_pos
-    return TokenInfo.new(TokenType.string, buffer, self.position)
+    return TokenInfo.new(TokenType.identifier, buffer, self.position)
   end
 end
 
