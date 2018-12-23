@@ -3,7 +3,7 @@ local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
 describe("Lexer tokenization for identifier tokens", function()
-  it("should return one TokenType.identifier token", function()
+  it("should return one identifier token", function()
     local tokens = Lexer.new("look_an_identifier"):tokenize()
 
     assert.same({

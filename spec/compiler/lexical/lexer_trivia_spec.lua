@@ -3,7 +3,7 @@ local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
 describe("Lexer tokenization for trivial tokens", function()
-  it("should return one TokenType.whitespace_trivia", function()
+  it("should return one whitespace_trivia", function()
     local tokens = Lexer.new(" "):tokenize()
 
     assert.same({
@@ -11,7 +11,7 @@ describe("Lexer tokenization for trivial tokens", function()
     }, tokens)
   end)
 
-  it("should return two TokenType.whitespace_trivia", function()
+  it("should return two whitespace_trivia", function()
     local tokens = Lexer.new("  "):tokenize()
 
     assert.same({
@@ -20,7 +20,7 @@ describe("Lexer tokenization for trivial tokens", function()
     }, tokens)
   end)
 
-  it("should return four TokenType.whitespace_trivia with mixed spaces and tabs", function()
+  it("should return four whitespace_trivia with mixed spaces and tabs", function()
     local tokens = Lexer.new(" \t \t"):tokenize()
 
     assert.same({
@@ -31,7 +31,7 @@ describe("Lexer tokenization for trivial tokens", function()
     }, tokens)
   end)
 
-  it("should return TokenType.end_of_line_trivia with any EOL style", function()
+  it("should return end_of_line_trivia with any EOL style", function()
     local tokens = Lexer.new("\r\r\n\n"):tokenize()
 
     assert.same({
