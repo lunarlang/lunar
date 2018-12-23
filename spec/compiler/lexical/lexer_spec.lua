@@ -10,4 +10,13 @@ describe("Lexer tokenization for trivial tokens", function()
       TokenInfo.new(TokenType.whitespace_trivia, " ", 1)
     }, tokens)
   end)
+
+  it("should return two TokenType.whitespace_trivia", function()
+    local tokens = Lexer.new("  "):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1),
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 2)
+    }, tokens)
+  end)
 end)
