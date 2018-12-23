@@ -30,4 +30,14 @@ describe("Lexer tokenization for trivial tokens", function()
       TokenInfo.new(TokenType.whitespace_trivia, "\t", 4)
     }, tokens)
   end)
+
+  it("should return TokenType.end_of_line_trivia with any EOL style", function()
+    local tokens = Lexer.new("\r\r\n\n"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.end_of_line_trivia, "\r", 1),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\r\n", 2),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 4)
+    }, tokens)
+  end)
 end)
