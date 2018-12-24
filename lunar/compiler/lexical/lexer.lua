@@ -32,7 +32,7 @@ function Lexer.new(source, file_name)
     pair(TokenType.and_keyword, "and"),
     pair(TokenType.break_keyword, "break"),
     pair(TokenType.do_keyword, "do"),
-    -- else before else and if, otherwise same issue with \r and \r\n
+    -- elseif before else and if, otherwise same issue with \r and \r\n
     pair(TokenType.elseif_keyword, "elseif"),
     pair(TokenType.else_keyword, "else"),
     pair(TokenType.end_keyword, "end"),
