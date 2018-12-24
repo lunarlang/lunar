@@ -9,6 +9,10 @@ Lexer.__index = Lexer
 function Lexer.new(source, file_name)
   if file_name == nil then file_name = "src" end
 
+  local function pair(type, value)
+    return { type = type, value = value }
+  end
+
   local super = BaseLexer.new(source, file_name)
   local self = setmetatable(super, Lexer)
 
@@ -16,12 +20,37 @@ function Lexer.new(source, file_name)
   -- so we don't end up falsly match \r in \r\n
   -- thanks a lot, old macOS, DOS, and linux: not helping the case of https://xkcd.com/927/
   self.trivias = {
-    { value = "\r\n", type = TokenType.end_of_line_trivia }, -- CRLF
-    { value = "\n", type = TokenType.end_of_line_trivia }, -- LF
-    { value = "\r", type = TokenType.end_of_line_trivia }, -- CR
+    pair(TokenType.end_of_line_trivia, "\r\n"), -- CRLF
+    pair(TokenType.end_of_line_trivia, "\n"), -- LF
+    pair(TokenType.end_of_line_trivia, "\r"), -- CR
     -- now that we have support for spaces AND tabs, we're feeding into the classic spaces vs tabs flame wars.
-    { value = " ", type = TokenType.whitespace_trivia },
-    { value = "\t", type = TokenType.whitespace_trivia }
+    pair(TokenType.whitespace_trivia, " "),
+    pair(TokenType.whitespace_trivia, "\t")
+  }
+
+  self.keywords = {
+    pair(TokenType.and_keyword, "and"),
+    pair(TokenType.break_keyword, "break"),
+    pair(TokenType.do_keyword, "do"),
+    -- else before else and if, otherwise same issue with \r and \r\n
+    pair(TokenType.elseif_keyword, "elseif"),
+    pair(TokenType.else_keyword, "else"),
+    pair(TokenType.end_keyword, "end"),
+    pair(TokenType.false_keyword, "false"),
+    pair(TokenType.for_keyword, "for"),
+    pair(TokenType.function_keyword, "function"),
+    pair(TokenType.if_keyword, "if"),
+    pair(TokenType.in_keyword, "in"),
+    pair(TokenType.local_keyword, "local"),
+    pair(TokenType.nil_keyword, "nil"),
+    pair(TokenType.not_keyword, "not"),
+    pair(TokenType.or_keyword, "or"),
+    pair(TokenType.repeat_keyword, "repeat"),
+    pair(TokenType.return_keyword, "return"),
+    pair(TokenType.then_keyword, "then"),
+    pair(TokenType.true_keyword, "true"),
+    pair(TokenType.until_keyword, "until"),
+    pair(TokenType.while_keyword, "while")
   }
 
   return self
@@ -50,6 +79,7 @@ end
 
 function Lexer:next_token()
   local token = self:next_trivia()
+    or self:next_keyword()
     or self:next_identifier()
 
   return token ~= nil, token
@@ -59,6 +89,14 @@ function Lexer:next_trivia()
   for _, trivia in pairs(self.trivias) do
     if self:match(trivia.value) then
       return TokenInfo.new(trivia.type, trivia.value, self.position)
+    end
+  end
+end
+
+function Lexer:next_keyword()
+  for _, keyword in pairs(self.keywords) do
+    if self:match(keyword.value) then
+      return TokenInfo.new(keyword.type, keyword.value, self.position)
     end
   end
 end
