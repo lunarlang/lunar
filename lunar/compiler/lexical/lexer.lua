@@ -53,6 +53,37 @@ function Lexer.new(source, file_name)
     pair(TokenType.while_keyword, "while")
   }
 
+  self.operators = {
+    pair(TokenType.triple_dot, "..."),
+
+    pair(TokenType.double_equal, "=="),
+    pair(TokenType.tilde_equal, "~="),
+    pair(TokenType.left_angle_equal, "<="),
+    pair(TokenType.right_angle_equal, ">="),
+    pair(TokenType.double_dot, ".."),
+
+    pair(TokenType.left_paren, "("),
+    pair(TokenType.right_paren, ")"),
+    pair(TokenType.left_brace, "{"),
+    pair(TokenType.right_brace, "}"),
+    pair(TokenType.left_bracket, "["),
+    pair(TokenType.right_bracket, "]"),
+    pair(TokenType.plus, "+"),
+    pair(TokenType.minus, "-"),
+    pair(TokenType.asterisk, "*"),
+    pair(TokenType.slash, "/"),
+    pair(TokenType.percent, "%"),
+    pair(TokenType.caret, "^"),
+    pair(TokenType.pound, "#"),
+    pair(TokenType.left_angle, "<"),
+    pair(TokenType.right_angle, ">"),
+    pair(TokenType.equal, "="),
+    pair(TokenType.semi_colon, ";"),
+    pair(TokenType.colon, ":"),
+    pair(TokenType.comma, ","),
+    pair(TokenType.dot, ".")
+  }
+
   return self
 end
 
@@ -81,6 +112,7 @@ function Lexer:next_token()
   local token = self:next_trivia()
     or self:next_keyword()
     or self:next_identifier()
+    or self:next_operator()
 
   return token ~= nil, token
 end
@@ -117,6 +149,14 @@ function Lexer:next_identifier()
 
     self.position = start_pos
     return TokenInfo.new(TokenType.identifier, buffer, self.position)
+  end
+end
+
+function Lexer:next_operator()
+  for _, op in pairs(self.operators) do
+    if self:match(op.value) then
+      return TokenInfo.new(op.type, op.value, self.position)
+    end
   end
 end
 
