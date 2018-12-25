@@ -2,7 +2,7 @@ local Lexer = require "lunar.compiler.lexical.lexer"
 local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
-describe("Lexer tokenization for keyword tokens", function()
+describe("Lexer:next_keyword", function()
   it("should return one and_keyword token", function()
     local tokens = Lexer.new("and"):tokenize()
 

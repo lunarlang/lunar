@@ -2,7 +2,7 @@ local Lexer = require "lunar.compiler.lexical.lexer"
 local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
-describe("Lexer tokenization for operator tokens", function()
+describe("Lexer:next_operator", function()
   it("should return one triple_dot token", function()
     local tokens = Lexer.new("..."):tokenize()
 

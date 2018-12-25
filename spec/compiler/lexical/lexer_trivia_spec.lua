@@ -2,7 +2,7 @@ local Lexer = require "lunar.compiler.lexical.lexer"
 local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
-describe("Lexer tokenization for trivial tokens", function()
+describe("Lexer:next_trivia", function()
   it("should return one whitespace_trivia", function()
     local tokens = Lexer.new(" "):tokenize()
 
