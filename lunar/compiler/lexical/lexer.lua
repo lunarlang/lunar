@@ -109,26 +109,18 @@ function Lexer:tokenize()
 end
 
 function Lexer:next_token()
-  local token = self:next_trivia()
-    or self:next_keyword()
+  local token = self:next_of(self.trivias)
+    or self:next_of(self.keywords)
+    or self:next_of(self.operators)
     or self:next_identifier()
-    or self:next_operator()
 
   return token ~= nil, token
 end
 
-function Lexer:next_trivia()
-  for _, trivia in pairs(self.trivias) do
-    if self:match(trivia.value) then
-      return TokenInfo.new(trivia.type, trivia.value, self.position)
-    end
-  end
-end
-
-function Lexer:next_keyword()
-  for _, keyword in pairs(self.keywords) do
-    if self:match(keyword.value) then
-      return TokenInfo.new(keyword.type, keyword.value, self.position)
+function Lexer:next_of(list)
+  for _, pair in pairs(list) do
+    if self:match(pair.value) then
+      return TokenInfo.new(pair.type, pair.value, self.position)
     end
   end
 end
@@ -149,14 +141,6 @@ function Lexer:next_identifier()
 
     self.position = start_pos
     return TokenInfo.new(TokenType.identifier, buffer, self.position)
-  end
-end
-
-function Lexer:next_operator()
-  for _, op in pairs(self.operators) do
-    if self:match(op.value) then
-      return TokenInfo.new(op.type, op.value, self.position)
-    end
   end
 end
 
