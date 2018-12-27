@@ -134,8 +134,7 @@ function Lexer:next_identifier()
     local lookahead
 
     repeat
-      buffer = buffer .. self:peek()
-      self:move(1)
+      buffer = buffer .. self:consume()
       lookahead = self:peek()
     until not (StringUtils.is_letter(lookahead) or lookahead == "_" or StringUtils.is_digit(lookahead))
 

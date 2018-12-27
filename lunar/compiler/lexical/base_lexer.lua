@@ -12,6 +12,14 @@ function BaseLexer.new(source, file_name)
   return self
 end
 
+--- Returns the character at the current position and moves forward
+-- @treturn string A single letter string from the previous position
+function BaseLexer:consume()
+  local c = self:peek()
+  self:move(1)
+  return c
+end
+
 --- Returns the character at the current position plus the offset
 -- @tparam[opt=0] number offset Number of characters to skip ahead (or behind, if negative)  to peek at
 -- @treturn string The single character string at that position
