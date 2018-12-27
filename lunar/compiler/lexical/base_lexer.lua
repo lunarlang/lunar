@@ -21,13 +21,13 @@ function BaseLexer:consume()
 end
 
 --- Returns the character at the current position plus the offset
--- @tparam[opt=0] number offset Number of characters to skip ahead (or behind, if negative)  to peek at
+-- @tparam[opt=0] number offset Number of characters to skip ahead (or behind, if negative) to peek at
 -- @treturn string The single character string at that position
 function BaseLexer:peek(offset)
   if offset == nil then offset = 0 end
 
   -- string.sub outside the boundary of self.source will return empty string
-  -- but we want it to turn nil so it can actually evaluate to falsy
+  -- but we want it to return nil so it can evaluate to false
   if #self.source >= self.position then
     return self.source:sub(self.position + offset, self.position + offset)
   end
