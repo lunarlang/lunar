@@ -110,6 +110,7 @@ end
 
 function Lexer:next_token()
   local token = self:next_of(self.trivias)
+    or self:next_string()
     or self:next_of(self.keywords)
     or self:next_of(self.operators)
     or self:next_identifier()
@@ -122,6 +123,32 @@ function Lexer:next_of(list)
     if self:match(pair.value) then
       return TokenInfo.new(pair.type, pair.value, self.position)
     end
+  end
+end
+
+function Lexer:next_string()
+  -- TODO: multiline block strings
+  if self:match("\"") or self:match("\'") then
+    local old_pos = self.position
+    local delimit = self:consume()
+    local buffer = ""
+    local escaping
+
+    repeat
+      local trivia_token = self:next_of(self.trivias)
+
+      if self:peek() == nil then
+        error("unfinished string near <eof>")
+      elseif trivia_token and trivia_token.token_type == TokenType.end_of_line_trivia then
+        error(("unfinished string near '%s'"):format(delimit .. buffer))
+      end
+
+      escaping = self:peek() == "\\"
+      buffer = buffer .. self:consume()
+    until not escaping and self:match(delimit)
+
+    self.position = old_pos
+    return TokenInfo.new(TokenType.string, delimit .. buffer .. delimit, self.position)
   end
 end
 
