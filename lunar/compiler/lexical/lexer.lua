@@ -127,8 +127,11 @@ function Lexer:next_of(list)
 end
 
 function Lexer:next_string()
-  -- TODO: multiline block strings
-  if self:match("\"") or self:match("\'") then
+  local block = self:next_multiline_block()
+
+  if block then
+    return TokenInfo.new(TokenType.string, block.value, self.position)
+  elseif self:match("\"") or self:match("\'") then
     local old_pos = self.position
     local delimit = self:consume()
     local buffer = ""
@@ -167,6 +170,33 @@ function Lexer:next_identifier()
 
     self.position = start_pos
     return TokenInfo.new(TokenType.identifier, buffer, self.position)
+  end
+end
+
+function Lexer:next_multiline_block()
+  if self:peek() == "[" then
+    local old_pos = self.position
+    local level = self:count("=", 1)
+
+    if self:peek(level + 1) ~= "[" then
+      self.position = old_pos
+      return nil
+    end
+
+    self:move(level + 2)
+    local buffer = "[" .. ("="):rep(level) .. "["
+
+    repeat
+      if self:peek() == nil then
+        error("unfinished string near <eof>")
+      end
+
+      buffer = buffer .. self:consume()
+    until self:match("]" .. ("="):rep(level) .. "]")
+
+    self.position = old_pos
+    buffer = buffer .. "]" .. ("="):rep(level) .. "]"
+    return TokenInfo.new(TokenType.block, buffer, self.position)
   end
 end
 

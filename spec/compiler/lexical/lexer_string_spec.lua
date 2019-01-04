@@ -19,9 +19,21 @@ describe("Lexer:next_string", function()
     }, tokens)
   end)
 
-  pending("should return a string token using multiline block")
+  it("should return a string token using multiline block", function()
+    local tokens = Lexer.new("[[ Hello, world! ]]"):tokenize()
 
-  pending("should return a string token using leveled multiline block")
+    assert.same({
+      TokenInfo.new(TokenType.string, "[[ Hello, world! ]]", 1)
+    }, tokens)
+  end)
+
+  it("should return a string token using leveled multiline block", function()
+    local tokens = Lexer.new("[====[ Hello, world! ]====]"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "[====[ Hello, world! ]====]", 1)
+    }, tokens)
+  end)
 
   it("should throw an error when encountering a newline while scanning", function()
     assert.has_error(function()
@@ -35,5 +47,17 @@ describe("Lexer:next_string", function()
     end, "unfinished string near <eof>")
   end)
 
-  pending("should not return a string token from invalid multiline block syntax")
+  it("should throw an error when encountering end of file while scanning multiline block", function()
+    assert.has_error(function()
+      Lexer.new("[[abc"):tokenize()
+    end, "unfinished string near <eof>")
+  end)
+
+  it("should not return a string token from invalid multiline block syntax", function()
+    local tokens = Lexer.new("[ =[ Hello, world ]]"):tokenize()
+
+    assert.is_not.same({
+      TokenInfo.new(TokenType.string, "[ =[ Hello, world ]]", 1)
+    }, tokens)
+  end)
 end)
