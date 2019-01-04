@@ -179,7 +179,6 @@ function Lexer:next_multiline_block()
     local level = self:count("=", 1)
 
     if self:peek(level + 1) ~= "[" then
-      self.position = old_pos
       return nil
     end
 
