@@ -20,6 +20,22 @@ function BaseLexer:consume()
   return c
 end
 
+--- Counts the number of successive characters from the starting position
+-- @tparam string c The string to match successively
+-- @tparam[opt=0] number offset The starting position ahead of the current position
+-- @treturn number The number of characters matched successively
+function BaseLexer:count(c, offset)
+  if offset == nil then offset = 0 end
+
+  local n = 0
+
+  while self:peek(offset + n) == c do
+    n = n + 1
+  end
+
+  return n
+end
+
 --- Returns the character at the current position plus the offset
 -- @tparam[opt=0] number offset Number of characters to skip ahead (or behind, if negative) to peek at
 -- @treturn string The single character string at that position
