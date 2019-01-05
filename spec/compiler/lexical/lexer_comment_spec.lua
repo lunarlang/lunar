@@ -28,10 +28,8 @@ describe("Lexer:next_comment", function()
   end)
 
   it("should return two comment tokens", function()
-    local code = [[
--- first comment
--- second comment]]
-
+    local code = "-- first comment\n" ..
+      "-- second comment"
     local tokens = Lexer.new(code):tokenize()
 
     assert.same({
@@ -50,10 +48,8 @@ describe("Lexer:next_comment", function()
   end)
 
   it("should not span multiple lines if there is anything between -- and the block", function()
-    local code = [[
--- [=[ Hello, world! ]=]
-nope]]
-
+    local code = "-- [=[ Hello, world! ]=]\n" ..
+      "nope"
     local tokens = Lexer.new(code):tokenize()
 
     assert.same({
