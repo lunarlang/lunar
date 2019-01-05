@@ -7,6 +7,7 @@ return {
   -- tokens with any values (1xx)
   identifier = 100,
   string = 101,
+  block = 102,
 
   -- keywords (2xx)
   and_keyword = 200,
