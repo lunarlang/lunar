@@ -187,7 +187,7 @@ function Lexer:next_identifier()
   local c = self:peek()
 
   if StringUtils.is_letter(c) or c == "_" then
-    local start_pos = self.position -- to reset to when we finish scanning series of valid characters
+    local old_pos = self.position
     local buffer = ""
     local lookahead
 
@@ -196,7 +196,7 @@ function Lexer:next_identifier()
       lookahead = self:peek()
     until not (StringUtils.is_letter(lookahead) or lookahead == "_" or StringUtils.is_digit(lookahead))
 
-    self.position = start_pos
+    self.position = old_pos
     return TokenInfo.new(TokenType.identifier, buffer, self.position)
   end
 end
