@@ -48,14 +48,18 @@ describe("Lexer:next_comment", function()
   end)
 
   it("should not span multiple lines if there is anything between -- and the block", function()
-    local code = "-- [=[ Hello, world! ]=]\n" ..
-      "nope"
+    local code = "-- [[\n" ..
+      "nope\n" ..
+      "]]"
     local tokens = Lexer.new(code):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.comment, "-- [=[ Hello, world! ]=]", 1),
-      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 25),
-      TokenInfo.new(TokenType.identifier, "nope", 26)
+      TokenInfo.new(TokenType.comment, "-- [[", 1),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 6),
+      TokenInfo.new(TokenType.identifier, "nope", 7),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 11),
+      TokenInfo.new(TokenType.right_bracket, "]", 12),
+      TokenInfo.new(TokenType.right_bracket, "]", 13)
     }, tokens)
   end)
 end)
