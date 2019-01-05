@@ -64,4 +64,14 @@ function BaseLexer:match(str)
   return self.source:sub(self.position, self.position + #str - 1) == str
 end
 
+function BaseLexer:move_if_match(str)
+  local ok = self:match(str)
+
+  if ok then
+    self:move(#str)
+  end
+
+  return ok
+end
+
 return BaseLexer

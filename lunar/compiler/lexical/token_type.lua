@@ -8,6 +8,7 @@ return {
   identifier = 100,
   string = 101,
   block = 102,
+  comment = 103,
 
   -- keywords (2xx)
   and_keyword = 200,

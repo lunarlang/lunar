@@ -110,6 +110,7 @@ end
 
 function Lexer:next_token()
   local token = self:next_of(self.trivias)
+    or self:next_comment()
     or self:next_string()
     or self:next_of(self.keywords)
     or self:next_of(self.operators)
@@ -123,6 +124,33 @@ function Lexer:next_of(list)
     if self:match(pair.value) then
       return TokenInfo.new(pair.type, pair.value, self.position)
     end
+  end
+end
+
+function Lexer:next_comment()
+  local old_pos = self.position
+
+  if self:move_if_match("--") then
+    local buffer = "--"
+    local block = self:next_multiline_block()
+
+    if block then
+      self.position = old_pos
+      return TokenInfo.new(TokenType.comment, buffer .. block.value, self.position)
+    end
+
+    while self:peek() ~= nil do
+      local trivia_token = self:next_of(self.trivias)
+
+      if trivia_token and trivia_token.token_type == TokenType.end_of_line_trivia then
+        break
+      end
+
+      buffer = buffer .. self:consume()
+    end
+
+    self.position = old_pos
+    return TokenInfo.new(TokenType.comment, buffer, self.position)
   end
 end
 
