@@ -36,6 +36,10 @@ function BaseLexer:count(c, offset)
   return n
 end
 
+function BaseLexer:is_finished()
+  return self.position > #self.source
+end
+
 --- Returns the character at the current position plus the offset
 -- @tparam[opt=0] number offset Number of characters to skip ahead (or behind, if negative) to peek at
 -- @treturn string The single character string at that position
@@ -44,7 +48,7 @@ function BaseLexer:peek(offset)
 
   -- string.sub outside the boundary of self.source will return empty string
   -- but we want it to return nil so it can evaluate to false
-  if #self.source >= self.position then
+  if not self:is_finished() then
     return self.source:sub(self.position + offset, self.position + offset)
   end
 end

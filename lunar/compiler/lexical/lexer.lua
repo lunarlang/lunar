@@ -101,7 +101,7 @@ function Lexer:tokenize()
   until not ok
 
   -- if position has not reached the end of source, then we failed to tokenize something
-  if self.position < #self.source then
+  if not self:is_finished() then
     error(("lexical analysis failed at %d %s"):format(self.position, self:peek()))
   end
 
@@ -139,7 +139,7 @@ function Lexer:next_comment()
       return TokenInfo.new(TokenType.comment, buffer .. block.value, self.position)
     end
 
-    while self:peek() ~= nil do
+    while not self:is_finished() do
       local trivia_token = self:next_of(self.trivias)
 
       if trivia_token and trivia_token.token_type == TokenType.end_of_line_trivia then
@@ -168,7 +168,7 @@ function Lexer:next_string()
     repeat
       local trivia_token = self:next_of(self.trivias)
 
-      if self:peek() == nil then
+      if self:is_finished() then
         error("unfinished string near <eof>")
       elseif trivia_token and trivia_token.token_type == TokenType.end_of_line_trivia then
         error(("unfinished string near '%s'"):format(delimit .. buffer))
@@ -214,7 +214,7 @@ function Lexer:next_multiline_block()
     local buffer = "[" .. ("="):rep(level) .. "["
 
     repeat
-      if self:peek() == nil then
+      if self:is_finished() then
         error("unfinished string near <eof>")
       end
 
