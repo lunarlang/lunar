@@ -65,6 +65,10 @@ end
 -- @tparam string str The string to match with the following string
 -- @treturn boolean true if the following string matches the given string, otherwise false
 function BaseLexer:match(str)
+  if self:is_finished() then
+    return false
+  end
+
   return self.source:sub(self.position, self.position + #str - 1) == str
 end
 
