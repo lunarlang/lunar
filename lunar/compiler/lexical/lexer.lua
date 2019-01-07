@@ -220,10 +220,8 @@ end
 function Lexer:next_keyword()
   local id = self:next_identifier()
 
-  if id then
-    if self.keywords[id.value] then
-      return TokenInfo.new(self.keywords[id.value], id.value, self.position)
-    end
+  if id and self.keywords[id.value] then
+    return TokenInfo.new(self.keywords[id.value], id.value, self.position)
   end
 end
 
