@@ -29,28 +29,27 @@ function Lexer.new(source, file_name)
   }
 
   self.keywords = {
-    pair(TokenType.and_keyword, "and"),
-    pair(TokenType.break_keyword, "break"),
-    pair(TokenType.do_keyword, "do"),
-    -- elseif before else and if, otherwise same issue with \r and \r\n
-    pair(TokenType.elseif_keyword, "elseif"),
-    pair(TokenType.else_keyword, "else"),
-    pair(TokenType.end_keyword, "end"),
-    pair(TokenType.false_keyword, "false"),
-    pair(TokenType.for_keyword, "for"),
-    pair(TokenType.function_keyword, "function"),
-    pair(TokenType.if_keyword, "if"),
-    pair(TokenType.in_keyword, "in"),
-    pair(TokenType.local_keyword, "local"),
-    pair(TokenType.nil_keyword, "nil"),
-    pair(TokenType.not_keyword, "not"),
-    pair(TokenType.or_keyword, "or"),
-    pair(TokenType.repeat_keyword, "repeat"),
-    pair(TokenType.return_keyword, "return"),
-    pair(TokenType.then_keyword, "then"),
-    pair(TokenType.true_keyword, "true"),
-    pair(TokenType.until_keyword, "until"),
-    pair(TokenType.while_keyword, "while")
+    ["and"] = TokenType.and_keyword,
+    ["break"] = TokenType.break_keyword,
+    ["do"] = TokenType.do_keyword,
+    ["else"] = TokenType.else_keyword,
+    ["elseif"] = TokenType.elseif_keyword,
+    ["end"] = TokenType.end_keyword,
+    ["false"] = TokenType.false_keyword,
+    ["for"] = TokenType.for_keyword,
+    ["function"] = TokenType.function_keyword,
+    ["if"] = TokenType.if_keyword,
+    ["in"] = TokenType.in_keyword,
+    ["local"] = TokenType.local_keyword,
+    ["nil"] = TokenType.nil_keyword,
+    ["not"] = TokenType.not_keyword,
+    ["or"] = TokenType.or_keyword,
+    ["repeat"] = TokenType.repeat_keyword,
+    ["return"] = TokenType.return_keyword,
+    ["then"] = TokenType.then_keyword,
+    ["true"] = TokenType.true_keyword,
+    ["until"] = TokenType.until_keyword,
+    ["while"] = TokenType.while_keyword
   }
 
   self.operators = {
@@ -112,7 +111,7 @@ function Lexer:next_token()
   local token = self:next_of(self.trivias)
     or self:next_comment()
     or self:next_string()
-    or self:next_of(self.keywords)
+    or self:next_keyword()
     or self:next_of(self.operators)
     or self:next_identifier()
 
@@ -180,6 +179,16 @@ function Lexer:next_string()
 
     self.position = old_pos
     return TokenInfo.new(TokenType.string, delimit .. buffer .. delimit, self.position)
+  end
+end
+
+function Lexer:next_keyword()
+  local id = self:next_identifier()
+
+  if id then
+    if self.keywords[id.value] then
+      return TokenInfo.new(self.keywords[id.value], id.value, self.position)
+    end
   end
 end
 

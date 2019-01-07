@@ -20,4 +20,12 @@ describe("Lexer:next_identifier", function()
       TokenInfo.new(TokenType.identifier, "id2", 5)
     }, tokens)
   end)
+
+  it("should return one identifier token, but starts with a keyword", function()
+    local tokens = Lexer.new("dotest"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.identifier, "dotest", 1)
+    }, tokens)
+  end)
 end)
