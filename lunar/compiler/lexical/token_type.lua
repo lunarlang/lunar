@@ -9,6 +9,7 @@ return {
   string = 101,
   block = 102,
   comment = 103,
+  number = 104,
 
   -- keywords (2xx)
   and_keyword = 200,

@@ -111,6 +111,7 @@ function Lexer:next_token()
   local token = self:next_of(self.trivias)
     or self:next_comment()
     or self:next_string()
+    or self:next_number()
     or self:next_keyword()
     or self:next_of(self.operators)
     or self:next_identifier()
@@ -179,6 +180,40 @@ function Lexer:next_string()
 
     self.position = old_pos
     return TokenInfo.new(TokenType.string, delimit .. buffer .. delimit, self.position)
+  end
+end
+
+-- not quite a fan of this... but it works
+-- TODO: refactor to use finite state automata at some point
+function Lexer:next_number()
+  local c = self:peek()
+
+  if StringUtils.is_digit(c) or (c == "." and StringUtils.is_digit(self:peek(1))) then
+    local old_pos = self.position
+    local buffer = ""
+
+    repeat
+      buffer = buffer .. self:consume()
+    until not (StringUtils.is_digit(self:peek()) or self:match("."))
+
+    if self:match("e") or self:match("E") then
+      buffer = buffer .. self:consume()
+
+      if self:match("+") or self:match("-") then
+        buffer = buffer .. self:consume()
+      end
+    end
+
+    while not self:is_finished() and (StringUtils.is_digit(self:peek()) or StringUtils.is_letter(self:peek()) or self:match("_")) do
+      buffer = buffer .. self:consume()
+    end
+
+    if tonumber(buffer) then
+      self.position = old_pos
+      return TokenInfo.new(TokenType.number, buffer, self.position)
+    else
+      error(("malformed number near '%s'"):format(buffer))
+    end
   end
 end
 
