@@ -3,211 +3,42 @@ local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
 describe("Lexer:next_operator", function()
-  it("should return one triple_dot token", function()
-    local tokens = Lexer.new("..."):tokenize()
+  local function operator_equals(op, token_type)
+    return function()
+      local tokens = Lexer.new(op):tokenize()
 
-    assert.same({
-      TokenInfo.new(TokenType.triple_dot, "...", 1)
-    }, tokens)
-  end)
+      assert.same({
+        TokenInfo.new(token_type, op, 1)
+      }, tokens)
+    end
+  end
 
-  it("should return one double_equal token", function()
-    local tokens = Lexer.new("=="):tokenize()
+  it("should return one triple_dot token", operator_equals("...", TokenType.triple_dot))
 
-    assert.same({
-      TokenInfo.new(TokenType.double_equal, "==", 1)
-    }, tokens)
-  end)
+  it("should return one double_equal token", operator_equals("==", TokenType.double_equal))
+  it("should return one tilde_equal token", operator_equals("~=", TokenType.tilde_equal))
+  it("should return one left_angle_equal token", operator_equals("<=", TokenType.left_angle_equal))
+  it("should return one right_angle_equal token", operator_equals(">=", TokenType.right_angle_equal))
+  it("should return one double_dot token", operator_equals("..", TokenType.double_dot))
 
-  it("should return one tilde_equal token", function()
-    local tokens = Lexer.new("~="):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.tilde_equal, "~=", 1)
-    }, tokens)
-  end)
-
-  it("should return one left_angle_equal token", function()
-    local tokens = Lexer.new("<="):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.left_angle_equal, "<=", 1)
-    }, tokens)
-  end)
-
-  it("should return one right_angle_equal token", function()
-    local tokens = Lexer.new(">="):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.right_angle_equal, ">=", 1)
-    }, tokens)
-  end)
-
-  it("should return one double_dot token", function()
-    local tokens = Lexer.new(".."):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.double_dot, "..", 1)
-    }, tokens)
-  end)
-
-  it("should return one left_paren token", function()
-    local tokens = Lexer.new("("):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.left_paren, "(", 1)
-    }, tokens)
-  end)
-
-  it("should return one right_paren token", function()
-    local tokens = Lexer.new(")"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.right_paren, ")", 1)
-    }, tokens)
-  end)
-
-  it("should return one left_brace token", function()
-    local tokens = Lexer.new("{"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.left_brace, "{", 1)
-    }, tokens)
-  end)
-
-  it("should return one right_brace token", function()
-    local tokens = Lexer.new("}"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.right_brace, "}", 1)
-    }, tokens)
-  end)
-
-  it("should return one left_bracket token", function()
-    local tokens = Lexer.new("["):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.left_bracket, "[", 1)
-    }, tokens)
-  end)
-
-  it("should return one right_bracket token", function()
-    local tokens = Lexer.new("]"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.right_bracket, "]", 1)
-    }, tokens)
-  end)
-
-  it("should return one plus token", function()
-    local tokens = Lexer.new("+"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.plus, "+", 1)
-    }, tokens)
-  end)
-
-  it("should return one minus token", function()
-    local tokens = Lexer.new("-"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.minus, "-", 1)
-    }, tokens)
-  end)
-
-  it("should return one asterisk token", function()
-    local tokens = Lexer.new("*"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.asterisk, "*", 1)
-    }, tokens)
-  end)
-
-  it("should return one slash token", function()
-    local tokens = Lexer.new("/"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.slash, "/", 1)
-    }, tokens)
-  end)
-
-  it("should return one percent token", function()
-    local tokens = Lexer.new("%"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.percent, "%", 1)
-    }, tokens)
-  end)
-
-  it("should return one caret token", function()
-    local tokens = Lexer.new("^"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.caret, "^", 1)
-    }, tokens)
-  end)
-
-  it("should return one pound token", function()
-    local tokens = Lexer.new("#"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.pound, "#", 1)
-    }, tokens)
-  end)
-
-  it("should return one left_angle token", function()
-    local tokens = Lexer.new("<"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.left_angle, "<", 1)
-    }, tokens)
-  end)
-
-  it("should return one right_angle token", function()
-    local tokens = Lexer.new(">"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.right_angle, ">", 1)
-    }, tokens)
-  end)
-
-  it("should return one equal token", function()
-    local tokens = Lexer.new("="):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.equal, "=", 1)
-    }, tokens)
-  end)
-
-  it("should return one semi_colon token", function()
-    local tokens = Lexer.new(";"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.semi_colon, ";", 1)
-    }, tokens)
-  end)
-
-  it("should return one colon token", function()
-    local tokens = Lexer.new(":"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.colon, ":", 1)
-    }, tokens)
-  end)
-
-  it("should return one comma token", function()
-    local tokens = Lexer.new(","):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.comma, ",", 1)
-    }, tokens)
-  end)
-
-  it("should return one dot token", function()
-    local tokens = Lexer.new("."):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.dot, ".", 1)
-    }, tokens)
-  end)
+  it("should return one left_paren token", operator_equals("(", TokenType.left_paren))
+  it("should return one right_paren token", operator_equals(")", TokenType.right_paren))
+  it("should return one left_brace token", operator_equals("{", TokenType.left_brace))
+  it("should return one right_brace token", operator_equals("}", TokenType.right_brace))
+  it("should return one left_bracket token", operator_equals("[", TokenType.left_bracket))
+  it("should return one right_bracket token", operator_equals("]", TokenType.right_bracket))
+  it("should return one plus token", operator_equals("+", TokenType.plus))
+  it("should return one minus token", operator_equals("-", TokenType.minus))
+  it("should return one asterisk token", operator_equals("*", TokenType.asterisk))
+  it("should return one slash token", operator_equals("/", TokenType.slash))
+  it("should return one percent token", operator_equals("%", TokenType.percent))
+  it("should return one caret token", operator_equals("^", TokenType.caret))
+  it("should return one pound token", operator_equals("#", TokenType.pound))
+  it("should return one left_angle token", operator_equals("<", TokenType.left_angle))
+  it("should return one right_angle token", operator_equals(">", TokenType.right_angle))
+  it("should return one equal token", operator_equals("=", TokenType.equal))
+  it("should return one semi_colon token", operator_equals(";", TokenType.semi_colon))
+  it("should return one colon token", operator_equals(":", TokenType.colon))
+  it("should return one comma token", operator_equals(",", TokenType.comma))
+  it("should return one dot token", operator_equals(".", TokenType.dot))
 end)

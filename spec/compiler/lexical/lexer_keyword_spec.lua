@@ -3,171 +3,35 @@ local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
 describe("Lexer:next_keyword", function()
-  it("should return one and_keyword token", function()
-    local tokens = Lexer.new("and"):tokenize()
+  local function keyword_equals(keyword, token_type)
+    return function()
+      local tokens = Lexer.new(keyword):tokenize()
 
-    assert.same({
-      TokenInfo.new(TokenType.and_keyword, "and", 1)
-    }, tokens)
-  end)
+      assert.same({
+        TokenInfo.new(token_type, keyword, 1)
+      }, tokens)
+    end
+  end
 
-  it("should return one break_keyword token", function()
-    local tokens = Lexer.new("break"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.break_keyword, "break", 1)
-    }, tokens)
-  end)
-
-  it("should return one do_keyword token", function()
-    local tokens = Lexer.new("do"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.do_keyword, "do", 1)
-    }, tokens)
-  end)
-
-  it("should return one elseif_keyword token", function()
-    local tokens = Lexer.new("elseif"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.elseif_keyword, "elseif", 1)
-    }, tokens)
-  end)
-
-  it("should return one else_keyword token", function()
-    local tokens = Lexer.new("else"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.else_keyword, "else", 1)
-    }, tokens)
-  end)
-
-  it("should return one end_keyword token", function()
-    local tokens = Lexer.new("end"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.end_keyword, "end", 1)
-    }, tokens)
-  end)
-
-  it("should return one false_keyword token", function()
-    local tokens = Lexer.new("false"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.false_keyword, "false", 1)
-    }, tokens)
-  end)
-
-  it("should return one for_keyword token", function()
-    local tokens = Lexer.new("for"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.for_keyword, "for", 1)
-    }, tokens)
-  end)
-
-  it("should return one function_keyword token", function()
-    local tokens = Lexer.new("function"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.function_keyword, "function", 1)
-    }, tokens)
-  end)
-
-  it("should return one if_keyword token", function()
-    local tokens = Lexer.new("if"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.if_keyword, "if", 1)
-    }, tokens)
-  end)
-
-  it("should return one in_keyword token", function()
-    local tokens = Lexer.new("in"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.in_keyword, "in", 1)
-    }, tokens)
-  end)
-
-  it("should return one local_keyword token", function()
-    local tokens = Lexer.new("local"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.local_keyword, "local", 1)
-    }, tokens)
-  end)
-
-  it("should return one nil_keyword token", function()
-    local tokens = Lexer.new("nil"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.nil_keyword, "nil", 1)
-    }, tokens)
-  end)
-
-  it("should return one not_keyword token", function()
-    local tokens = Lexer.new("not"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.not_keyword, "not", 1)
-    }, tokens)
-  end)
-
-  it("should return one or_keyword token", function()
-    local tokens = Lexer.new("or"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.or_keyword, "or", 1)
-    }, tokens)
-  end)
-
-  it("should return one repeat_keyword token", function()
-    local tokens = Lexer.new("repeat"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.repeat_keyword, "repeat", 1)
-    }, tokens)
-  end)
-
-  it("should return one return_keyword token", function()
-    local tokens = Lexer.new("return"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.return_keyword, "return", 1)
-    }, tokens)
-  end)
-
-  it("should return one then_keyword token", function()
-    local tokens = Lexer.new("then"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.then_keyword, "then", 1)
-    }, tokens)
-  end)
-
-  it("should return one true_keyword token", function()
-    local tokens = Lexer.new("true"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.true_keyword, "true", 1)
-    }, tokens)
-  end)
-
-  it("should return one until_keyword token", function()
-    local tokens = Lexer.new("until"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.until_keyword, "until", 1)
-    }, tokens)
-  end)
-
-  it("should return one while_keyword token", function()
-    local tokens = Lexer.new("while"):tokenize()
-
-    assert.same({
-      TokenInfo.new(TokenType.while_keyword, "while", 1)
-    }, tokens)
-  end)
+  it("should return one and_keyword token", keyword_equals("and", TokenType.and_keyword))
+  it("should return one break_keyword token", keyword_equals("break", TokenType.break_keyword))
+  it("should return one do_keyword token", keyword_equals("do", TokenType.do_keyword))
+  it("should return one else_keyword token", keyword_equals("else", TokenType.else_keyword))
+  it("should return one elseif_keyword token", keyword_equals("elseif", TokenType.elseif_keyword))
+  it("should return one end_keyword token", keyword_equals("end", TokenType.end_keyword))
+  it("should return one false_keyword token", keyword_equals("false", TokenType.false_keyword))
+  it("should return one for_keyword token", keyword_equals("for", TokenType.for_keyword))
+  it("should return one function_keyword token", keyword_equals("function", TokenType.function_keyword))
+  it("should return one if_keyword token", keyword_equals("if", TokenType.if_keyword))
+  it("should return one in_keyword token", keyword_equals("in", TokenType.in_keyword))
+  it("should return one local_keyword token", keyword_equals("local", TokenType.local_keyword))
+  it("should return one nil_keyword token", keyword_equals("nil", TokenType.nil_keyword))
+  it("should return one not_keyword token", keyword_equals("not", TokenType.not_keyword))
+  it("should return one or_keyword token", keyword_equals("or", TokenType.or_keyword))
+  it("should return one repeat_keyword token", keyword_equals("repeat", TokenType.repeat_keyword))
+  it("should return one return_keyword token", keyword_equals("return", TokenType.return_keyword))
+  it("should return one then_keyword token", keyword_equals("then", TokenType.then_keyword))
+  it("should return one true_keyword token", keyword_equals("true", TokenType.true_keyword))
+  it("should return one until_keyword token", keyword_equals("until", TokenType.until_keyword))
+  it("should return one while_keyword token", keyword_equals("while", TokenType.while_keyword))
 end)

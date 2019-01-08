@@ -3,7 +3,6 @@ local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
 describe("Lexer:next_number", function()
-  -- a helper function to create a test case handler for the given input
   local function number_equals(input)
     return function()
       local tokens = Lexer.new(input):tokenize()
