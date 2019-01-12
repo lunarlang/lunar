@@ -1,10 +1,6 @@
 local StringUtils = {}
 
---- Asserts whether the target is in range of low and high bytes, inclusive.
--- @tparam string target A single letter string to compute against
--- @tparam string low A single letter string to compute for lower bound
--- @tparam string high A single letter string to compute for higher bound
--- @treturn bool true if target in range of low and high, inclusive, otherwise false
+-- asserts whether the target is in range of low and high bytes, inclusive.
 function StringUtils.is_in_range(target, low, high)
   -- return false, if nil, because these throws an error if we index on it
   if target == nil or low == nil or high == nil then
