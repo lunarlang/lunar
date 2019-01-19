@@ -3,6 +3,7 @@ local TokenType = require "lunar.compiler.lexical.token_type"
 local BreakStatement = require "lunar.ast.stats.break_statement"
 local ReturnStatement = require "lunar.ast.stats.return_statement"
 local DoStatement = require "lunar.ast.stats.do_statement"
+local NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression"
 
 local Parser = setmetatable({}, BaseParser)
 Parser.__index = Parser
@@ -61,6 +62,12 @@ function Parser:parse_do_statement()
     local block = self:parse_block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
     return DoStatement.new(unpack(block))
+  end
+end
+
+function Parser:parse_expression()
+  if self:match_any(TokenType.nil_keyword) then
+    return NilLiteralExpression.new()
   end
 end
 
