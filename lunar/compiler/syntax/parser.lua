@@ -52,8 +52,7 @@ function Parser:parse_last_statement()
   if self:match_any(TokenType.break_keyword) then
     return BreakStatement.new()
   elseif self:match_any(TokenType.return_keyword) then
-    -- TODO: explist
-    return ReturnStatement.new()
+    return ReturnStatement.new(unpack(self:parse_expression_list()))
   end
 end
 
@@ -69,6 +68,20 @@ function Parser:parse_expression()
   if self:match_any(TokenType.nil_keyword) then
     return NilLiteralExpression.new()
   end
+end
+
+function Parser:parse_expression_list()
+  local explist = {}
+
+  repeat
+    local expr = self:parse_expression()
+
+    if expr then
+      table.insert(explist, expr)
+    end
+  until not self:match_any(TokenType.comma)
+
+  return explist
 end
 
 return Parser
