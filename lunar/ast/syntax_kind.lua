@@ -2,8 +2,7 @@ return {
   -- terminal trees (< 500)
   break_statement = 1,
   nil_literal_expression = 2,
-  true_literal_expression = 3,
-  false_literal_expression = 4,
+  boolean_literal_expression = 3,
 
   -- non-terminal trees (>= 500)
   do_statement = 500,

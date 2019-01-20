@@ -4,8 +4,7 @@ local BreakStatement = require "lunar.ast.stats.break_statement"
 local ReturnStatement = require "lunar.ast.stats.return_statement"
 local DoStatement = require "lunar.ast.stats.do_statement"
 local NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression"
-local TrueLiteralExpression = require "lunar.ast.exprs.true_literal_expression"
-local FalseLiteralExpression = require "lunar.ast.exprs.false_literal_expression"
+local BooleanLiteralExpression = require "lunar.ast.exprs.boolean_literal_expression"
 
 local Parser = setmetatable({}, BaseParser)
 Parser.__index = Parser
@@ -65,10 +64,10 @@ end
 function Parser:parse_expression()
   if self:match_any(TokenType.nil_keyword) then
     return NilLiteralExpression.new()
-  elseif self:match_any(TokenType.true_keyword) then
-    return TrueLiteralExpression.new()
-  elseif self:match_any(TokenType.false_keyword) then
-    return FalseLiteralExpression.new()
+  elseif self:assert(TokenType.true_keyword, TokenType.false_keyword) then
+    local token = self:peek()
+    self:move(1)
+    return BooleanLiteralExpression.new(token.token_type == TokenType.true_keyword)
   end
 end
 
