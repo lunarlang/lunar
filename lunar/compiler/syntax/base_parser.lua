@@ -47,11 +47,18 @@ function BaseParser:skip_tokens()
   until self:is_finished()
 end
 
--- Asserts whether the current token equals the given TokenType
-function BaseParser:assert(token_type)
+-- Asserts whether the current token equals to one of the given TokenTypes
+function BaseParser:assert(...)
+  local token_types = { ... }
+
   if not self:is_finished() then
-    self:skip_tokens()
-    return self:peek().token_type == token_type
+    for _, token_type in pairs(token_types) do
+      self:skip_tokens()
+
+      if self:peek().token_type == token_type then
+        return true
+      end
+    end
   end
 
   return false
@@ -75,15 +82,11 @@ end
 -- If current token is one of these expected TokenType, moves the position by one
 function BaseParser:match_any(...)
   if not self:is_finished() then
-    local token_types = { ... }
-
     self:skip_tokens()
 
-    for _, token_type in pairs(token_types) do
-      if self:assert(token_type) then
-        self:move(1)
-        return true
-      end
+    if self:assert(...) then
+      self:move(1)
+      return true
     end
   end
 
