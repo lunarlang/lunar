@@ -11,14 +11,14 @@ describe("Parser:parse_expression", function()
     assert.same(NilLiteralExpression.new(), ast)
   end)
 
-  it("should return one BooleanLiteralExpression node", function()
+  it("should return one BooleanLiteralExpression node given a value of true", function()
     local tokens = Lexer.new("true"):tokenize()
     local ast = Parser.new(tokens):parse_expression()
 
     assert.same(BooleanLiteralExpression.new(true), ast)
   end)
 
-  it("should return one BooleanLiteralExpression node", function()
+  it("should return one BooleanLiteralExpression node given a value of false", function()
     local tokens = Lexer.new("false"):tokenize()
     local ast = Parser.new(tokens):parse_expression()
 
