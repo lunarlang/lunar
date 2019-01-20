@@ -45,7 +45,11 @@ function Parser:parse_block()
 end
 
 function Parser:parse_statement()
-  return self:parse_do_statement()
+  if self:match_any(TokenType.do_keyword) then
+    local block = self:parse_block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
+    return DoStatement.new(unpack(block))
+  end
 end
 
 function Parser:parse_last_statement()
@@ -53,14 +57,6 @@ function Parser:parse_last_statement()
     return BreakStatement.new()
   elseif self:match_any(TokenType.return_keyword) then
     return ReturnStatement.new(unpack(self:parse_expression_list()))
-  end
-end
-
-function Parser:parse_do_statement()
-  if self:match_any(TokenType.do_keyword) then
-    local block = self:parse_block()
-    self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
-    return DoStatement.new(unpack(block))
   end
 end
 
