@@ -5,6 +5,7 @@ local ReturnStatement = require "lunar.ast.stats.return_statement"
 local DoStatement = require "lunar.ast.stats.do_statement"
 local NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression"
 local BooleanLiteralExpression = require "lunar.ast.exprs.boolean_literal_expression"
+local NumberLiteralExpression = require "lunar.ast.exprs.number_literal_expression"
 
 local Parser = setmetatable({}, BaseParser)
 Parser.__index = Parser
@@ -68,6 +69,10 @@ function Parser:parse_expression()
     local token = self:peek()
     self:move(1)
     return BooleanLiteralExpression.new(token.token_type == TokenType.true_keyword)
+  elseif self:assert(TokenType.number) then
+    local token = self:peek()
+    self:move(1)
+    return NumberLiteralExpression.new(tonumber(token.value))
   end
 end
 
