@@ -25,10 +25,18 @@ function BaseParser:move(by)
 end
 
 -- Peeks at the current token where the parser is currently at
-function BaseParser:peek()
-  if not self:is_finished() then
-    return self.tokens[self.position]
-  end
+function BaseParser:peek(offset)
+  if offset == nil then offset = 0 end
+
+  return self.tokens[self.position + offset]
+end
+
+function BaseParser:previous()
+  return self:peek(-1)
+end
+
+function BaseParser:next()
+  return self:peek(1)
 end
 
 function BaseParser:skip_tokens()
