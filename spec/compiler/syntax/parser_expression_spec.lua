@@ -38,6 +38,13 @@ describe("Parser:parse_expression", function()
 
       assert.same(AST.StringLiteralExpression.new("'Hello, world!'"), ast)
     end)
+
+    it("should return one VariableArgumentExpression node", function()
+      local tokens = Lexer.new("..."):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      assert.same(AST.VariableArgumentExpression.new(), ast)
+    end)
   end)
 
   describe("ExpressionList syntax", function()

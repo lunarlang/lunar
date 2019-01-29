@@ -7,4 +7,5 @@ return {
   return_statement = 6,
   expression_list = 7,
   string_literal_expression = 8,
+  variable_argument_expression = 9,
 }
