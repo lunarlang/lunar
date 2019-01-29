@@ -8,4 +8,6 @@ return {
   expression_list = 7,
   string_literal_expression = 8,
   variable_argument_expression = 9,
+  function_expression = 10,
+  parameter_declaration = 11,
 }

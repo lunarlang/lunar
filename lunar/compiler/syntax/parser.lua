@@ -56,10 +56,29 @@ function Parser:parse_expression()
       or AST.NumberLiteralExpression.try_parse(self)
       or AST.StringLiteralExpression.try_parse(self)
       or AST.VariableArgumentExpression.try_parse(self)
+      or AST.FunctionExpression.try_parse(self)
 end
 
 function Parser:parse_expression_list()
   return AST.ExpressionList.try_parse(self)
+end
+
+function Parser:parse_parameter_list()
+  local paramlist = {}
+
+  repeat
+    local param = AST.ParameterDeclaration.try_parse(self)
+    if param ~= nil then
+      table.insert(paramlist, param)
+
+      -- ... is the final argument possible in a list of parameters
+      if param.name == "..." then
+        break
+      end
+    end
+  until not self:match(TokenType.comma)
+
+  return paramlist
 end
 
 return Parser

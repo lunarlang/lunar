@@ -45,6 +45,16 @@ describe("Parser:parse_expression", function()
 
       assert.same(AST.VariableArgumentExpression.new(), ast)
     end)
+
+    it("should return one FunctionExpression node whose parameters has two ParameterDeclaration nodes and a BreakStatement block", function()
+      local tokens = Lexer.new("function(hello, ...) break end"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local expected_params = { AST.ParameterDeclaration.new("hello"), AST.ParameterDeclaration.new("...") }
+      local expected_block = { AST.BreakStatement.new() }
+
+      assert.same(AST.FunctionExpression.new(expected_params, expected_block), ast)
+    end)
   end)
 
   describe("ExpressionList syntax", function()
