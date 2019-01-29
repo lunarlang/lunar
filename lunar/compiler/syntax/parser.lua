@@ -42,46 +42,22 @@ function Parser:parse_block()
 end
 
 function Parser:parse_statement()
-  if self:match(TokenType.do_keyword) then
-    local block = self:parse_block()
-    self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
-    return AST.DoStatement.new(unpack(block))
-  end
+  return AST.DoStatement.try_parse(self)
 end
 
 function Parser:parse_last_statement()
-  if self:match(TokenType.break_keyword) then
-    return AST.BreakStatement.new()
-  elseif self:match(TokenType.return_keyword) then
-    local explist = self:parse_expression_list()
-    return AST.ReturnStatement.new(#explist.expressions > 0 and explist or nil) -- prefer nil over empty explist
-  end
+  return AST.BreakStatement.try_parse(self)
+      or AST.ReturnStatement.try_parse(self)
 end
 
 function Parser:parse_expression()
-  if self:match(TokenType.nil_keyword) then
-    return AST.NilLiteralExpression.new()
-  elseif self:match(TokenType.true_keyword, TokenType.false_keyword) then
-    local token = self:peek(-1)
-    return AST.BooleanLiteralExpression.new(token.token_type == TokenType.true_keyword)
-  elseif self:match(TokenType.number) then
-    local token = self:peek(-1)
-    return AST.NumberLiteralExpression.new(tonumber(token.value))
-  end
+  return AST.NilLiteralExpression.try_parse(self)
+      or AST.BooleanLiteralExpression.try_parse(self)
+      or AST.NumberLiteralExpression.try_parse(self)
 end
 
 function Parser:parse_expression_list()
-  local explist = {}
-
-  repeat
-    local expr = self:parse_expression()
-
-    if expr then
-      table.insert(explist, expr)
-    end
-  until not self:match(TokenType.comma)
-
-  return AST.ExpressionList.new(unpack(explist))
+  return AST.ExpressionList.try_parse(self)
 end
 
 return Parser

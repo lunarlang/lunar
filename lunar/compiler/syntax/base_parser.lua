@@ -71,6 +71,13 @@ function BaseParser:expect(token_type, reason)
   end
 end
 
+-- Consumes the current token irrespective of the token_type (not to be used without asserting the type beforehand!)
+function BaseParser:consume()
+  local token = self:peek()
+  self:move(1)
+  return token
+end
+
 -- If current token is one of these expected TokenType, moves the position by one
 function BaseParser:match(...)
   if not self:is_finished() then
