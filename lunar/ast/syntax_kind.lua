@@ -6,4 +6,5 @@ return {
   do_statement = 5,
   return_statement = 6,
   expression_list = 7,
+  string_literal_expression = 8,
 }

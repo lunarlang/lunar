@@ -31,6 +31,13 @@ describe("Parser:parse_expression", function()
 
       assert.same(AST.NumberLiteralExpression.new(100), ast)
     end)
+
+    it("should return one StringLiteralExpression node given a string value", function()
+      local tokens = Lexer.new("'Hello, world!'"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      assert.same(AST.StringLiteralExpression.new("'Hello, world!'"), ast)
+    end)
   end)
 
   describe("ExpressionList syntax", function()

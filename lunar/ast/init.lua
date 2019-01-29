@@ -5,5 +5,6 @@ return {
   NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression",
   BooleanLiteralExpression = require "lunar.ast.exprs.boolean_literal_expression",
   NumberLiteralExpression = require "lunar.ast.exprs.number_literal_expression",
+  StringLiteralExpression = require "lunar.ast.exprs.string_literal_expression",
   ExpressionList = require "lunar.ast.exprs.expression_list",
 }

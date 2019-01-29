@@ -54,6 +54,7 @@ function Parser:parse_expression()
   return AST.NilLiteralExpression.try_parse(self)
       or AST.BooleanLiteralExpression.try_parse(self)
       or AST.NumberLiteralExpression.try_parse(self)
+      or AST.StringLiteralExpression.try_parse(self)
 end
 
 function Parser:parse_expression_list()
