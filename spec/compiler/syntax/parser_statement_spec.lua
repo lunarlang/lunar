@@ -1,6 +1,6 @@
+local AST = require "lunar.ast"
 local Lexer = require "lunar.compiler.lexical.lexer"
 local Parser = require "lunar.compiler.syntax.parser"
-local DoStatement = require "lunar.ast.stats.do_statement"
 
 describe("Parser:parse_statement", function()
   describe("DoStatement syntax", function()
@@ -9,7 +9,7 @@ describe("Parser:parse_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        DoStatement.new()
+        AST.DoStatement.new()
       }, ast)
     end)
 
@@ -18,8 +18,8 @@ describe("Parser:parse_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        DoStatement.new(),
-        DoStatement.new()
+        AST.DoStatement.new(),
+        AST.DoStatement.new()
       }, ast)
     end)
 
@@ -28,7 +28,7 @@ describe("Parser:parse_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        DoStatement.new(DoStatement.new(DoStatement.new()))
+        AST.DoStatement.new(AST.DoStatement.new(AST.DoStatement.new()))
       }, ast)
     end)
   end)

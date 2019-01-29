@@ -1,11 +1,6 @@
+local AST = require "lunar.ast"
 local BaseParser = require "lunar.compiler.syntax.base_parser"
 local TokenType = require "lunar.compiler.lexical.token_type"
-local BreakStatement = require "lunar.ast.stats.break_statement"
-local ReturnStatement = require "lunar.ast.stats.return_statement"
-local DoStatement = require "lunar.ast.stats.do_statement"
-local NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression"
-local BooleanLiteralExpression = require "lunar.ast.exprs.boolean_literal_expression"
-local NumberLiteralExpression = require "lunar.ast.exprs.number_literal_expression"
 
 local Parser = setmetatable({}, BaseParser)
 Parser.__index = Parser
@@ -28,13 +23,13 @@ function Parser:parse_block()
     local stat = self:parse_statement()
     if stat ~= nil then
       table.insert(stats, stat)
-      self:match_any(TokenType.semi_colon)
+      self:match(TokenType.semi_colon)
     end
 
     local last = self:parse_last_statement()
     if last ~= nil then
       table.insert(stats, last)
-      self:match_any(TokenType.semi_colon)
+      self:match(TokenType.semi_colon)
       break
     end
 
@@ -47,32 +42,31 @@ function Parser:parse_block()
 end
 
 function Parser:parse_statement()
-  if self:match_any(TokenType.do_keyword) then
+  if self:match(TokenType.do_keyword) then
     local block = self:parse_block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
-    return DoStatement.new(unpack(block))
+    return AST.DoStatement.new(unpack(block))
   end
 end
 
 function Parser:parse_last_statement()
-  if self:match_any(TokenType.break_keyword) then
-    return BreakStatement.new()
-  elseif self:match_any(TokenType.return_keyword) then
-    return ReturnStatement.new(unpack(self:parse_expression_list()))
+  if self:match(TokenType.break_keyword) then
+    return AST.BreakStatement.new()
+  elseif self:match(TokenType.return_keyword) then
+    local explist = self:parse_expression_list()
+    return AST.ReturnStatement.new(#explist.expressions > 0 and explist or nil) -- prefer nil over empty explist
   end
 end
 
 function Parser:parse_expression()
-  if self:match_any(TokenType.nil_keyword) then
-    return NilLiteralExpression.new()
-  elseif self:assert(TokenType.true_keyword, TokenType.false_keyword) then
-    local token = self:peek()
-    self:move(1)
-    return BooleanLiteralExpression.new(token.token_type == TokenType.true_keyword)
-  elseif self:assert(TokenType.number) then
-    local token = self:peek()
-    self:move(1)
-    return NumberLiteralExpression.new(tonumber(token.value))
+  if self:match(TokenType.nil_keyword) then
+    return AST.NilLiteralExpression.new()
+  elseif self:match(TokenType.true_keyword, TokenType.false_keyword) then
+    local token = self:peek(-1)
+    return AST.BooleanLiteralExpression.new(token.token_type == TokenType.true_keyword)
+  elseif self:match(TokenType.number) then
+    local token = self:peek(-1)
+    return AST.NumberLiteralExpression.new(tonumber(token.value))
   end
 end
 
@@ -85,9 +79,9 @@ function Parser:parse_expression_list()
     if expr then
       table.insert(explist, expr)
     end
-  until not self:match_any(TokenType.comma)
+  until not self:match(TokenType.comma)
 
-  return explist
+  return AST.ExpressionList.new(unpack(explist))
 end
 
 return Parser

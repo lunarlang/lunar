@@ -4,9 +4,10 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 local ReturnStatement = setmetatable({}, SyntaxNode)
 ReturnStatement.__index = ReturnStatement
 
-function ReturnStatement.new(...)
-  local super = SyntaxNode.new(SyntaxKind.return_statement, ...)
+function ReturnStatement.new(explist)
+  local super = SyntaxNode.new(SyntaxKind.return_statement)
   local self = setmetatable(super, ReturnStatement)
+  self.explist = explist
 
   return self
 end

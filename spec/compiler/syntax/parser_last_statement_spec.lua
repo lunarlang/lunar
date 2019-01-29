@@ -1,8 +1,6 @@
+local AST = require "lunar.ast"
 local Lexer = require "lunar.compiler.lexical.lexer"
 local Parser = require "lunar.compiler.syntax.parser"
-local BreakStatement = require "lunar.ast.stats.break_statement"
-local ReturnStatement = require "lunar.ast.stats.return_statement"
-local NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression"
 
 describe("Parser:parse_last_statement", function()
   describe("BreakStatement syntax", function()
@@ -11,7 +9,7 @@ describe("Parser:parse_last_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        BreakStatement.new()
+        AST.BreakStatement.new()
       }, ast)
     end)
   end)
@@ -22,7 +20,7 @@ describe("Parser:parse_last_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        ReturnStatement.new()
+        AST.ReturnStatement.new()
       }, ast)
     end)
 
@@ -31,7 +29,7 @@ describe("Parser:parse_last_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        ReturnStatement.new(NilLiteralExpression.new())
+        AST.ReturnStatement.new(AST.ExpressionList.new(AST.NilLiteralExpression.new()))
       }, ast)
     end)
 
@@ -40,7 +38,7 @@ describe("Parser:parse_last_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        ReturnStatement.new(NilLiteralExpression.new(), NilLiteralExpression.new())
+        AST.ReturnStatement.new(AST.ExpressionList.new(AST.NilLiteralExpression.new(), AST.NilLiteralExpression.new()))
       }, ast)
     end)
   end)
