@@ -73,11 +73,11 @@ describe("Parser:parse_expression", function()
   end)
 
   describe("ExpressionList syntax", function()
-    it("should return one ExpressionList with two expression nodes", function()
+    it("should return an array of two expression nodes", function()
       local tokens = Lexer.new("1, 2"):tokenize()
       local ast = Parser.new(tokens):parse_expression_list()
 
-      assert.same(AST.ExpressionList.new(AST.NumberLiteralExpression.new(1), AST.NumberLiteralExpression.new(2)), ast)
+      assert.same({ AST.NumberLiteralExpression.new(1), AST.NumberLiteralExpression.new(2) }, ast)
     end)
   end)
 end)

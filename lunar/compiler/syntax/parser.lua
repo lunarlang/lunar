@@ -61,7 +61,17 @@ function Parser:parse_expression()
 end
 
 function Parser:parse_expression_list()
-  return AST.ExpressionList.try_parse(self)
+  local explist = {}
+
+  repeat
+    local expr = self:parse_expression()
+
+    if expr ~= nil then
+      table.insert(explist, expr)
+    end
+  until not self:match(TokenType.comma)
+
+  return explist
 end
 
 function Parser:parse_parameter_list()

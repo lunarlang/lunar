@@ -29,7 +29,7 @@ describe("Parser:parse_last_statement", function()
       local ast = Parser.new(tokens):parse()
 
       assert.same({
-        AST.ReturnStatement.new(AST.ExpressionList.new(AST.NilLiteralExpression.new()))
+        AST.ReturnStatement.new({ AST.NilLiteralExpression.new() })
       }, ast)
     end)
 
@@ -37,8 +37,10 @@ describe("Parser:parse_last_statement", function()
       local tokens = Lexer.new("return nil, nil"):tokenize()
       local ast = Parser.new(tokens):parse()
 
+      local expected_explist = { AST.NilLiteralExpression.new(), AST.NilLiteralExpression.new() }
+
       assert.same({
-        AST.ReturnStatement.new(AST.ExpressionList.new(AST.NilLiteralExpression.new(), AST.NilLiteralExpression.new()))
+        AST.ReturnStatement.new(expected_explist)
       }, ast)
     end)
   end)

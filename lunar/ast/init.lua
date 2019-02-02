@@ -9,7 +9,6 @@ return {
   TableLiteralExpression = require "lunar.ast.exprs.table_literal_expression",
   VariableArgumentExpression = require "lunar.ast.exprs.variable_argument_expression",
   FunctionExpression = require "lunar.ast.exprs.function_expression",
-  ExpressionList = require "lunar.ast.exprs.expression_list",
   FieldDeclaration = require "lunar.ast.decls.field_declaration",
   ParameterDeclaration = require "lunar.ast.decls.parameter_declaration",
 }

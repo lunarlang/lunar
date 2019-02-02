@@ -18,7 +18,7 @@ function ReturnStatement.try_parse(parser)
     local explist = parser:parse_expression_list()
 
     -- prefer nil if explist returned empty
-    if #explist.expressions == 0 then
+    if #explist == 0 then
       return ReturnStatement.new(nil)
     end
 
