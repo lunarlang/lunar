@@ -55,6 +55,7 @@ function Parser:parse_expression()
       or AST.BooleanLiteralExpression.try_parse(self)
       or AST.NumberLiteralExpression.try_parse(self)
       or AST.StringLiteralExpression.try_parse(self)
+      or AST.TableLiteralExpression.try_parse(self)
       or AST.VariableArgumentExpression.try_parse(self)
       or AST.FunctionExpression.try_parse(self)
 end
@@ -79,6 +80,21 @@ function Parser:parse_parameter_list()
   until not self:match(TokenType.comma)
 
   return paramlist
+end
+
+function Parser:parse_field_list()
+  local fieldlist = {}
+
+  repeat
+    lastfield = AST.FieldDeclaration.try_parse(self)
+
+    if lastfield ~= nil then
+      table.insert(fieldlist, lastfield)
+      self:match(TokenType.comma, TokenType.semi_colon)
+    end
+  until lastfield == nil
+
+  return fieldlist
 end
 
 return Parser

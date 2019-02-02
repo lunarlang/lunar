@@ -1,5 +1,7 @@
 local AST = require "lunar.ast"
 local Lexer = require "lunar.compiler.lexical.lexer"
+local TokenInfo = require "lunar.compiler.lexical.token_info"
+local TokenType = require "lunar.compiler.lexical.token_type"
 local Parser = require "lunar.compiler.syntax.parser"
 
 describe("Parser:parse_expression", function()
@@ -54,6 +56,19 @@ describe("Parser:parse_expression", function()
       local expected_block = { AST.BreakStatement.new() }
 
       assert.same(AST.FunctionExpression.new(expected_params, expected_block), ast)
+    end)
+
+    it("should return one TableLiteralExpression node with three FieldDeclaration nodes", function()
+      local tokens = Lexer.new("{ ['hello'] = true, world = false; nil; }"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local expected_fields = {
+        AST.FieldDeclaration.new(AST.StringLiteralExpression.new("'hello'"), AST.BooleanLiteralExpression.new(true)),
+        AST.FieldDeclaration.new(TokenInfo.new(TokenType.identifier, "world", 21), AST.BooleanLiteralExpression.new(false)),
+        AST.FieldDeclaration.new(nil, AST.NilLiteralExpression.new()),
+      }
+
+      assert.same(AST.TableLiteralExpression.new(expected_fields), ast)
     end)
   end)
 

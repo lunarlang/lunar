@@ -10,4 +10,6 @@ return {
   variable_argument_expression = 9,
   function_expression = 10,
   parameter_declaration = 11,
+  table_literal_expression = 12,
+  field_declaration = 13,
 }
