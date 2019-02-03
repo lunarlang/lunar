@@ -94,6 +94,7 @@ end
 
 function Parser:parse_field_list()
   local fieldlist = {}
+  local lastfield
 
   repeat
     lastfield = AST.FieldDeclaration.try_parse(self)
