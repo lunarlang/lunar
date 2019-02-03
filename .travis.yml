@@ -12,6 +12,11 @@ before_install:
 
 install:
   - luarocks install busted
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
 
 script:
-  - busted --verbose
+  - busted --verbose --coverage
+
+after_success:
+  - luacov-coveralls -r ./lunar -e $TRAVIS_BUILD_DIR/lua_install -e "_spec"
