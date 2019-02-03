@@ -8,7 +8,7 @@ before_install:
   - pip install hererocks
   - hererocks lua_install -r^ --$LUA
   - export PATH=$PATH:$PWD/lua_install/bin
-  - export LUA_PATH=$LUA_PATH;./?.lua
+  - export LUA_PATH="$LUA_PATH;./?.lua"
 
 install:
   - luarocks install busted
