@@ -4,6 +4,8 @@
 <div align="center"><img src="https://i.imgur.com/xVujd8N.png"/></div>
 
 # Lunar
+[![Build Status](https://travis-ci.org/lunarlang/lunar.svg?branch=master)](https://travis-ci.org/lunarlang/lunar)
+
 The Lua 5.1 superset programming language.
 
 ## Goals: what we want
