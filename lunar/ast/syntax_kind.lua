@@ -11,4 +11,6 @@ return {
   parameter_declaration = 10,
   table_literal_expression = 11,
   field_declaration = 12,
+  binary_expression = 13,
+  unary_expression = 14,
 }

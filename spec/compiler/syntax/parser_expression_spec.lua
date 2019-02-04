@@ -70,6 +70,27 @@ describe("Parser:parse_expression", function()
 
       assert.same(AST.TableLiteralExpression.new(expected_fields), ast)
     end)
+
+    it("should return one BinaryExpression node with two operands and add operator", function()
+      local tokens = Lexer.new("1 + 2"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local expected_left_operand = AST.NumberLiteralExpression.new(1)
+      local expected_operator = TokenInfo.new(TokenType.plus, "+", 3)
+      local expected_right_operand = AST.NumberLiteralExpression.new(2)
+
+      assert.same(AST.BinaryExpression.new(expected_left_operand, expected_operator, expected_right_operand), ast)
+    end)
+
+    it("should return one UnaryExpression node with one operand and minus operator", function()
+      local tokens = Lexer.new("-1"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local expected_operator = TokenInfo.new(TokenType.minus, "-", 1)
+      local expected_operand = AST.NumberLiteralExpression.new(1)
+
+      assert.same(AST.UnaryExpression.new(expected_operator, expected_operand), ast)
+    end)
   end)
 
   describe("ExpressionList syntax", function()

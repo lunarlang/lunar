@@ -50,7 +50,7 @@ function Parser:parse_last_statement()
       or AST.ReturnStatement.try_parse(self)
 end
 
-function Parser:parse_expression()
+function Parser:parse_primary_expression()
   return AST.NilLiteralExpression.try_parse(self)
       or AST.BooleanLiteralExpression.try_parse(self)
       or AST.NumberLiteralExpression.try_parse(self)
@@ -58,6 +58,10 @@ function Parser:parse_expression()
       or AST.TableLiteralExpression.try_parse(self)
       or AST.VariableArgumentExpression.try_parse(self)
       or AST.FunctionExpression.try_parse(self)
+end
+
+function Parser:parse_expression()
+  return AST.BinaryExpression.try_parse(self)
 end
 
 function Parser:parse_expression_list()
@@ -106,6 +110,10 @@ function Parser:parse_field_list()
   until lastfield == nil
 
   return fieldlist
+end
+
+function Parser:parse_unary()
+  return AST.UnaryExpression.try_parse(self)
 end
 
 return Parser
