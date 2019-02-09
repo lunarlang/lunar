@@ -12,10 +12,4 @@ function VariableArgumentExpression.new()
   return self
 end
 
-function VariableArgumentExpression.try_parse(parser)
-  if parser:match(TokenType.triple_dot) then
-    return VariableArgumentExpression.new()
-  end
-end
-
 return VariableArgumentExpression

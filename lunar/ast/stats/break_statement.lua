@@ -12,10 +12,4 @@ function BreakStatement.new()
   return self
 end
 
-function BreakStatement.try_parse(parser)
-  if parser:match(TokenType.break_keyword) then
-    return BreakStatement.new()
-  end
-end
-
 return BreakStatement

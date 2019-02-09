@@ -13,12 +13,4 @@ function ParameterDeclaration.new(name)
   return self
 end
 
-function ParameterDeclaration.try_parse(parser)
-  if parser:assert(TokenType.identifier, TokenType.triple_dot) then
-    local token = parser:consume()
-
-    return ParameterDeclaration.new(token.value)
-  end
-end
-
 return ParameterDeclaration

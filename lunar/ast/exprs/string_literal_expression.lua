@@ -13,12 +13,4 @@ function StringLiteralExpression.new(value)
   return self
 end
 
-function StringLiteralExpression.try_parse(parser)
-  if parser:assert(TokenType.string) then
-    local token = parser:consume()
-
-    return StringLiteralExpression.new(token.value)
-  end
-end
-
 return StringLiteralExpression

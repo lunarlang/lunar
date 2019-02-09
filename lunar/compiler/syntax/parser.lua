@@ -42,25 +42,101 @@ function Parser:parse_block()
 end
 
 function Parser:parse_statement()
-  return AST.DoStatement.try_parse(self)
+  -- 'do' block 'end'
+  if self:match(TokenType.do_keyword) then
+    return self:parse_do_block_statement()
+  end
+end
+
+function Parser:parse_do_block_statement()
+  local block = self:parse_block()
+  self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
+
+  return AST.DoStatement.new(unpack(block))
 end
 
 function Parser:parse_last_statement()
-  return AST.BreakStatement.try_parse(self)
-      or AST.ReturnStatement.try_parse(self)
+  -- 'break'
+  if self:match(TokenType.break_keyword) then
+    return AST.BreakStatement.new()
+  end
+
+  -- 'return' [explist]
+  if self:match(TokenType.return_keyword) then
+    return self:parse_return_statement()
+  end
+end
+
+function Parser:parse_return_statement()
+  local explist = self:parse_expression_list()
+
+  -- prefer nil if there is no expressions
+  if #explist == 0 then
+    return AST.ReturnStatement.new(nil)
+  end
+
+  return AST.ReturnStatement.new(explist)
 end
 
 function Parser:parse_expression()
-  return AST.NilLiteralExpression.try_parse(self)
-      or AST.BooleanLiteralExpression.try_parse(self)
-      or AST.NumberLiteralExpression.try_parse(self)
-      or AST.StringLiteralExpression.try_parse(self)
-      or AST.TableLiteralExpression.try_parse(self)
-      or AST.VariableArgumentExpression.try_parse(self)
-      or AST.FunctionExpression.try_parse(self)
+  -- 'nil'
+  if self:match(TokenType.nil_keyword) then
+    return AST.NilLiteralExpression.new()
+  end
+
+  -- 'true' | 'false'
+  if self:assert(TokenType.true_keyword, TokenType.false_keyword) then
+    local boolean_token = self:consume()
+    return AST.BooleanLiteralExpression.new(boolean_token.token_type == TokenType.true_keyword)
+  end
+
+  -- number
+  if self:assert(TokenType.number) then
+    local number_token = self:consume()
+    return AST.NumberLiteralExpression.new(tonumber(number_token.value))
+  end
+
+  -- string
+  if self:assert(TokenType.string) then
+    local string_token = self:consume()
+    return AST.StringLiteralExpression.new(string_token.value)
+  end
+
+  -- '{' [fieldlist] '}'
+  if self:match(TokenType.left_brace) then
+    return self:parse_table_literal_expression()
+  end
+
+  -- '...'
+  if self:match(TokenType.triple_dot) then
+    return AST.VariableArgumentExpression.new()
+  end
+
+  -- 'function' '(' [paramlist] ')' block 'end'
+  if self:match(TokenType.function_keyword) then
+    return self:parse_function_expression()
+  end
+end
+
+function Parser:parse_table_literal_expression()
+  local fieldlist = self:parse_field_list()
+  self:expect(TokenType.right_brace, "Expected '}' to close '{'")
+
+  return AST.TableLiteralExpression.new(fieldlist)
+end
+
+function Parser:parse_function_expression()
+  self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
+  local paramlist = self:parse_parameter_list()
+  self:expect(TokenType.right_paren, "Expected ')' to close '('")
+  local block = self:parse_block()
+  self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
+
+  return AST.FunctionExpression.new(paramlist, block)
 end
 
 function Parser:parse_expression_list()
+  -- exp {',' exp}
   local explist = {}
 
   repeat
@@ -74,22 +150,55 @@ function Parser:parse_expression_list()
   return explist
 end
 
+function Parser:parse_parameter_declaration()
+  -- identifier | '...'
+  if self:assert(TokenType.identifier, TokenType.triple_dot) then
+    local param = self:consume()
+    return AST.ParameterDeclaration.new(param.value)
+  end
+end
+
 function Parser:parse_parameter_list()
+  -- param {',' param} [',' '...']
+  -- keep parsing params until we see '...' or there's no ','
   local paramlist = {}
+  local param
 
   repeat
-    local param = AST.ParameterDeclaration.try_parse(self)
+    param = self:parse_parameter_declaration()
     if param ~= nil then
       table.insert(paramlist, param)
-
-      -- ... is the final argument possible in a list of parameters
-      if param.name == "..." then
-        break
-      end
     end
-  until not self:match(TokenType.comma)
+  until not self:match(TokenType.comma) or param.name == "..."
 
   return paramlist
+end
+
+function Parser:parse_field_declaration()
+  -- '[' exp ']' '=' exp
+  if self:match(TokenType.left_bracket) then
+    local key = self:parse_expression()
+    self:expect(TokenType.right_bracket, "Expected ']' to close '['")
+    self:expect(TokenType.equal, "Expected '=' near ']'")
+    local value = self:parse_expression()
+
+    return AST.FieldDeclaration.new(key, value)
+  end
+
+  -- identifier '=' exp
+  if self:peek(1) and self:peek(1).token_type == TokenType.equal then
+    local key = self:expect(TokenType.identifier, "Expected identifier to start this field")
+    self:consume() -- consumes the equal token, because we asserted it earlier
+    local value = self:parse_expression()
+
+    return AST.FieldDeclaration.new(key, value)
+  end
+
+  -- exp
+  local value = self:parse_expression()
+  if value ~= nil then
+    return AST.FieldDeclaration.new(nil, value)
+  end
 end
 
 function Parser:parse_field_list()
@@ -97,7 +206,7 @@ function Parser:parse_field_list()
   local lastfield
 
   repeat
-    lastfield = AST.FieldDeclaration.try_parse(self)
+    lastfield = self:parse_field_declaration()
 
     if lastfield ~= nil then
       table.insert(fieldlist, lastfield)

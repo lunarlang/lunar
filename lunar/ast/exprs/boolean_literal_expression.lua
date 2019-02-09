@@ -13,12 +13,4 @@ function BooleanLiteralExpression.new(value)
   return self
 end
 
-function BooleanLiteralExpression.try_parse(parser)
-  if parser:assert(TokenType.true_keyword, TokenType.false_keyword) then
-    local token = parser:consume()
-
-    return BooleanLiteralExpression.new(token.token_type == TokenType.true_keyword)
-  end
-end
-
 return BooleanLiteralExpression

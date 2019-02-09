@@ -12,10 +12,4 @@ function NilLiteralExpression.new()
   return self
 end
 
-function NilLiteralExpression.try_parse(parser)
-  if parser:match(TokenType.nil_keyword) then
-    return NilLiteralExpression.new()
-  end
-end
-
 return NilLiteralExpression

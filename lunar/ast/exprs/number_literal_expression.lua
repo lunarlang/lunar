@@ -13,12 +13,4 @@ function NumberLiteralExpression.new(value)
   return self
 end
 
-function NumberLiteralExpression.try_parse(parser)
-  if parser:assert(TokenType.number) then
-    local token = parser:consume()
-
-    return NumberLiteralExpression.new(tonumber(token.value))
-  end
-end
-
 return NumberLiteralExpression

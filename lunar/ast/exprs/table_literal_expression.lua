@@ -13,13 +13,4 @@ function TableLiteralExpression.new(fields)
   return self
 end
 
-function TableLiteralExpression.try_parse(parser)
-  if parser:match(TokenType.left_brace) then
-    local fields = parser:parse_field_list()
-    parser:expect(TokenType.right_brace, "Expected '}' to close '{'")
-
-    return TableLiteralExpression.new(fields)
-  end
-end
-
 return TableLiteralExpression
