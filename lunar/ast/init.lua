@@ -8,8 +8,6 @@ return {
   StringLiteralExpression = require "lunar.ast.exprs.string_literal_expression",
   TableLiteralExpression = require "lunar.ast.exprs.table_literal_expression",
   VariableArgumentExpression = require "lunar.ast.exprs.variable_argument_expression",
-  BinaryExpression = require "lunar.ast.exprs.binary_expression",
-  UnaryExpression = require "lunar.ast.exprs.unary_expression",
   FunctionExpression = require "lunar.ast.exprs.function_expression",
   FieldDeclaration = require "lunar.ast.decls.field_declaration",
   ParameterDeclaration = require "lunar.ast.decls.parameter_declaration",
