@@ -202,6 +202,7 @@ function Parser:parse_field_declaration()
 end
 
 function Parser:parse_field_list()
+  -- field {(',' | ';') field} [(',' | ';')]
   local fieldlist = {}
   local lastfield
 
