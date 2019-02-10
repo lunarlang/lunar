@@ -44,15 +44,11 @@ end
 function Parser:parse_statement()
   -- 'do' block 'end'
   if self:match(TokenType.do_keyword) then
-    return self:parse_do_block_statement()
+    local block = self:parse_block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
+
+    return AST.DoStatement.new(unpack(block))
   end
-end
-
-function Parser:parse_do_block_statement()
-  local block = self:parse_block()
-  self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
-
-  return AST.DoStatement.new(unpack(block))
 end
 
 function Parser:parse_last_statement()
@@ -63,19 +59,15 @@ function Parser:parse_last_statement()
 
   -- 'return' [explist]
   if self:match(TokenType.return_keyword) then
-    return self:parse_return_statement()
+    local explist = self:parse_expression_list()
+
+    -- prefer nil if there is no expressions
+    if #explist == 0 then
+      return AST.ReturnStatement.new(nil)
+    end
+
+    return AST.ReturnStatement.new(explist)
   end
-end
-
-function Parser:parse_return_statement()
-  local explist = self:parse_expression_list()
-
-  -- prefer nil if there is no expressions
-  if #explist == 0 then
-    return AST.ReturnStatement.new(nil)
-  end
-
-  return AST.ReturnStatement.new(explist)
 end
 
 function Parser:parse_expression()
@@ -104,7 +96,10 @@ function Parser:parse_expression()
 
   -- '{' [fieldlist] '}'
   if self:match(TokenType.left_brace) then
-    return self:parse_table_literal_expression()
+    local fieldlist = self:parse_field_list()
+    self:expect(TokenType.right_brace, "Expected '}' to close '{'")
+
+    return AST.TableLiteralExpression.new(fieldlist)
   end
 
   -- '...'
@@ -114,25 +109,14 @@ function Parser:parse_expression()
 
   -- 'function' '(' [paramlist] ')' block 'end'
   if self:match(TokenType.function_keyword) then
-    return self:parse_function_expression()
+    self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
+    local paramlist = self:parse_parameter_list()
+    self:expect(TokenType.right_paren, "Expected ')' to close '('")
+    local block = self:parse_block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
+
+    return AST.FunctionExpression.new(paramlist, block)
   end
-end
-
-function Parser:parse_table_literal_expression()
-  local fieldlist = self:parse_field_list()
-  self:expect(TokenType.right_brace, "Expected '}' to close '{'")
-
-  return AST.TableLiteralExpression.new(fieldlist)
-end
-
-function Parser:parse_function_expression()
-  self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
-  local paramlist = self:parse_parameter_list()
-  self:expect(TokenType.right_paren, "Expected ')' to close '('")
-  local block = self:parse_block()
-  self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
-
-  return AST.FunctionExpression.new(paramlist, block)
 end
 
 function Parser:parse_expression_list()
