@@ -9,6 +9,30 @@ function Parser.new(tokens)
   local super = BaseParser.new(tokens)
   local self = setmetatable(super, Parser)
 
+  self.binary_op_map = {
+    ["+"] = AST.BinaryOpKind.addition_op,
+    ["-"] = AST.BinaryOpKind.subtraction_op,
+    ["*"] = AST.BinaryOpKind.multiplication_op,
+    ["/"] = AST.BinaryOpKind.division_op,
+    ["%"] = AST.BinaryOpKind.modulus_op,
+    ["^"] = AST.BinaryOpKind.power_op,
+    [".."] = AST.BinaryOpKind.concatenation_op,
+    ["~="] = AST.BinaryOpKind.not_equal_op,
+    ["=="] = AST.BinaryOpKind.equal_op,
+    ["<"] = AST.BinaryOpKind.less_than_op,
+    ["<="] = AST.BinaryOpKind.less_or_equal_op,
+    [">"] = AST.BinaryOpKind.greater_than_op,
+    [">="] = AST.BinaryOpKind.greater_or_equal_op,
+    ["and"] = AST.BinaryOpKind.and_op,
+    ["or"] = AST.BinaryOpKind.or_op,
+  }
+
+  self.unary_op_map = {
+    ["not"] = AST.UnaryOpKind.not_op,
+    ["-"] = AST.UnaryOpKind.negative_op,
+    ["#"] = AST.UnaryOpKind.length_op,
+  }
+
   return self
 end
 
@@ -71,6 +95,123 @@ function Parser:parse_last_statement()
 end
 
 function Parser:parse_expression()
+  return self:parse_logical_or_expression()
+end
+
+-- it looks like the opposite of operator precedences even though we're parsing our way downwards
+-- that's because we start from the lowest operator precedence and work our way up to the highest operator precedence
+function Parser:parse_logical_or_expression()
+  -- logical_and {'or' logical_and}
+  local expr = self:parse_logical_and_expression()
+
+  while self:assert(TokenType.or_keyword) do
+    local op = self:consume()
+    local right = self:parse_logical_and_expression()
+    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
+  end
+
+  return expr
+end
+
+function Parser:parse_logical_and_expression()
+  -- comparison {('and') comparison}
+  local expr = self:parse_comparison_expression()
+
+  while self:assert(TokenType.and_keyword) do
+    local op = self:consume()
+    local right = self:parse_comparison_expression()
+    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
+  end
+
+  return expr
+end
+
+function Parser:parse_comparison_expression()
+  -- concat {('~=' | '==' | '<' | '<=' | '>' | '>=') concat}
+  local expr = self:parse_concat_expression()
+
+  while self:assert(
+    TokenType.tilde_equal,
+    TokenType.double_equal,
+    TokenType.left_angle,
+    TokenType.left_angle_equal,
+    TokenType.right_angle,
+    TokenType.right_angle_equal
+  ) do
+    local op = self:consume()
+    local right = self:parse_concat_expression()
+    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
+  end
+
+  return expr
+end
+
+function Parser:parse_concat_expression()
+  -- right associativity
+  -- addition {('..') concat}
+  local expr = self:parse_addition_expression()
+
+  while self:assert(TokenType.double_dot) do
+    local op = self:consume()
+    local right = self:parse_concat_expression()
+    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
+  end
+
+  return expr
+end
+
+function Parser:parse_addition_expression()
+  -- multiplication {('+' | '-') multiplication}
+  local expr = self:parse_multiplication_expression()
+
+  while self:assert(TokenType.plus, TokenType.minus) do
+    local op = self:consume()
+    local right = self:parse_multiplication_expression()
+    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
+  end
+
+  return expr
+end
+
+function Parser:parse_multiplication_expression()
+  -- power {('*' | '/' | '%') power}
+  local expr = self:parse_power_expression()
+
+  while self:assert(TokenType.asterisk, TokenType.slash, TokenType.percent) do
+    local op = self:consume()
+    local right = self:parse_power_expression()
+    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
+  end
+
+  return expr
+end
+
+function Parser:parse_power_expression()
+  -- right associativity
+  -- unary {'^' power}
+  local expr = self:parse_unary_expression()
+
+  while self:assert(TokenType.caret) do
+    local op = self:consume()
+    local right = self:parse_power_expression()
+    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
+  end
+
+  return expr
+end
+
+function Parser:parse_unary_expression()
+  -- ('not' | '-' | '#') unary | primary
+  if self:assert(TokenType.not_keyword, TokenType.minus, TokenType.pound) then
+    local op = self:consume()
+    local right = self:parse_unary_expression()
+    return AST.UnaryOpExpression.new(self.unary_op_map[op.value], right)
+  end
+
+  return self:parse_primary_expression()
+end
+
+function Parser:parse_primary_expression()
   -- 'nil'
   if self:match(TokenType.nil_keyword) then
     return AST.NilLiteralExpression.new()
