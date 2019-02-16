@@ -5,10 +5,8 @@ local Parser = require "lunar.compiler.syntax.parser"
 describe("BreakStatement syntax", function()
   it("should only return one BreakStatement node", function()
     local tokens = Lexer.new("break"):tokenize()
-    local ast = Parser.new(tokens):parse()
+    local result = Parser.new(tokens):parse()
 
-    assert.same({
-      AST.BreakStatement.new()
-    }, ast)
+    assert.same({ AST.BreakStatement.new() }, result)
   end)
 end)

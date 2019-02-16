@@ -88,24 +88,24 @@ function Parser:last_statement()
     return AST.BreakStatement.new()
   end
 
-  -- 'return' [explist]
+  -- 'return' [exprlist]
   if self:match(TokenType.return_keyword) then
-    local explist = self:expression_list()
+    local exprlist = self:expression_list()
 
     -- prefer nil if there is no expressions
-    if #explist == 0 then
+    if #exprlist == 0 then
       return AST.ReturnStatement.new(nil)
     end
 
-    return AST.ReturnStatement.new(explist)
+    return AST.ReturnStatement.new(exprlist)
   end
 end
 
 function Parser:function_arg()
-  -- exp
-  local exp = self:expression()
-  if exp ~= nil then
-    return AST.ArgumentExpression.new(exp)
+  -- expr
+  local expr = self:expression()
+  if expr ~= nil then
+    return AST.ArgumentExpression.new(expr)
   end
 end
 
@@ -134,12 +134,12 @@ function Parser:function_arg_list()
 end
 
 function Parser:prefix_expression()
-  -- '(' exp ')'
+  -- '(' expr ')'
   if self:match(TokenType.left_paren) then
-    local exp = self:expression()
+    local expr = self:expression()
     self:expect(TokenType.right_paren, "Expected ')' to close '('")
 
-    return exp
+    return expr
   end
 
   -- identifier
@@ -306,18 +306,18 @@ function Parser:sub_expression(limit)
 end
 
 function Parser:expression_list()
-  -- exp {',' exp}
-  local explist = {}
+  -- expr {',' expr}
+  local exprlist = {}
 
   repeat
     local expr = self:expression()
 
     if expr ~= nil then
-      table.insert(explist, expr)
+      table.insert(exprlist, expr)
     end
   until not self:match(TokenType.comma)
 
-  return explist
+  return exprlist
 end
 
 function Parser:parameter_declaration()
@@ -345,7 +345,7 @@ function Parser:parameter_list()
 end
 
 function Parser:field_declaration()
-  -- '[' exp ']' '=' exp
+  -- '[' expr ']' '=' expr
   if self:match(TokenType.left_bracket) then
     local key = self:expression()
     self:expect(TokenType.right_bracket, "Expected ']' to close '['")
@@ -355,7 +355,7 @@ function Parser:field_declaration()
     return AST.FieldDeclaration.new(key, value)
   end
 
-  -- identifier '=' exp
+  -- identifier '=' expr
   if self:peek(1) and self:peek(1).token_type == TokenType.equal then
     local key = self:expect(TokenType.identifier, "Expected identifier to start this field")
     self:consume() -- consumes the equal token, because we asserted it earlier
@@ -364,7 +364,7 @@ function Parser:field_declaration()
     return AST.FieldDeclaration.new(key, value)
   end
 
-  -- exp
+  -- expr
   local value = self:expression()
   if value ~= nil then
     return AST.FieldDeclaration.new(nil, value)
