@@ -29,6 +29,18 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(member, args), ast)
   end)
 
+  it("should return a FunctionCallExpression with a MemberExpression using bracket syntax", function()
+    local tokens = Lexer.new("thank['you'](kanye)"):tokenize()
+    local ast = Parser.new(tokens):expression()
+
+    local left_member = TokenInfo.new(TokenType.identifier, "thank", 1)
+    local right_member = AST.StringLiteralExpression.new("'you'")
+    local top_member = AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member)
+    local args = { AST.ArgumentExpression.new(AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "kanye", 14))) }
+
+    assert.same(AST.FunctionCallExpression.new(top_member, args), ast)
+  end)
+
   it("should return a FunctionCallExpression with dot syntax", function()
     local tokens = Lexer.new("very.cool()"):tokenize()
     local ast = Parser.new(tokens):expression()
