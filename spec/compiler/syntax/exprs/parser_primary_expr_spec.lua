@@ -29,6 +29,18 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(member, args), ast)
   end)
 
+  it("should return a FunctionCallExpression with dot syntax", function()
+    local tokens = Lexer.new("very.cool()"):tokenize()
+    local ast = Parser.new(tokens):expression()
+
+    local left_member = TokenInfo.new(TokenType.identifier, "very", 1)
+    local right_member = TokenInfo.new(TokenType.identifier, "cool", 6)
+    local top_member = AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member)
+    local args = {}
+
+    assert.same(AST.FunctionCallExpression.new(top_member, args), ast)
+  end)
+
   it("should return a FunctionCallExpression with colon syntax", function()
     local tokens = Lexer.new("very:nice()"):tokenize()
     local ast = Parser.new(tokens):expression()

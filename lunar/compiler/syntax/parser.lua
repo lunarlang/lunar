@@ -149,123 +149,34 @@ function Parser:prefix_expression()
 end
 
 function Parser:expression()
-  return self:logical_or_expression()
-end
-
--- it looks like the opposite of operator precedences even though we're parsing our way downwards
--- that's because we start from the lowest operator precedence and work our way up to the highest operator precedence
-function Parser:logical_or_expression()
-  -- logical_and {'or' logical_and}
-  local expr = self:logical_and_expression()
-
-  while self:assert(TokenType.or_keyword) do
-    local op = self:consume()
-    local right = self:logical_and_expression()
-    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
-  end
-
-  return expr
-end
-
-function Parser:logical_and_expression()
-  -- comparison {('and') comparison}
-  local expr = self:comparison_expression()
-
-  while self:assert(TokenType.and_keyword) do
-    local op = self:consume()
-    local right = self:comparison_expression()
-    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
-  end
-
-  return expr
-end
-
-function Parser:comparison_expression()
-  -- concat {('~=' | '==' | '<' | '<=' | '>' | '>=') concat}
-  local expr = self:concat_expression()
-
-  while self:assert(
-    TokenType.tilde_equal,
-    TokenType.double_equal,
-    TokenType.left_angle,
-    TokenType.left_angle_equal,
-    TokenType.right_angle,
-    TokenType.right_angle_equal
-  ) do
-    local op = self:consume()
-    local right = self:concat_expression()
-    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
-  end
-
-  return expr
-end
-
-function Parser:concat_expression()
-  -- right associativity
-  -- addition {('..') concat}
-  local expr = self:addition_expression()
-
-  while self:assert(TokenType.double_dot) do
-    local op = self:consume()
-    local right = self:concat_expression()
-    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
-  end
-
-  return expr
-end
-
-function Parser:addition_expression()
-  -- multiplication {('+' | '-') multiplication}
-  local expr = self:multiplication_expression()
-
-  while self:assert(TokenType.plus, TokenType.minus) do
-    local op = self:consume()
-    local right = self:multiplication_expression()
-    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
-  end
-
-  return expr
-end
-
-function Parser:multiplication_expression()
-  -- power {('*' | '/' | '%') power}
-  local expr = self:power_expression()
-
-  while self:assert(TokenType.asterisk, TokenType.slash, TokenType.percent) do
-    local op = self:consume()
-    local right = self:power_expression()
-    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
-  end
-
-  return expr
-end
-
-function Parser:power_expression()
-  -- right associativity
-  -- unary {'^' power}
-  local expr = self:unary_expression()
-
-  while self:assert(TokenType.caret) do
-    local op = self:consume()
-    local right = self:power_expression()
-    expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
-  end
-
-  return expr
-end
-
-function Parser:unary_expression()
-  -- ('not' | '-' | '#') unary | primary
-  if self:assert(TokenType.not_keyword, TokenType.minus, TokenType.pound) then
-    local op = self:consume()
-    local right = self:unary_expression()
-    return AST.UnaryOpExpression.new(self.unary_op_map[op.value], right)
-  end
-
-  return self:primary_expression()
+  return self:sub_expression(0)
 end
 
 function Parser:primary_expression()
+  local expr = self:prefix_expression()
+
+  while true do
+    if self:match(TokenType.dot) then
+      local identifier = self:expect(TokenType.identifier, "Expected identifier after '.'")
+      expr = AST.MemberExpression.new(expr, identifier)
+    elseif self:match(TokenType.left_bracket) then
+      local inner_expr = self:expression()
+      self:expect(TokenType.right_bracket, "Expected ']' to close '['")
+      expr = AST.MemberExpression.new(expr, inner_expr)
+    elseif self:match(TokenType.colon) then
+      local identifier = self:expect(TokenType.identifier, "Expected identifier after ':'")
+      local args = self:function_arg_list()
+      expr = AST.FunctionCallExpression.new(AST.MemberExpression.new(expr, identifier, true), args)
+    elseif self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
+      local args = self:function_arg_list()
+      expr = AST.FunctionCallExpression.new(expr, args)
+    else
+      return expr
+    end
+  end
+end
+
+function Parser:simple_expression()
   -- 'nil'
   if self:match(TokenType.nil_keyword) then
     return AST.NilLiteralExpression.new()
@@ -313,41 +224,85 @@ function Parser:primary_expression()
     return AST.FunctionExpression.new(paramlist, block)
   end
 
-  return self:secondary_expression()
+  return self:primary_expression()
 end
 
-function Parser:secondary_expression()
-  local prefixexp = self:prefix_expression()
+-- using this as the basis for unary, binary, and simple expressions
+-- https://github.com/lua/lua/blob/98194db4295726069137d13b8d24fca8cbf892b6/lparser.c#L778-L853
+function Parser:get_unary_op()
+  local ops = {
+    TokenType.not_keyword,
+    TokenType.minus,
+    TokenType.pound,
+  }
 
-  if prefixexp ~= nil then
-    -- prefixexp '.' identifier
-    if self:match(TokenType.dot) then
-      local identifier_token = self:expect(TokenType.identifier, "Expected identifier after '.'")
-      return AST.MemberExpression.new(prefixexp, identifier_token)
-    end
-
-    -- prefixexp '[' exp ']'
-    if self:match(TokenType.left_bracket) then
-      local exp = self:expression()
-      return AST.MemberExpression.new(prefixexp, exp)
-    end
-
-    -- prefixexp ':' identifier arglist
-    if self:match(TokenType.colon) then
-      local identifier_token = self:expect(TokenType.identifier)
-      local args = self:function_arg_list()
-      return AST.FunctionCallExpression.new(AST.MemberExpression.new(prefixexp, identifier_token, true), args)
-    end
-
-    -- prefixexp arglist
-    if self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
-      local args = self:function_arg_list()
-      return AST.FunctionCallExpression.new(prefixexp, args)
-    end
-
-    -- prefixexp
-    return prefixexp
+  if self:assert(unpack(ops)) then
+    local op = self:consume()
+    return self.unary_op_map[op.value]
   end
+end
+
+function Parser:get_binary_op()
+  local ops = {
+    TokenType.plus,
+    TokenType.minus,
+    TokenType.asterisk,
+    TokenType.slash,
+    TokenType.percent,
+    TokenType.caret,
+    TokenType.double_dot,
+    TokenType.tilde_equal,
+    TokenType.double_equal,
+    TokenType.left_angle,
+    TokenType.left_angle_equal,
+    TokenType.right_angle,
+    TokenType.right_angle_equal,
+    TokenType.and_keyword,
+    TokenType.or_keyword,
+  }
+
+  if self:assert(unpack(ops)) then
+    local op = self:consume()
+    return self.binary_op_map[op.value]
+  end
+end
+
+local unary_priority = 8
+local priority = {
+  -- '+' | '-' | '*' | '/' | '%'
+  { 6, 6 }, { 6, 6 }, { 7, 7 }, { 7, 7 }, { 7, 7 },
+  -- '^' | '..'
+  { 10, 9 }, { 5, 4 },
+  -- '==' | '~='
+  { 3, 3 }, { 3, 3 },
+  -- '<', | '<=' | '>' | '>='
+  { 3, 3 }, { 3, 3 }, { 3, 3 }, { 3, 3 },
+  -- 'and' | 'or'
+  { 2, 2 }, { 1, 1 },
+}
+
+function Parser:sub_expression(limit)
+  local expr
+
+  local unary_op = self:get_unary_op()
+  if unary_op ~= nil then
+    expr = AST.UnaryOpExpression.new(unary_op, self:sub_expression(unary_priority))
+  else
+    expr = self:simple_expression()
+  end
+
+  local binary_op = self:get_binary_op()
+  -- if binary_op is not nil and left priority of this binary_op is greater than current limit
+  while binary_op ~= nil and priority[binary_op][1] > limit do
+    -- parse a new sub_expression with the right priority of this binary_op
+    local next_expr = self:sub_expression(priority[binary_op][2])
+    expr = AST.BinaryOpExpression.new(expr, binary_op, next_expr)
+
+    -- is there any binary op after this?
+    binary_op = self:get_binary_op()
+  end
+
+  return expr
 end
 
 function Parser:expression_list()
