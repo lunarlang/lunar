@@ -37,20 +37,20 @@ function Parser.new(tokens)
 end
 
 function Parser:parse()
-  return self:parse_block()
+  return self:block()
 end
 
-function Parser:parse_block()
+function Parser:block()
   local stats = {}
 
   while not self:is_finished() do
-    local stat = self:parse_statement()
+    local stat = self:statement()
     if stat ~= nil then
       table.insert(stats, stat)
       self:match(TokenType.semi_colon)
     end
 
-    local last = self:parse_last_statement()
+    local last = self:last_statement()
     if last ~= nil then
       table.insert(stats, last)
       self:match(TokenType.semi_colon)
@@ -65,17 +65,17 @@ function Parser:parse_block()
   return stats
 end
 
-function Parser:parse_statement()
+function Parser:statement()
   -- 'do' block 'end'
   if self:match(TokenType.do_keyword) then
-    local block = self:parse_block()
+    local block = self:block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
 
     return AST.DoStatement.new(unpack(block))
   end
 end
 
-function Parser:parse_last_statement()
+function Parser:last_statement()
   -- 'break'
   if self:match(TokenType.break_keyword) then
     return AST.BreakStatement.new()
@@ -83,7 +83,7 @@ function Parser:parse_last_statement()
 
   -- 'return' [explist]
   if self:match(TokenType.return_keyword) then
-    local explist = self:parse_expression_list()
+    local explist = self:expression_list()
 
     -- prefer nil if there is no expressions
     if #explist == 0 then
@@ -94,21 +94,21 @@ function Parser:parse_last_statement()
   end
 end
 
-function Parser:parse_function_arg()
+function Parser:function_arg()
   -- exp
-  local exp = self:parse_expression()
+  local exp = self:expression()
   if exp ~= nil then
     return AST.ArgumentExpression.new(exp)
   end
 end
 
-function Parser:parse_function_arg_list()
+function Parser:function_arg_list()
   -- '(' arg {',' arg} ')'
   if self:match(TokenType.left_paren) then
     local args = {}
 
     repeat
-      local arg = self:parse_function_arg()
+      local arg = self:function_arg()
 
       if arg ~= nil then
         table.insert(args, arg)
@@ -122,14 +122,14 @@ function Parser:parse_function_arg_list()
 
   -- string | TableLiteralExpression
   if self:assert(TokenType.string, TokenType.left_brace) then
-    return { self:parse_function_arg() }
+    return { self:function_arg() }
   end
 end
 
-function Parser:parse_prefix_expression()
+function Parser:prefix_expression()
   -- '(' exp ')'
   if self:match(TokenType.left_paren) then
-    local exp = self:parse_expression()
+    local exp = self:expression()
     self:expect(TokenType.right_paren, "Expected ')' to close '('")
 
     return exp
@@ -141,41 +141,41 @@ function Parser:parse_prefix_expression()
   end
 end
 
-function Parser:parse_expression()
-  return self:parse_logical_or_expression()
+function Parser:expression()
+  return self:logical_or_expression()
 end
 
 -- it looks like the opposite of operator precedences even though we're parsing our way downwards
 -- that's because we start from the lowest operator precedence and work our way up to the highest operator precedence
-function Parser:parse_logical_or_expression()
+function Parser:logical_or_expression()
   -- logical_and {'or' logical_and}
-  local expr = self:parse_logical_and_expression()
+  local expr = self:logical_and_expression()
 
   while self:assert(TokenType.or_keyword) do
     local op = self:consume()
-    local right = self:parse_logical_and_expression()
+    local right = self:logical_and_expression()
     expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
   end
 
   return expr
 end
 
-function Parser:parse_logical_and_expression()
+function Parser:logical_and_expression()
   -- comparison {('and') comparison}
-  local expr = self:parse_comparison_expression()
+  local expr = self:comparison_expression()
 
   while self:assert(TokenType.and_keyword) do
     local op = self:consume()
-    local right = self:parse_comparison_expression()
+    local right = self:comparison_expression()
     expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
   end
 
   return expr
 end
 
-function Parser:parse_comparison_expression()
+function Parser:comparison_expression()
   -- concat {('~=' | '==' | '<' | '<=' | '>' | '>=') concat}
-  local expr = self:parse_concat_expression()
+  local expr = self:concat_expression()
 
   while self:assert(
     TokenType.tilde_equal,
@@ -186,79 +186,79 @@ function Parser:parse_comparison_expression()
     TokenType.right_angle_equal
   ) do
     local op = self:consume()
-    local right = self:parse_concat_expression()
+    local right = self:concat_expression()
     expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
   end
 
   return expr
 end
 
-function Parser:parse_concat_expression()
+function Parser:concat_expression()
   -- right associativity
   -- addition {('..') concat}
-  local expr = self:parse_addition_expression()
+  local expr = self:addition_expression()
 
   while self:assert(TokenType.double_dot) do
     local op = self:consume()
-    local right = self:parse_concat_expression()
+    local right = self:concat_expression()
     expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
   end
 
   return expr
 end
 
-function Parser:parse_addition_expression()
+function Parser:addition_expression()
   -- multiplication {('+' | '-') multiplication}
-  local expr = self:parse_multiplication_expression()
+  local expr = self:multiplication_expression()
 
   while self:assert(TokenType.plus, TokenType.minus) do
     local op = self:consume()
-    local right = self:parse_multiplication_expression()
+    local right = self:multiplication_expression()
     expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
   end
 
   return expr
 end
 
-function Parser:parse_multiplication_expression()
+function Parser:multiplication_expression()
   -- power {('*' | '/' | '%') power}
-  local expr = self:parse_power_expression()
+  local expr = self:power_expression()
 
   while self:assert(TokenType.asterisk, TokenType.slash, TokenType.percent) do
     local op = self:consume()
-    local right = self:parse_power_expression()
+    local right = self:power_expression()
     expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
   end
 
   return expr
 end
 
-function Parser:parse_power_expression()
+function Parser:power_expression()
   -- right associativity
   -- unary {'^' power}
-  local expr = self:parse_unary_expression()
+  local expr = self:unary_expression()
 
   while self:assert(TokenType.caret) do
     local op = self:consume()
-    local right = self:parse_power_expression()
+    local right = self:power_expression()
     expr = AST.BinaryOpExpression.new(expr, self.binary_op_map[op.value], right)
   end
 
   return expr
 end
 
-function Parser:parse_unary_expression()
+function Parser:unary_expression()
   -- ('not' | '-' | '#') unary | primary
   if self:assert(TokenType.not_keyword, TokenType.minus, TokenType.pound) then
     local op = self:consume()
-    local right = self:parse_unary_expression()
+    local right = self:unary_expression()
     return AST.UnaryOpExpression.new(self.unary_op_map[op.value], right)
   end
 
-  return self:parse_primary_expression()
+  return self:primary_expression()
 end
 
-function Parser:parse_primary_expression()
+function Parser:primary_expression()
   -- 'nil'
   if self:match(TokenType.nil_keyword) then
     return AST.NilLiteralExpression.new()
@@ -284,7 +284,7 @@ function Parser:parse_primary_expression()
 
   -- '{' [fieldlist] '}'
   if self:match(TokenType.left_brace) then
-    local fieldlist = self:parse_field_list()
+    local fieldlist = self:field_list()
     self:expect(TokenType.right_brace, "Expected '}' to close '{'")
 
     return AST.TableLiteralExpression.new(fieldlist)
@@ -298,19 +298,19 @@ function Parser:parse_primary_expression()
   -- 'function' '(' [paramlist] ')' block 'end'
   if self:match(TokenType.function_keyword) then
     self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
-    local paramlist = self:parse_parameter_list()
+    local paramlist = self:parameter_list()
     self:expect(TokenType.right_paren, "Expected ')' to close '('")
-    local block = self:parse_block()
+    local block = self:block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
     return AST.FunctionExpression.new(paramlist, block)
   end
 
-  return self:parse_secondary_expression()
+  return self:secondary_expression()
 end
 
-function Parser:parse_secondary_expression()
-  local prefixexp = self:parse_prefix_expression()
+function Parser:secondary_expression()
+  local prefixexp = self:prefix_expression()
 
   if prefixexp ~= nil then
     -- prefixexp '.' identifier
@@ -321,20 +321,20 @@ function Parser:parse_secondary_expression()
 
     -- prefixexp '[' exp ']'
     if self:match(TokenType.left_bracket) then
-      local exp = self:parse_expression()
+      local exp = self:expression()
       return AST.MemberExpression.new(prefixexp, exp)
     end
 
     -- prefixexp ':' identifier arglist
     if self:match(TokenType.colon) then
       local identifier_token = self:expect(TokenType.identifier)
-      local args = self:parse_function_arg_list()
+      local args = self:function_arg_list()
       return AST.FunctionCallExpression.new(AST.MemberExpression.new(prefixexp, identifier_token, true), args)
     end
 
     -- prefixexp arglist
     if self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
-      local args = self:parse_function_arg_list()
+      local args = self:function_arg_list()
       return AST.FunctionCallExpression.new(prefixexp, args)
     end
 
@@ -343,12 +343,12 @@ function Parser:parse_secondary_expression()
   end
 end
 
-function Parser:parse_expression_list()
+function Parser:expression_list()
   -- exp {',' exp}
   local explist = {}
 
   repeat
-    local expr = self:parse_expression()
+    local expr = self:expression()
 
     if expr ~= nil then
       table.insert(explist, expr)
@@ -358,7 +358,7 @@ function Parser:parse_expression_list()
   return explist
 end
 
-function Parser:parse_parameter_declaration()
+function Parser:parameter_declaration()
   -- identifier | '...'
   if self:assert(TokenType.identifier, TokenType.triple_dot) then
     local param = self:consume()
@@ -366,14 +366,14 @@ function Parser:parse_parameter_declaration()
   end
 end
 
-function Parser:parse_parameter_list()
+function Parser:parameter_list()
   -- param {',' param} [',' '...']
   -- keep parsing params until we see '...' or there's no ','
   local paramlist = {}
   local param
 
   repeat
-    param = self:parse_parameter_declaration()
+    param = self:parameter_declaration()
     if param ~= nil then
       table.insert(paramlist, param)
     end
@@ -382,13 +382,13 @@ function Parser:parse_parameter_list()
   return paramlist
 end
 
-function Parser:parse_field_declaration()
+function Parser:field_declaration()
   -- '[' exp ']' '=' exp
   if self:match(TokenType.left_bracket) then
-    local key = self:parse_expression()
+    local key = self:expression()
     self:expect(TokenType.right_bracket, "Expected ']' to close '['")
     self:expect(TokenType.equal, "Expected '=' near ']'")
-    local value = self:parse_expression()
+    local value = self:expression()
 
     return AST.FieldDeclaration.new(key, value)
   end
@@ -397,25 +397,25 @@ function Parser:parse_field_declaration()
   if self:peek(1) and self:peek(1).token_type == TokenType.equal then
     local key = self:expect(TokenType.identifier, "Expected identifier to start this field")
     self:consume() -- consumes the equal token, because we asserted it earlier
-    local value = self:parse_expression()
+    local value = self:expression()
 
     return AST.FieldDeclaration.new(key, value)
   end
 
   -- exp
-  local value = self:parse_expression()
+  local value = self:expression()
   if value ~= nil then
     return AST.FieldDeclaration.new(nil, value)
   end
 end
 
-function Parser:parse_field_list()
+function Parser:field_list()
   -- field {(',' | ';') field} [(',' | ';')]
   local fieldlist = {}
   local lastfield
 
   repeat
-    lastfield = self:parse_field_declaration()
+    lastfield = self:field_declaration()
 
     if lastfield ~= nil then
       table.insert(fieldlist, lastfield)
