@@ -13,4 +13,7 @@ return {
   field_declaration = 12,
   binary_op_expression = 13,
   unary_op_expresssion = 14,
+  member_expression = 15,
+  function_call_expression = 16,
+  argument_expression = 17,
 }

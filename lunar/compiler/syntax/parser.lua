@@ -94,6 +94,53 @@ function Parser:parse_last_statement()
   end
 end
 
+function Parser:parse_function_arg()
+  -- exp
+  local exp = self:parse_expression()
+  if exp ~= nil then
+    return AST.ArgumentExpression.new(exp)
+  end
+end
+
+function Parser:parse_function_arg_list()
+  -- '(' arg {',' arg} ')'
+  if self:match(TokenType.left_paren) then
+    local args = {}
+
+    repeat
+      local arg = self:parse_function_arg()
+
+      if arg ~= nil then
+        table.insert(args, arg)
+      end
+    until not self:match(TokenType.comma)
+
+    self:expect(TokenType.right_paren, "Expected ')' to close '('")
+
+    return args
+  end
+
+  -- string | TableLiteralExpression
+  if self:assert(TokenType.string, TokenType.left_brace) then
+    return { self:parse_function_arg() }
+  end
+end
+
+function Parser:parse_prefix_expression()
+  -- '(' exp ')'
+  if self:match(TokenType.left_paren) then
+    local exp = self:parse_expression()
+    self:expect(TokenType.right_paren, "Expected ')' to close '('")
+
+    return exp
+  end
+
+  -- identifier
+  if self:assert(TokenType.identifier) then
+    return AST.MemberExpression.new(self:consume(), nil)
+  end
+end
+
 function Parser:parse_expression()
   return self:parse_logical_or_expression()
 end
@@ -257,6 +304,42 @@ function Parser:parse_primary_expression()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
     return AST.FunctionExpression.new(paramlist, block)
+  end
+
+  return self:parse_secondary_expression()
+end
+
+function Parser:parse_secondary_expression()
+  local prefixexp = self:parse_prefix_expression()
+
+  if prefixexp ~= nil then
+    -- prefixexp '.' identifier
+    if self:match(TokenType.dot) then
+      local identifier_token = self:expect(TokenType.identifier, "Expected identifier after '.'")
+      return AST.MemberExpression.new(prefixexp, identifier_token)
+    end
+
+    -- prefixexp '[' exp ']'
+    if self:match(TokenType.left_bracket) then
+      local exp = self:parse_expression()
+      return AST.MemberExpression.new(prefixexp, exp)
+    end
+
+    -- prefixexp ':' identifier arglist
+    if self:match(TokenType.colon) then
+      local identifier_token = self:expect(TokenType.identifier)
+      local args = self:parse_function_arg_list()
+      return AST.FunctionCallExpression.new(AST.MemberExpression.new(prefixexp, identifier_token, true), args)
+    end
+
+    -- prefixexp arglist
+    if self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
+      local args = self:parse_function_arg_list()
+      return AST.FunctionCallExpression.new(prefixexp, args)
+    end
+
+    -- prefixexp
+    return prefixexp
   end
 end
 

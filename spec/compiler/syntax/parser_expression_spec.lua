@@ -271,6 +271,105 @@ describe("Parser:parse_expression", function()
     end)
   end)
 
+  describe("PrefixExpression syntax", function()
+    it("should return a BinaryOpExpresssion whose left operand is 1 and right operand is right-associative BinaryOpExpression", function()
+      local tokens = Lexer.new("1 + (2 + 3)"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local outer_left_operand = AST.NumberLiteralExpression.new(1)
+      local inner_left_operand = AST.NumberLiteralExpression.new(2)
+      local inner_right_operand = AST.NumberLiteralExpression.new(3)
+      local right_operand = AST.BinaryOpExpression.new(inner_left_operand, AST.BinaryOpKind.addition_op, inner_right_operand)
+
+      assert.same(AST.BinaryOpExpression.new(outer_left_operand, AST.BinaryOpKind.addition_op, right_operand), ast)
+    end)
+
+    it("should return a MemberExpression named hello", function()
+      local tokens = Lexer.new("hello"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      assert.same(AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "hello", 1), nil), ast)
+    end)
+
+    it("should return a left MemberExpression named hello with a right MemberExpression named world", function()
+      local tokens = Lexer.new("hello.world"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local left_member = TokenInfo.new(TokenType.identifier, "hello", 1)
+      local right_member = TokenInfo.new(TokenType.identifier, "world", 7)
+
+      assert.same(AST.MemberExpression.new(AST.MemberExpression.new(left_member, nil), right_member), ast)
+    end)
+
+    it("should return a left MemberExpression named hello with a right MemberExpression of StringLiteralExpression whose value is 'world'", function()
+      local tokens = Lexer.new("hello['world']"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local left_member = TokenInfo.new(TokenType.identifier, "hello", 1)
+      local right_member = AST.StringLiteralExpression.new("'world'")
+
+      assert.same(AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member), ast)
+    end)
+  end)
+
+  describe("SecondaryExpression syntax", function()
+    it("should return a FunctionCallExpression with no arguments", function()
+      local tokens = Lexer.new("hello()"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "hello", 1))
+      local args = {}
+
+      assert.same(AST.FunctionCallExpression.new(member, args), ast)
+    end)
+
+    it("should return a FunctionCallExpression with three NumberLiteralExpression arguments", function()
+      local tokens = Lexer.new("testing(1, 2, 3)"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "testing", 1))
+      local args = {
+        AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(1)),
+        AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(2)),
+        AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(3))
+      }
+
+      assert.same(AST.FunctionCallExpression.new(member, args), ast)
+    end)
+
+    it("should return a FunctionCallExpression with colon syntax", function()
+      local tokens = Lexer.new("very:nice()"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local left_member = TokenInfo.new(TokenType.identifier, "very", 1)
+      local right_member = TokenInfo.new(TokenType.identifier, "nice", 6)
+      local top_member = AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member, true)
+      local args = {}
+
+      assert.same(AST.FunctionCallExpression.new(top_member, args), ast)
+    end)
+
+    it("should return a FunctionCallExpression with a string argument", function()
+      local tokens = Lexer.new("cool'stuff'"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "cool", 1))
+      local args = { AST.ArgumentExpression.new(AST.StringLiteralExpression.new("'stuff'")) }
+
+      assert.same(AST.FunctionCallExpression.new(member, args), ast)
+    end)
+
+    it("should return a FunctionCallExpression with a table argument", function()
+      local tokens = Lexer.new("help{}"):tokenize()
+      local ast = Parser.new(tokens):parse_expression()
+
+      local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "help", 1))
+      local args = { AST.ArgumentExpression.new(AST.TableLiteralExpression.new({})) }
+
+      assert.same(AST.FunctionCallExpression.new(member, args), ast)
+    end)
+  end)
+
   describe("ExpressionList syntax", function()
     it("should return an array of two expression nodes", function()
       local tokens = Lexer.new("1, 2"):tokenize()
