@@ -4,8 +4,8 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 local DoStatement = setmetatable({}, SyntaxNode)
 DoStatement.__index = DoStatement
 
-function DoStatement.new(...)
-  local block = { ... }
+function DoStatement.new(stats)
+  local block = stats
 
   local super = SyntaxNode.new(SyntaxKind.do_statement)
   local self = setmetatable(super, DoStatement)

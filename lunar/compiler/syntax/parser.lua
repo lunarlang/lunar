@@ -78,7 +78,7 @@ function Parser:statement()
     local block = self:block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
 
-    return AST.DoStatement.new(unpack(block))
+    return AST.DoStatement.new(block)
   end
 end
 
