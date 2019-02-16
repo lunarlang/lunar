@@ -11,7 +11,7 @@ return {
   less_than_op = 10,
   less_or_equal_op = 11,
   greater_than_op = 12,
-  greater_or_equal = 13,
+  greater_or_equal_op = 13,
   and_op = 14,
   or_op = 15,
 }
