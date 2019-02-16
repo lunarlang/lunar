@@ -80,6 +80,16 @@ function Parser:statement()
 
     return AST.DoStatement.new(block)
   end
+
+  -- 'while' expr 'do' block 'end'
+  if self:match(TokenType.while_keyword) then
+    local expr = self:expression()
+    self:expect(TokenType.do_keyword, "Expected 'do' to close 'while'")
+    local block = self:block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
+
+    return AST.WhileStatement.new(expr, block)
+  end
 end
 
 function Parser:last_statement()

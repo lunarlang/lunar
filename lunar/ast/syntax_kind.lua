@@ -16,4 +16,5 @@ return {
   member_expression = 15,
   function_call_expression = 16,
   argument_expression = 17,
+  while_statement = 18,
 }
