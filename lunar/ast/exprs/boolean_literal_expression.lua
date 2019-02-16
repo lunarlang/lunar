@@ -1,6 +1,5 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
-local TokenType = require "lunar.compiler.lexical.token_type"
 
 local BooleanLiteralExpression = setmetatable({}, SyntaxNode)
 BooleanLiteralExpression.__index = BooleanLiteralExpression

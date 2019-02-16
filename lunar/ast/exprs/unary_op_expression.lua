@@ -1,6 +1,5 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
-local TokenType = require "lunar.compiler.lexical.token_type"
 
 local UnaryOpExpression = setmetatable({}, SyntaxNode)
 UnaryOpExpression.__index = UnaryOpExpression
