@@ -16,13 +16,14 @@ The Lua 5.1 superset programming language.
   - interoperate with Lua, both ways. Code written in Lunar should be as easy to use in Lua.
 
 ## Getting Started
-### Prerequisites
-You will need Lua 5.1 runtime, [luarocks][LuaRocks] (lua package manager), and [busted][Busted] (unit testing framework). On some installs of Lua, you might not have `./?.lua` in your `LUA_PATH`. Configure your system environment variables and append `;./?.lua` into `LUA_PATH`.
+Lunar is written for Lua 5.1, therefore you need the Lua 5.1 runtime. On some installs of Lua, you might not have `./?.lua` and `./?/init.lua` in your `LUA_PATH`. Configure your system environment variables and append `;./?.lua;./?/init.lua` into `LUA_PATH`.
+
+### Prerequisites for development
+You will need [luarocks][LuaRocks] (lua package manager), and [busted][Busted] (unit testing framework).
 ```
 $ git clone https://github.com/lunarlang/lunar
 $ luarocks install busted
 $ cd ./lunar # the root folder, not the lunar source code folder.
 ```
 
-### Running Tests
-Just run `busted` with the root directory of this repository as the current working directory.
+To run tests and verify everything's in working order, just run `busted` with the root directory of this repository as the current working directory.
