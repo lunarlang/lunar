@@ -37,7 +37,14 @@ function Parser.new(tokens)
 end
 
 function Parser:parse()
-  return self:block()
+  local block = self:block()
+
+  if not self:is_finished() then
+    local weird_token = self:peek()
+    error(("Unexpected token '%s' at %d"):format(weird_token.value, weird_token.position))
+  end
+
+  return block
 end
 
 function Parser:block()
