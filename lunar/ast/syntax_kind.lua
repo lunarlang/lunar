@@ -21,4 +21,5 @@ return {
   if_statement = 20,
   range_for_statement = 21,
   generic_for_statement = 22,
+  function_statement = 23,
 }

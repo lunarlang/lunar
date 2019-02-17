@@ -164,6 +164,30 @@ function Parser:statement()
       return AST.GenericForStatement.new(identifiers, exprlist, block)
     end
   end
+
+  -- 'function' identifier {'.' identifier} [':' identifier] '(' [paramlist] ')' block 'end'
+  if self:match(TokenType.function_keyword) then
+    local first_identifier = self:expect(TokenType.identifier, "Expected identifier after 'function'")
+    local member_expr = AST.MemberExpression.new(first_identifier)
+
+    while self:match(TokenType.dot) do
+      local identifier = self:expect(TokenType.identifier, "Expected identifier after '.'")
+      member_expr = AST.MemberExpression.new(member_expr, identifier)
+    end
+
+    if self:match(TokenType.colon) then
+      local identifier = self:expect(TokenType.identifier, "Expected identifier after ':'")
+      member_expr = AST.MemberExpression.new(member_expr, identifier, true)
+    end
+
+    self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
+    local paramlist = self:parameter_list()
+    self:expect(TokenType.right_paren, "Expected ')' to close '('")
+    local block = self:block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
+
+    return AST.FunctionStatement.new(member_expr, paramlist, block)
+  end
 end
 
 function Parser:last_statement()
