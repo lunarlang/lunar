@@ -32,4 +32,13 @@ describe("FunctionStatement syntax", function()
       AST.FunctionStatement.new(top_member_expr, {}, {})
     }, result)
   end)
+
+  it("should return a FunctionStatement node whose definition was local", function()
+    local tokens = Lexer.new("local function test() end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.FunctionStatement.new("test", {}, {}, true)
+    }, result)
+  end)
 end)

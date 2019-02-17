@@ -188,6 +188,21 @@ function Parser:statement()
 
     return AST.FunctionStatement.new(member_expr, paramlist, block)
   end
+
+  -- 'local'
+  if self:match(TokenType.local_keyword) then
+    -- 'function' identifier '(' [paramlist] ')' block 'end'
+    if self:match(TokenType.function_keyword) then
+      local name = self:expect(TokenType.identifier, "Expected identifier after 'function'")
+      self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
+      local paramlist = self:parameter_list()
+      self:expect(TokenType.right_paren, "Expected ')' to close '('")
+      local block = self:block()
+      self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
+
+      return AST.FunctionStatement.new(name.value, paramlist, block, true)
+    end
+  end
 end
 
 function Parser:last_statement()
