@@ -6,6 +6,7 @@ return {
   RangeForStatement = require "lunar.ast.stats.range_for_statement",
   GenericForStatement = require "lunar.ast.stats.generic_for_statement",
   FunctionStatement = require "lunar.ast.stats.function_statement",
+  VariableStatement = require "lunar.ast.stats.variable_statement",
   BreakStatement = require "lunar.ast.stats.break_statement",
   ReturnStatement = require "lunar.ast.stats.return_statement",
   BinaryOpExpression = require "lunar.ast.exprs.binary_op_expression",

@@ -202,6 +202,23 @@ function Parser:statement()
 
       return AST.FunctionStatement.new(name.value, paramlist, block, true)
     end
+
+    -- identifier {',' identifier} ['=' exprlist]
+    if self:assert(TokenType.identifier) then
+      local first_identifier = self:consume()
+      local namelist = { first_identifier.value }
+      local exprlist
+
+      while self:match(TokenType.comma) do
+        table.insert(namelist, self:expect(TokenType.identifier, "Expected identifier after ','").value)
+      end
+
+      if self:match(TokenType.equal) then
+        exprlist = self:expression_list()
+      end
+
+      return AST.VariableStatement.new(namelist, exprlist)
+    end
   end
 end
 
