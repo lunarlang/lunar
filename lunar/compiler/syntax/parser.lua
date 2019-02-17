@@ -99,6 +99,30 @@ function Parser:statement()
 
     return AST.RepeatUntilStatement.new(block, expr)
   end
+
+  -- 'if' expr 'then' block {'elseif' expr 'then' block} ['else' block] 'end'
+  if self:match(TokenType.if_keyword) then
+    local expr = self:expression()
+    self:expect(TokenType.then_keyword, "Expected 'then' to close 'if'")
+    local block = self:block()
+    local if_statement = AST.IfStatement.new(expr, block)
+
+    while self:match(TokenType.elseif_keyword) do
+      local expr = self:expression()
+      self:expect(TokenType.then_keyword, "Expected 'then' to close 'elseif'")
+      local block = self:block()
+
+      if_statement:push_elseif(AST.IfStatement.new(expr, block))
+    end
+
+    if self:match(TokenType.else_keyword) then
+      local block = self:block()
+      if_statement:set_else(AST.IfStatement.new(nil, block))
+    end
+
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'if'")
+    return if_statement
+  end
 end
 
 function Parser:last_statement()

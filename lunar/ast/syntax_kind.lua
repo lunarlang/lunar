@@ -18,4 +18,5 @@ return {
   argument_expression = 17,
   while_statement = 18,
   repeat_until_statement = 19,
+  if_statement = 20,
 }
