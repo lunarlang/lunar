@@ -29,8 +29,8 @@ function Parser.new(tokens)
   }
 
   self.unary_op_map = {
-    ["not"] = AST.UnaryOpKind.not_op,
     ["-"] = AST.UnaryOpKind.negative_op,
+    ["not"] = AST.UnaryOpKind.not_op,
     ["#"] = AST.UnaryOpKind.length_op,
   }
 
