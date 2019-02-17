@@ -19,4 +19,6 @@ return {
   while_statement = 18,
   repeat_until_statement = 19,
   if_statement = 20,
+  range_for_statement = 21,
+  generic_for_statement = 22,
 }

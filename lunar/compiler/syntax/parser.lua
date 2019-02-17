@@ -123,6 +123,47 @@ function Parser:statement()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'if'")
     return if_statement
   end
+
+  -- 'for' identifier
+  if self:match(TokenType.for_keyword) and self:assert(TokenType.identifier) then
+    local first_identifier = self:consume()
+
+    -- '=' expr ',' expr [',' expr] 'do' block 'end'
+    if self:match(TokenType.equal) then
+      local start_expr = self:expression()
+      self:expect(TokenType.comma, "Expected ',' after first expression")
+      local end_expr = self:expression()
+
+      local incremental_expr
+      if self:match(TokenType.comma) then
+        incremental_expr = self:expression()
+      end
+
+      self:expect(TokenType.do_keyword, "Expected 'do' to close 'for'")
+      local block = self:block()
+      self:expect(TokenType.end_keyword, "Expected 'end' to close 'for'")
+
+      return AST.RangeForStatement.new(first_identifier, start_expr, end_expr, incremental_expr, block)
+    end
+
+    -- {',' identifier} 'in' exprlist 'do' block 'end'
+    if self:assert(TokenType.comma, TokenType.in_keyword) then
+      local identifiers = { first_identifier }
+
+      while self:match(TokenType.comma) do
+        local identifier = self:expect(TokenType.identifier, "Expected identifier after ','")
+        table.insert(identifiers, identifier)
+      end
+
+      self:expect(TokenType.in_keyword, "Expected 'in' after namelist")
+      local exprlist = self:expression_list()
+      self:expect(TokenType.do_keyword, "Expected 'do' to close 'for'")
+      local block = self:block()
+      self:expect(TokenType.end_keyword, "Expected 'end' to close 'for'")
+
+      return AST.GenericForStatement.new(identifiers, exprlist, block)
+    end
+  end
 end
 
 function Parser:last_statement()
