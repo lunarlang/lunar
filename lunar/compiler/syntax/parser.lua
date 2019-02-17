@@ -90,6 +90,15 @@ function Parser:statement()
 
     return AST.WhileStatement.new(expr, block)
   end
+
+  -- 'repeat' block 'until' expr
+  if self:match(TokenType.repeat_keyword) then
+    local block = self:block()
+    self:expect(TokenType.until_keyword, "Expected 'until' to close 'repeat'")
+    local expr = self:expression()
+
+    return AST.RepeatUntilStatement.new(block, expr)
+  end
 end
 
 function Parser:last_statement()

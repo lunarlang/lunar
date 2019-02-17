@@ -1,6 +1,7 @@
 return {
   DoStatement = require "lunar.ast.stats.do_statement",
   WhileStatement = require "lunar.ast.stats.while_statement",
+  RepeatUntilStatement = require "lunar.ast.stats.repeat_until_statement",
   BreakStatement = require "lunar.ast.stats.break_statement",
   ReturnStatement = require "lunar.ast.stats.return_statement",
   BinaryOpExpression = require "lunar.ast.exprs.binary_op_expression",

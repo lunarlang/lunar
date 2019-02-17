@@ -17,4 +17,5 @@ return {
   function_call_expression = 16,
   argument_expression = 17,
   while_statement = 18,
+  repeat_until_statement = 19,
 }
