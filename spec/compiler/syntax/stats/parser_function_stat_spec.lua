@@ -9,10 +9,10 @@ describe("FunctionStatement syntax", function()
     local tokens = Lexer.new("function test(a, b) end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_name = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "test", 10))
+    local expected_name = AST.MemberExpression.new("test")
     local expected_params = {
-      AST.ParameterDeclaration.new('a'),
-      AST.ParameterDeclaration.new('b')
+      AST.ParameterDeclaration.new("a"),
+      AST.ParameterDeclaration.new("b")
     }
 
     assert.same({
@@ -24,9 +24,9 @@ describe("FunctionStatement syntax", function()
     local tokens = Lexer.new("function a.b:c() end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local root_member_expr = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "a", 10))
-    local middle_member_expr = AST.MemberExpression.new(root_member_expr, TokenInfo.new(TokenType.identifier, "b", 12))
-    local top_member_expr = AST.MemberExpression.new(middle_member_expr, TokenInfo.new(TokenType.identifier, "c", 14), true)
+    local root_member_expr = AST.MemberExpression.new("a")
+    local middle_member_expr = AST.MemberExpression.new(root_member_expr, "b")
+    local top_member_expr = AST.MemberExpression.new(middle_member_expr, "c", true)
 
     assert.same({
       AST.FunctionStatement.new(top_member_expr, {}, {})

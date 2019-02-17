@@ -9,7 +9,7 @@ describe("SecondaryExpression syntax", function()
     local tokens = Lexer.new("hello()"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "hello", 1))
+    local member = AST.MemberExpression.new("hello")
     local args = {}
 
     assert.same(AST.FunctionCallExpression.new(member, args), result)
@@ -19,7 +19,7 @@ describe("SecondaryExpression syntax", function()
     local tokens = Lexer.new("testing(1, 2, 3)"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "testing", 1))
+    local member = AST.MemberExpression.new("testing")
     local args = {
       AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(1)),
       AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(2)),
@@ -33,10 +33,9 @@ describe("SecondaryExpression syntax", function()
     local tokens = Lexer.new("thank['you'](kanye)"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local left_member = TokenInfo.new(TokenType.identifier, "thank", 1)
     local right_member = AST.StringLiteralExpression.new("'you'")
-    local top_member = AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member)
-    local args = { AST.ArgumentExpression.new(AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "kanye", 14))) }
+    local top_member = AST.MemberExpression.new(AST.MemberExpression.new("thank"), right_member)
+    local args = { AST.ArgumentExpression.new(AST.MemberExpression.new("kanye")) }
 
     assert.same(AST.FunctionCallExpression.new(top_member, args), result)
   end)
@@ -45,9 +44,7 @@ describe("SecondaryExpression syntax", function()
     local tokens = Lexer.new("very.cool()"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local left_member = TokenInfo.new(TokenType.identifier, "very", 1)
-    local right_member = TokenInfo.new(TokenType.identifier, "cool", 6)
-    local top_member = AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member)
+    local top_member = AST.MemberExpression.new(AST.MemberExpression.new("very"), "cool")
     local args = {}
 
     assert.same(AST.FunctionCallExpression.new(top_member, args), result)
@@ -57,9 +54,7 @@ describe("SecondaryExpression syntax", function()
     local tokens = Lexer.new("very:nice()"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local left_member = TokenInfo.new(TokenType.identifier, "very", 1)
-    local right_member = TokenInfo.new(TokenType.identifier, "nice", 6)
-    local top_member = AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member, true)
+    local top_member = AST.MemberExpression.new(AST.MemberExpression.new("very"), "nice", true)
     local args = {}
 
     assert.same(AST.FunctionCallExpression.new(top_member, args), result)
@@ -69,7 +64,7 @@ describe("SecondaryExpression syntax", function()
     local tokens = Lexer.new("cool'stuff'"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "cool", 1))
+    local member = AST.MemberExpression.new("cool")
     local args = { AST.ArgumentExpression.new(AST.StringLiteralExpression.new("'stuff'")) }
 
     assert.same(AST.FunctionCallExpression.new(member, args), result)
@@ -79,7 +74,7 @@ describe("SecondaryExpression syntax", function()
     local tokens = Lexer.new("help{}"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local member = AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "help", 1))
+    local member = AST.MemberExpression.new("help")
     local args = { AST.ArgumentExpression.new(AST.TableLiteralExpression.new({})) }
 
     assert.same(AST.FunctionCallExpression.new(member, args), result)

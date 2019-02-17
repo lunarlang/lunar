@@ -11,7 +11,7 @@ describe("RangeForStatement syntax", function()
 
     assert.same({
       AST.RangeForStatement.new(
-        TokenInfo.new(TokenType.identifier, "i", 5),
+        "i",
         AST.NumberLiteralExpression.new(1),
         AST.NumberLiteralExpression.new(2),
         nil,
@@ -26,7 +26,7 @@ describe("RangeForStatement syntax", function()
 
     assert.same({
       AST.RangeForStatement.new(
-        TokenInfo.new(TokenType.identifier, "i", 5),
+        "i",
         AST.NumberLiteralExpression.new(1),
         AST.NumberLiteralExpression.new(2),
         AST.NumberLiteralExpression.new(3),

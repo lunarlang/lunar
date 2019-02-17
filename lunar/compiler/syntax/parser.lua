@@ -143,16 +143,16 @@ function Parser:statement()
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'for'")
 
-      return AST.RangeForStatement.new(first_identifier, start_expr, end_expr, incremental_expr, block)
+      return AST.RangeForStatement.new(first_identifier.value, start_expr, end_expr, incremental_expr, block)
     end
 
     -- {',' identifier} 'in' exprlist 'do' block 'end'
     if self:assert(TokenType.comma, TokenType.in_keyword) then
-      local identifiers = { first_identifier }
+      local identifiers = { first_identifier.value }
 
       while self:match(TokenType.comma) do
         local identifier = self:expect(TokenType.identifier, "Expected identifier after ','")
-        table.insert(identifiers, identifier)
+        table.insert(identifiers, identifier.value)
       end
 
       self:expect(TokenType.in_keyword, "Expected 'in' after namelist")
@@ -168,16 +168,16 @@ function Parser:statement()
   -- 'function' identifier {'.' identifier} [':' identifier] '(' [paramlist] ')' block 'end'
   if self:match(TokenType.function_keyword) then
     local first_identifier = self:expect(TokenType.identifier, "Expected identifier after 'function'")
-    local member_expr = AST.MemberExpression.new(first_identifier)
+    local member_expr = AST.MemberExpression.new(first_identifier.value)
 
     while self:match(TokenType.dot) do
       local identifier = self:expect(TokenType.identifier, "Expected identifier after '.'")
-      member_expr = AST.MemberExpression.new(member_expr, identifier)
+      member_expr = AST.MemberExpression.new(member_expr, identifier.value)
     end
 
     if self:match(TokenType.colon) then
       local identifier = self:expect(TokenType.identifier, "Expected identifier after ':'")
-      member_expr = AST.MemberExpression.new(member_expr, identifier, true)
+      member_expr = AST.MemberExpression.new(member_expr, identifier.value, true)
     end
 
     self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
@@ -267,7 +267,8 @@ function Parser:prefix_expression()
 
   -- identifier
   if self:assert(TokenType.identifier) then
-    return AST.MemberExpression.new(self:consume(), nil)
+    local identifier = self:consume()
+    return AST.MemberExpression.new(identifier.value, nil)
   end
 end
 
@@ -281,7 +282,7 @@ function Parser:primary_expression()
   while true do
     if self:match(TokenType.dot) then
       local identifier = self:expect(TokenType.identifier, "Expected identifier after '.'")
-      expr = AST.MemberExpression.new(expr, identifier)
+      expr = AST.MemberExpression.new(expr, identifier.value)
     elseif self:match(TokenType.left_bracket) then
       local inner_expr = self:expression()
       self:expect(TokenType.right_bracket, "Expected ']' to close '['")
@@ -289,7 +290,7 @@ function Parser:primary_expression()
     elseif self:match(TokenType.colon) then
       local identifier = self:expect(TokenType.identifier, "Expected identifier after ':'")
       local args = self:function_arg_list()
-      expr = AST.FunctionCallExpression.new(AST.MemberExpression.new(expr, identifier, true), args)
+      expr = AST.FunctionCallExpression.new(AST.MemberExpression.new(expr, identifier.value, true), args)
     elseif self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
       local args = self:function_arg_list()
       expr = AST.FunctionCallExpression.new(expr, args)

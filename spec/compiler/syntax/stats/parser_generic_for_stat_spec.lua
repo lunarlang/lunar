@@ -9,9 +9,9 @@ describe("GenericForStatement syntax", function()
     local tokens = Lexer.new("for i in pairs() do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_identifiers = { TokenInfo.new(TokenType.identifier, "i", 5) }
+    local expected_identifiers = { "i" }
     local expected_exprlist = {
-      AST.FunctionCallExpression.new(AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "pairs", 10)), {})
+      AST.FunctionCallExpression.new(AST.MemberExpression.new("pairs"), {})
     }
 
     assert.same({
@@ -23,12 +23,9 @@ describe("GenericForStatement syntax", function()
     local tokens = Lexer.new("for i, v in pairs() do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_identifiers = {
-      TokenInfo.new(TokenType.identifier, "i", 5),
-      TokenInfo.new(TokenType.identifier, "v", 8)
-    }
+    local expected_identifiers = { "i", "v" }
     local expected_exprlist = {
-      AST.FunctionCallExpression.new(AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "pairs", 13)), {})
+      AST.FunctionCallExpression.new(AST.MemberExpression.new("pairs"), {})
     }
 
     assert.same({
@@ -40,13 +37,10 @@ describe("GenericForStatement syntax", function()
     local tokens = Lexer.new("for i, v in next, t do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_identifiers = {
-      TokenInfo.new(TokenType.identifier, "i", 5),
-      TokenInfo.new(TokenType.identifier, "v", 8)
-    }
+    local expected_identifiers = { "i", "v" }
     local expected_exprlist = {
-      AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "next", 13)),
-      AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "t", 19))
+      AST.MemberExpression.new("next"),
+      AST.MemberExpression.new("t")
     }
 
     assert.same({

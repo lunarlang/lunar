@@ -21,26 +21,22 @@ describe("PrefixExpression syntax", function()
     local tokens = Lexer.new("hello"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.MemberExpression.new(TokenInfo.new(TokenType.identifier, "hello", 1)), result)
+    assert.same(AST.MemberExpression.new("hello"), result)
   end)
 
   it("should return a left MemberExpression named hello with a right MemberExpression named world", function()
     local tokens = Lexer.new("hello.world"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local left_member = TokenInfo.new(TokenType.identifier, "hello", 1)
-    local right_member = TokenInfo.new(TokenType.identifier, "world", 7)
-
-    assert.same(AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member), result)
+    assert.same(AST.MemberExpression.new(AST.MemberExpression.new("hello"), "world"), result)
   end)
 
   it("should return a left MemberExpression named hello with a right MemberExpression of StringLiteralExpression whose value is 'world'", function()
     local tokens = Lexer.new("hello['world']"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local left_member = TokenInfo.new(TokenType.identifier, "hello", 1)
     local right_member = AST.StringLiteralExpression.new("'world'")
 
-    assert.same(AST.MemberExpression.new(AST.MemberExpression.new(left_member), right_member), result)
+    assert.same(AST.MemberExpression.new(AST.MemberExpression.new("hello"), right_member), result)
   end)
 end)
