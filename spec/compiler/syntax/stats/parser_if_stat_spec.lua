@@ -25,7 +25,7 @@ describe("IfStatement syntax", function()
     }, result)
   end)
 
-  it("should return one IfStatement node with one elseif branch and an else branch #prob", function()
+  it("should return one IfStatement node with one elseif branch and an else branch", function()
     local tokens = Lexer.new("if false then elseif false then else end"):tokenize()
     local result = Parser.new(tokens):parse()
 
