@@ -1,6 +1,7 @@
 local AST = require "lunar.ast"
 local BaseParser = require "lunar.compiler.syntax.base_parser"
 local TokenType = require "lunar.compiler.lexical.token_type"
+local SyntaxKind = require "lunar.ast.syntax_kind"
 
 local Parser = setmetatable({}, BaseParser)
 Parser.__index = Parser
@@ -73,6 +74,33 @@ function Parser:block()
 end
 
 function Parser:statement()
+  local primaryexpr = self:primary_expression()
+  if primaryexpr ~= nil then
+    -- immediately return this if it is a FunctionCallExpression as an ExpressionStatement
+    if primaryexpr.syntax_kind == SyntaxKind.function_call_expression then
+      return AST.ExpressionStatement.new(primaryexpr)
+    elseif primaryexpr.syntax_kind == SyntaxKind.member_expression then
+      local members = { primaryexpr }
+
+      while self:match(TokenType.comma) do
+        local expr = self:primary_expression()
+        if expr and expr.syntax_kind == SyntaxKind.member_expression then
+          table.insert(members, expr)
+        else
+          return nil
+        end
+      end
+
+      self:expect(TokenType.equal, "Expected '=' to follow this member")
+      local exprs = self:expression_list()
+
+      return AST.AssignmentStatement.new(members, exprs)
+    else
+      -- no other cases are allowed from primary_expression, so we bail out and let the error bubble up
+      return nil
+    end
+  end
+
   -- 'do' block 'end'
   if self:match(TokenType.do_keyword) then
     local block = self:block()

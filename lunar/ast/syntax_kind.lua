@@ -23,4 +23,6 @@ return {
   generic_for_statement = 22,
   function_statement = 23,
   variable_statement = 24,
+  expression_statement = 25,
+  assignment_statement = 26,
 }
