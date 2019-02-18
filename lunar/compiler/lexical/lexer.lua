@@ -165,6 +165,12 @@ function Lexer:next_string()
     local buffer = ""
     local escaping
 
+    -- immediately return in cases of empty strings
+    if self:match(delimit) then
+      self.position = old_pos
+      return TokenInfo.new(TokenType.string, delimit .. delimit, self.position)
+    end
+
     repeat
       local trivia_token = self:next_of(self.trivias)
 

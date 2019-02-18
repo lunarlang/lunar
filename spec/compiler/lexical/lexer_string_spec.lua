@@ -3,6 +3,14 @@ local TokenInfo = require "lunar.compiler.lexical.token_info"
 local TokenType = require "lunar.compiler.lexical.token_type"
 
 describe("Lexer:next_string", function()
+  it("should return a string token whose value is empty", function()
+    local tokens = Lexer.new("''"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "''", 1)
+    }, tokens)
+  end)
+
   it("should return a string token using single quotes", function()
     local tokens = Lexer.new("'Hello, world!'"):tokenize()
 
