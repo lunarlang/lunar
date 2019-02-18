@@ -167,4 +167,18 @@ describe("BinaryOpExpression syntax", function()
 
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
+
+  it("should return a BinaryOpExpression node whose operands are BinaryOpExpression and operator is and_op", function()
+    local tokens = Lexer.new("true == true and false == false"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local eq_op = AST.BinaryOpKind.equal_op
+    local true_expr = AST.BooleanLiteralExpression.new(true)
+    local false_expr = AST.BooleanLiteralExpression.new(false)
+
+    local left_operand = AST.BinaryOpExpression.new(true_expr, eq_op, true_expr)
+    local right_operand = AST.BinaryOpExpression.new(false_expr, eq_op, false_expr)
+
+    assert.same(AST.BinaryOpExpression.new(left_operand, AST.BinaryOpKind.and_op, right_operand), result)
+  end)
 end)

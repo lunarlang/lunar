@@ -406,7 +406,7 @@ function Parser:get_unary_op()
   }
 
   if self:assert(unpack(ops)) then
-    local op = self:consume()
+    local op = self:peek()
     return self.unary_op_map[op.value]
   end
 end
@@ -431,7 +431,7 @@ function Parser:get_binary_op()
   }
 
   if self:assert(unpack(ops)) then
-    local op = self:consume()
+    local op = self:peek()
     return self.binary_op_map[op.value]
   end
 end
@@ -455,6 +455,7 @@ function Parser:sub_expression(limit)
 
   local unary_op = self:get_unary_op()
   if unary_op ~= nil then
+    self:consume()
     expr = AST.UnaryOpExpression.new(unary_op, self:sub_expression(unary_priority))
   else
     expr = self:simple_expression()
@@ -463,6 +464,7 @@ function Parser:sub_expression(limit)
   local binary_op = self:get_binary_op()
   -- if binary_op is not nil and left priority of this binary_op is greater than current limit
   while binary_op ~= nil and priority[binary_op][1] > limit do
+    self:consume()
     -- parse a new sub_expression with the right priority of this binary_op
     local next_expr = self:sub_expression(priority[binary_op][2])
     expr = AST.BinaryOpExpression.new(expr, binary_op, next_expr)
