@@ -400,8 +400,8 @@ end
 -- https://github.com/lua/lua/blob/98194db4295726069137d13b8d24fca8cbf892b6/lparser.c#L778-L853
 function Parser:get_unary_op()
   local ops = {
-    TokenType.not_keyword,
     TokenType.minus,
+    TokenType.not_keyword,
     TokenType.pound,
   }
 
