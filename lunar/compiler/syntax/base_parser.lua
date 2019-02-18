@@ -12,14 +12,17 @@ BaseParser.__index = BaseParser
 
 function BaseParser.new(tokens)
   local self = setmetatable({}, BaseParser)
-  self.tokens = tokens
   self.position = 1
 
-  for index, token in pairs(self.tokens) do
-    if should_skip_token(token) then
-      table.remove(self.tokens, index)
+  local filtered_tokens = {}
+
+  for index, token in pairs(tokens) do
+    if not should_skip_token(token) then
+      table.insert(filtered_tokens, token)
     end
   end
+
+  self.tokens = filtered_tokens
 
   return self
 end
