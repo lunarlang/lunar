@@ -49,8 +49,8 @@ describe("WhileStatement transpilation", function()
     assert.spy(hello.world).was.called_with(hello, true)
   end)
 
-  it("should support calling a function using bracket notation with no arguments", function()
-    local input = "hello['world']()"
+  it("should support calling a function using bracket notation with a number argument", function()
+    local input = "hello['world'](1)"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
@@ -62,5 +62,6 @@ describe("WhileStatement transpilation", function()
     local env = Environment.new(result, { hello = hello }):run()
 
     assert.spy(hello['world']).was.called()
+    assert.spy(hello['world']).was.called_with(1)
   end)
 end)

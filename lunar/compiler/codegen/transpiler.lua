@@ -14,6 +14,7 @@ function Transpiler.new(ast)
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
 
     -- exprs
+    [SyntaxKind.number_literal_expression] = self.visit_number_literal_expression,
     [SyntaxKind.boolean_literal_expression] = self.visit_boolean_literal_expression,
     [SyntaxKind.string_literal_expression] = self.visit_string_literal_expression,
     [SyntaxKind.function_call_expression] = self.visit_function_call_expression,
@@ -68,6 +69,10 @@ end
 
 function Transpiler:visit_expression_statement(stat)
   return self:visit_node(stat.expr)
+end
+
+function Transpiler:visit_number_literal_expression(expr)
+  return tostring(expr.value)
 end
 
 function Transpiler:visit_boolean_literal_expression(expr)
