@@ -11,6 +11,7 @@ function Transpiler.new(ast)
   self.visitors = {
     -- stats
     [SyntaxKind.while_statement] = self.visit_while_statement,
+    [SyntaxKind.break_statement] = self.visit_break_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
 
     -- exprs
@@ -65,6 +66,10 @@ function Transpiler:visit_while_statement(stat)
   return "while " .. self:visit_node(stat.expr) .. " do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
+end
+
+function Transpiler:visit_break_statement(stat)
+  return "break"
 end
 
 function Transpiler:visit_expression_statement(stat)
