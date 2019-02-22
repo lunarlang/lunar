@@ -1,8 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("VariableStatement syntax", function()
+  require_dev()
+
   it("should return one VariableSyntax node with two names and two expressions", function()
     local tokens = Lexer.new("local a, b = 1, 2"):tokenize()
     local result = Parser.new(tokens):parse()

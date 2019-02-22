@@ -1,8 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("UnaryOpExpression syntax", function()
+  require_dev()
+
   it("should return an UnaryOpExpression node whose operand is BooleanLiteralExpression and operator is not_op", function()
     local tokens = Lexer.new("not false"):tokenize()
     local result = Parser.new(tokens):expression()

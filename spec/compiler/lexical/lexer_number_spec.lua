@@ -1,8 +1,8 @@
-local Lexer = require "lunar.compiler.lexical.lexer"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
-local TokenType = require "lunar.compiler.lexical.token_type"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("Lexer:next_number", function()
+  require_dev()
+
   local function number_equals(input)
     return function()
       local tokens = Lexer.new(input):tokenize()

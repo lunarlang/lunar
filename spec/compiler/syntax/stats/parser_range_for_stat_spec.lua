@@ -1,10 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
-local TokenType = require "lunar.compiler.lexical.token_type"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("RangeForStatement syntax", function()
+  require_dev()
+
   it("should return one RangeForStatement node with two expressions", function()
     local tokens = Lexer.new("for i = 1, 2 do end"):tokenize()
     local result = Parser.new(tokens):parse()

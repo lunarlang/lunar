@@ -1,8 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("AssignmentStatement syntax", function()
+  require_dev()
+
   it("should return one AssignmentStatement with one MemberExpression and one expression", function()
     local tokens = Lexer.new("hello = 1"):tokenize()
     local result = Parser.new(tokens):parse()

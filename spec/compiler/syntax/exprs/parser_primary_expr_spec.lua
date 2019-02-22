@@ -1,10 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
-local TokenType = require "lunar.compiler.lexical.token_type"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("SecondaryExpression syntax", function()
+  require_dev()
+
   it("should return a FunctionCallExpression with no arguments", function()
     local tokens = Lexer.new("hello()"):tokenize()
     local result = Parser.new(tokens):expression()

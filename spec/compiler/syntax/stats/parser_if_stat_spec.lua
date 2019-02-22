@@ -1,8 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("IfStatement syntax", function()
+  require_dev()
+
   it("should return one IfStatement node", function()
     local tokens = Lexer.new("if true then end"):tokenize()
     local result = Parser.new(tokens):parse()

@@ -1,10 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
-local TokenType = require "lunar.compiler.lexical.token_type"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("GenericForStatement syntax", function()
+  require_dev()
+
   it("should return one GenericForStatement node with one identifier and one expression", function()
     local tokens = Lexer.new("for i in pairs() do end"):tokenize()
     local result = Parser.new(tokens):parse()

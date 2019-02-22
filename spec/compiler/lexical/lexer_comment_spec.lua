@@ -1,8 +1,8 @@
-local Lexer = require "lunar.compiler.lexical.lexer"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
-local TokenType = require "lunar.compiler.lexical.token_type"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("Lexer:next_comment", function()
+  require_dev()
+
   it("should return one comment token", function()
     local tokens = Lexer.new("-- Hello, world!"):tokenize()
 

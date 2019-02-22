@@ -1,10 +1,8 @@
-local AST = require "lunar.ast"
-local Lexer = require "lunar.compiler.lexical.lexer"
-local Parser = require "lunar.compiler.syntax.parser"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
-local TokenType = require "lunar.compiler.lexical.token_type"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("PrefixExpression syntax", function()
+  require_dev()
+
   it("should return a BinaryOpExpression whose left operand is 1 and right operand is right-associative BinaryOpExpression", function()
     local tokens = Lexer.new("1 + (2 + 3)"):tokenize()
     local result = Parser.new(tokens):expression()

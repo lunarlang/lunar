@@ -1,8 +1,10 @@
-local Lexer = require "lunar.compiler.lexical.lexer"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
+local require_dev = require "spec.helpers.require_dev"
+-- setup handler is called too late, so we need to require this early
 local TokenType = require "lunar.compiler.lexical.token_type"
 
 describe("Lexer:next_keyword", function()
+  require_dev()
+
   local function keyword_equals(keyword, token_type)
     return function()
       local tokens = Lexer.new(keyword):tokenize()

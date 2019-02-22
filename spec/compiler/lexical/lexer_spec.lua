@@ -1,8 +1,8 @@
-local Lexer = require "lunar.compiler.lexical.lexer"
-local TokenInfo = require "lunar.compiler.lexical.token_info"
-local TokenType = require "lunar.compiler.lexical.token_type"
+local require_dev = require "spec.helpers.require_dev"
 
 describe("Lexer:tokenize", function()
+  require_dev()
+
   it("should match with the pattern of a typical local function declaration", function()
     local code = "local function a(b)\n" ..
       "  return b\n" ..
