@@ -10,6 +10,7 @@ function Transpiler.new(ast)
   self.ast = ast
   self.visitors = {
     -- stats
+    [SyntaxKind.do_statement] = self.visit_do_statement,
     [SyntaxKind.while_statement] = self.visit_while_statement,
     [SyntaxKind.break_statement] = self.visit_break_statement,
     [SyntaxKind.return_statement] = self.visit_return_statement,
@@ -71,6 +72,12 @@ function Transpiler:visit_exprlist(exprlist)
   end
 
   return table.concat(out, ", ")
+end
+
+function Transpiler:visit_do_statement(stat)
+  return "do\n" ..
+    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
+    "end"
 end
 
 function Transpiler:visit_while_statement(stat)
