@@ -69,7 +69,7 @@ describe("LiteralExpression syntax", function()
   end)
 
   it("should return one LambdaExpression node with two arguments and does not implicitly return", function()
-    local tokens = Lexer.new("do |a, b| return a + b end"):tokenize()
+    local tokens = Lexer.new("|a, b| do return a + b end"):tokenize()
     local result = Parser.new(tokens):expression()
 
     local expected_params = {

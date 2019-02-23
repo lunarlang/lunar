@@ -88,7 +88,7 @@ describe("FunctionStatement transpilation", function()
   end)
 
   it("should support lambda expresssions that has parameters and does not implicitly return", function()
-    local input = "return do |a, b| return a + b end"
+    local input = "return |a, b| do return a + b end"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()

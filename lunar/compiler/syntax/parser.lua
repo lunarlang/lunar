@@ -418,25 +418,27 @@ function Parser:simple_expression()
     return AST.FunctionExpression.new(paramlist, block)
   end
 
-  -- 'do' ['|' paramlist '|'] block 'end' | '|' [paramlist] '|' expr
-  if self:match(TokenType.do_keyword) then
-    local params = {}
+  -- ['|' paramlist '|'] 'do' block 'end | '|' [paramlist] '|' expr
+  if self:match(TokenType.bar) then
+    local params = self:parameter_list()
+    self:expect(TokenType.bar, "Expected '|' to close '|'")
 
-    if self:match(TokenType.bar) then
-      params = self:parameter_list()
-      self:expect(TokenType.bar, "Expected '|' to close '|' near 'do'")
+    -- need to make sure this doesn't return another lambda!
+    if self:match(TokenType.do_keyword) then
+      local block = self:block()
+      self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
+
+      return AST.LambdaExpression.new(params, block, false)
+    else
+      local expr = self:expression()
+
+      return AST.LambdaExpression.new(params, expr, true)
     end
-
+  elseif self:match(TokenType.do_keyword) then
     local block = self:block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
 
-    return AST.LambdaExpression.new(params, block, false)
-  elseif self:match(TokenType.bar) then
-    local params = self:parameter_list()
-    self:expect(TokenType.bar, "Expected '|' to close '|'")
-    local expr = self:expression()
-
-    return AST.LambdaExpression.new(params, expr, true)
+    return AST.LambdaExpression.new({}, block, false)
   end
 
   return self:primary_expression()
