@@ -10,7 +10,9 @@ describe("PrefixExpression syntax", function()
     local outer_left_operand = AST.NumberLiteralExpression.new(1)
     local inner_left_operand = AST.NumberLiteralExpression.new(2)
     local inner_right_operand = AST.NumberLiteralExpression.new(3)
-    local right_operand = AST.BinaryOpExpression.new(inner_left_operand, AST.BinaryOpKind.addition_op, inner_right_operand)
+    local right_operand = AST.PrefixExpression.new(
+      AST.BinaryOpExpression.new(inner_left_operand, AST.BinaryOpKind.addition_op, inner_right_operand)
+    )
 
     assert.same(AST.BinaryOpExpression.new(outer_left_operand, AST.BinaryOpKind.addition_op, right_operand), result)
   end)

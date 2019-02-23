@@ -304,7 +304,7 @@ end
 function Parser:prefix_expression()
   -- '(' expr ')'
   if self:match(TokenType.left_paren) then
-    local expr = self:expression()
+    local expr = AST.PrefixExpression.new(self:expression())
     self:expect(TokenType.right_paren, "Expected ')' to close '('")
 
     return expr

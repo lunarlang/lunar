@@ -26,6 +26,7 @@ return {
   FunctionCallExpression = require "lunar.ast.exprs.function_call_expression",
   ArgumentExpression = require "lunar.ast.exprs.argument_expression",
   LambdaExpression = require "lunar.ast.exprs.lambda_expression",
+  PrefixExpression = require "lunar.ast.exprs.prefix_expression",
   FieldDeclaration = require "lunar.ast.decls.field_declaration",
   ParameterDeclaration = require "lunar.ast.decls.parameter_declaration",
 }

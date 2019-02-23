@@ -20,6 +20,7 @@ describe("BinaryOp expressions transpilation", function()
 
   it("should support one subtraction_op BinaryOpExpression", binary_op_equals("2 - 1", 1))
   it("should support two subtraction_op BinaryOpExpression", binary_op_equals("3 - 2 - 1", 0))
+  it("should support parenthesized BinaryOpExpression", binary_op_equals("3 - (2 - 1)", 2))
 
   it("should support one multiplication_op BinaryOpExpression", binary_op_equals("1 * 2", 2))
   it("should support two multiplication_op BinaryOpExpression", binary_op_equals("1 * 2 * 3", 6))

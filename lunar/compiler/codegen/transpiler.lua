@@ -25,6 +25,7 @@ function Transpiler.new(ast)
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
 
     -- exprs
+    [SyntaxKind.prefix_expression] = self.visit_prefix_expression,
     [SyntaxKind.lambda_expression] = self.visit_lambda_expression,
     [SyntaxKind.member_expression] = self.visit_member_expression,
     [SyntaxKind.argument_expression] = self.visit_argument_expression,
@@ -241,6 +242,10 @@ function Transpiler:visit_repeat_until_statement(stat)
   return "repeat\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "until " .. self:visit_node(stat.expr)
+end
+
+function Transpiler:visit_prefix_expression(expr)
+  return "(" .. self:visit_node(expr.expr) .. ")"
 end
 
 function Transpiler:visit_lambda_expression(expr)

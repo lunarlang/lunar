@@ -26,4 +26,5 @@ return {
   expression_statement = 25,
   assignment_statement = 26,
   lambda_expression = 27,
+  prefix_expression = 28,
 }
