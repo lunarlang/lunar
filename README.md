@@ -7,6 +7,36 @@
 
 The Lua 5.1 superset programming language.
 
+## Examples
+Lunar adds 6 new operators: `..=`, `+=`, `-=`, `*=`, `/=`, and `^=`.
+```lua
+local message = "hello"
+message ..= " world!"
+print(message) --> "hello world!"
+
+local a, b = 1, 2
+a, b += 1, 2
+print(a, b) --> 2, 4
+```
+
+Lunar also adds lambda expressions making it more convenient to create short and quick functions as well as big functions.
+```lua
+local divisible = |dividend, divisor| dividend % divisor == 0
+local fizz = |n| do
+  local message = ""
+
+  if divisible(n, 3) then message ..= "Fizz" end
+  if divisible(n, 5) then message ..= "Buzz" end
+  if message == "" then message = n end
+
+  return message
+end
+
+for i = 1, 100 do
+  print(fizz(i))
+end
+```
+
 ## Goals: what we want
   - embeds most idioms into the language (default args, named varargs, classes, etc)
   - implements type checking and type inference
