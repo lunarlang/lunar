@@ -1,11 +1,9 @@
-[Busted]: http://olivinelabs.com/busted/
-[LuaRocks]: https://luarocks.org/
-
 <div align="center"><img src="https://i.imgur.com/xVujd8N.png"/></div>
 
 # Lunar
 [![Build Status](https://travis-ci.org/lunarlang/lunar.svg?branch=master)](https://travis-ci.org/lunarlang/lunar)
 [![Coverage Status](https://coveralls.io/repos/github/lunarlang/lunar/badge.svg?branch=master)](https://coveralls.io/github/lunarlang/lunar?branch=master)
+[![Discord Server](https://discordapp.com/api/guilds/517093929770942474/embed.png)](https://discord.gg/CHFC3pS)
 
 The Lua 5.1 superset programming language.
 
@@ -19,7 +17,7 @@ The Lua 5.1 superset programming language.
 Lunar is written for Lua 5.1, therefore you need the Lua 5.1 runtime. On some installs of Lua, you might not have `./?.lua` and `./?/init.lua` in your `LUA_PATH`. Configure your system environment variables and append `;./?.lua;./?/init.lua` into `LUA_PATH`.
 
 ### Prerequisites for development
-You will need [luarocks][LuaRocks] (lua package manager), and [busted][Busted] (unit testing framework).
+You will need [luarocks](https://luarocks.org/) (lua package manager), and [busted](http://olivinelabs.com/busted/) (unit testing framework).
 ```
 $ git clone https://github.com/lunarlang/lunar
 $ luarocks install busted
