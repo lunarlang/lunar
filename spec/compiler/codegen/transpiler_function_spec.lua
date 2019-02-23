@@ -66,4 +66,17 @@ describe("FunctionStatement transpilation", function()
     assert.equal("abc", r[2])
     assert.equal(false, r[3])
   end)
+
+  it("should support function expressions", function()
+    local input = "local a = function(b) return b end; return a(1), a(2)"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(1, program.result[1])
+    assert.equal(2, program.result[2])
+  end)
 end)
