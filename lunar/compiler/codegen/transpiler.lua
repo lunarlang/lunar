@@ -14,6 +14,7 @@ function Transpiler.new(ast)
     [SyntaxKind.while_statement] = self.visit_while_statement,
     [SyntaxKind.break_statement] = self.visit_break_statement,
     [SyntaxKind.return_statement] = self.visit_return_statement,
+    [SyntaxKind.function_statement] = self.visit_function_statement,
     [SyntaxKind.variable_statement] = self.visit_variable_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
     [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
@@ -26,6 +27,9 @@ function Transpiler.new(ast)
     [SyntaxKind.function_call_expression] = self.visit_function_call_expression,
     [SyntaxKind.member_expression] = self.visit_member_expression,
     [SyntaxKind.argument_expression] = self.visit_argument_expression,
+
+    -- decls
+    [SyntaxKind.parameter_declaration] = self.visit_parameter_declaration,
   }
 
   return self
@@ -60,6 +64,16 @@ function Transpiler:visit_varlist(varlist)
 
   for _, var in pairs(varlist) do
     table.insert(out, self:visit_member_expression(var))
+  end
+
+  return table.concat(out, ", ")
+end
+
+function Transpiler:visit_params(params)
+  local out = {}
+
+  for _, param in pairs(params) do
+    table.insert(out, self:visit_node(param))
   end
 
   return table.concat(out, ", ")
@@ -109,6 +123,22 @@ function Transpiler:visit_return_statement(stat)
   end
 
   return "return"
+end
+
+function Transpiler:visit_function_statement(stat)
+  local out = ""
+
+  if stat.is_local then
+    out = "local function " .. stat.name
+  else
+    out = "function " .. self:visit_node(stat.name)
+  end
+
+  out = out .. "(" .. self:visit_params(stat.parameters) .. ")\n" ..
+    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
+    "end"
+
+  return out
 end
 
 function Transpiler:visit_variable_statement(stat)
@@ -176,6 +206,10 @@ end
 
 function Transpiler:visit_argument_expression(arg)
   return self:visit_node(arg.value)
+end
+
+function Transpiler:visit_parameter_declaration(param)
+  return param.name
 end
 
 return Transpiler
