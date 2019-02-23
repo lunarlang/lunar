@@ -1,3 +1,4 @@
+local AST = require "lunar.ast"
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local BaseTranspiler = require "lunar.compiler.codegen.base_transpiler"
 
@@ -27,6 +28,7 @@ function Transpiler.new(ast)
     [SyntaxKind.member_expression] = self.visit_member_expression,
     [SyntaxKind.argument_expression] = self.visit_argument_expression,
     [SyntaxKind.function_expression] = self.visit_function_expression,
+    [SyntaxKind.binary_op_expression] = self.visit_binary_op_expression,
     [SyntaxKind.nil_literal_expression] = self.visit_nil_literal_expression,
     [SyntaxKind.function_call_expression] = self.visit_function_call_expression,
     [SyntaxKind.table_literal_expression] = self.visit_table_literal_expression,
@@ -38,6 +40,23 @@ function Transpiler.new(ast)
     -- decls
     [SyntaxKind.field_declaration] = self.visit_field_declaration,
     [SyntaxKind.parameter_declaration] = self.visit_parameter_declaration,
+  }
+
+  self.binary_op_map = {
+    [AST.BinaryOpKind.addition_op] = "+",
+    [AST.BinaryOpKind.subtraction_op] = "-",
+    [AST.BinaryOpKind.multiplication_op] = "*",
+    [AST.BinaryOpKind.division_op] = "/",
+    [AST.BinaryOpKind.modulus_op] = "%",
+    [AST.BinaryOpKind.power_op] = "^",
+    [AST.BinaryOpKind.concatenation_op] = "..",
+    [AST.BinaryOpKind.not_equal_op] = "~=",    [AST.BinaryOpKind.equal_op] = "==",
+    [AST.BinaryOpKind.less_than_op] = "<",
+    [AST.BinaryOpKind.less_or_equal_op] = "<=",
+    [AST.BinaryOpKind.greater_than_op] = ">",
+    [AST.BinaryOpKind.greater_or_equal_op] = ">=",
+    [AST.BinaryOpKind.and_op] = "and",
+    [AST.BinaryOpKind.or_op] = "or",
   }
 
   return self
@@ -261,6 +280,23 @@ end
 
 function Transpiler:visit_function_call_expression(expr)
   return self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
+end
+
+function Transpiler:visit_binary_op_expression(expr)
+  local out = ""
+
+  -- while left_operand is of BinaryOpExpression, visit left
+  repeat
+    local current = expr
+
+    out = self:visit_node(current.left_operand) ..
+      " " .. self.binary_op_map[expr.operator] .. " " ..
+      self:visit_node(current.right_operand) .. out
+
+    current = current.left_operand
+  until current.left_operand == nil or current.left_operand.syntax_kind ~= SyntaxKind.binary_op_expression
+
+  return out
 end
 
 function Transpiler:visit_table_literal_expression(expr)
