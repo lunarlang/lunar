@@ -15,6 +15,7 @@ function Transpiler.new(ast)
     [SyntaxKind.break_statement] = self.visit_break_statement,
     [SyntaxKind.return_statement] = self.visit_return_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
+    [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
 
     -- exprs
     [SyntaxKind.number_literal_expression] = self.visit_number_literal_expression,
@@ -50,6 +51,16 @@ function Transpiler:visit_block(block)
   end
 
   return out
+end
+
+function Transpiler:visit_varlist(varlist)
+  local out = {}
+
+  for _, var in pairs(varlist) do
+    table.insert(out, self:visit_member_expression(var))
+  end
+
+  return table.concat(out, ", ")
 end
 
 function Transpiler:visit_args(args)
@@ -100,6 +111,10 @@ end
 
 function Transpiler:visit_expression_statement(stat)
   return self:visit_node(stat.expr)
+end
+
+function Transpiler:visit_assignment_statement(stat)
+  return self:visit_varlist(stat.members) .. " = " .. self:visit_exprlist(stat.exprs)
 end
 
 function Transpiler:visit_number_literal_expression(expr)

@@ -2,6 +2,8 @@ local Program = {}
 Program.__index = Program
 
 function Program.new(code, override)
+  if override == nil then override = {} end
+
   local self = setmetatable({}, Program)
   self.code = code
   self.override = override
