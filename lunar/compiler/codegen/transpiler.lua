@@ -11,6 +11,7 @@ function Transpiler.new(ast)
   self.visitors = {
     -- stats
     [SyntaxKind.do_statement] = self.visit_do_statement,
+    [SyntaxKind.if_statement] = self.visit_if_statement,
     [SyntaxKind.while_statement] = self.visit_while_statement,
     [SyntaxKind.break_statement] = self.visit_break_statement,
     [SyntaxKind.return_statement] = self.visit_return_statement,
@@ -105,6 +106,24 @@ function Transpiler:visit_do_statement(stat)
   return "do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
+end
+
+function Transpiler:visit_if_statement(stat)
+  local out = "if " .. self:visit_node(stat.expr) .. " then\n" ..
+    self:indent() .. self:visit_block(stat.block) .. self:dedent()
+
+  for _, elseif_branch in pairs(stat.elseif_branches) do
+    out = out .. "elseif " .. self:visit_node(elseif_branch.expr) .. " then\n" ..
+      self:indent() .. self:visit_block(elseif_branch.block) .. self:dedent()
+  end
+
+  if stat.else_branch then
+    out = out .. "else\n" ..
+      self:indent() .. self:visit_block(stat.else_branch.block) .. self:dedent()
+  end
+
+  out = out .. "end"
+  return out
 end
 
 function Transpiler:visit_while_statement(stat)
