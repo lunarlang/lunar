@@ -17,7 +17,7 @@ describe("WhileStatement transpilation", function()
     end)
     local test_was_ran = spy.new(function() end)
 
-    local env = Environment.new(result, {
+    local program = Program.new(result, {
       test = test,
       test_was_ran = test_was_ran
     }):run()
@@ -36,7 +36,7 @@ describe("WhileStatement transpilation", function()
 
     local test = spy.new(function() end)
 
-    local env = Environment.new(result, { test = test }):run()
+    local program = Program.new(result, { test = test }):run()
 
     assert.spy(test).was.called(1)
   end)

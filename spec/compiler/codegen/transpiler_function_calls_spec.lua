@@ -12,7 +12,7 @@ describe("WhileStatement transpilation", function()
 
     local hello = spy.new(function() end)
 
-    local env = Environment.new(result, { hello = hello }):run()
+    local program = Program.new(result, { hello = hello }):run()
 
     assert.spy(hello).was.called()
   end)
@@ -27,7 +27,7 @@ describe("WhileStatement transpilation", function()
     local hello = {}
     hello.world = spy.new(function() end)
 
-    local env = Environment.new(result, { hello = hello }):run()
+    local program = Program.new(result, { hello = hello }):run()
 
     assert.spy(hello.world).was.called()
     assert.spy(hello.world).was.called_with("cool stuff")
@@ -43,7 +43,7 @@ describe("WhileStatement transpilation", function()
     local hello = {}
     hello.world = spy.new(function() end)
 
-    local env = Environment.new(result, { hello = hello }):run()
+    local program = Program.new(result, { hello = hello }):run()
 
     assert.spy(hello.world).was.called()
     assert.spy(hello.world).was.called_with(hello, true)
@@ -59,7 +59,7 @@ describe("WhileStatement transpilation", function()
     local hello = {}
     hello['world'] = spy.new(function() end)
 
-    local env = Environment.new(result, { hello = hello }):run()
+    local program = Program.new(result, { hello = hello }):run()
 
     assert.spy(hello['world']).was.called()
     assert.spy(hello['world']).was.called_with(1)

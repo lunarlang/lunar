@@ -8,7 +8,7 @@ return function()
     spec_env.TokenType = require "lunar.compiler.lexical.token_type"
     spec_env.Parser = require "lunar.compiler.syntax.parser"
     spec_env.Transpiler = require "lunar.compiler.codegen.transpiler"
-    spec_env.Environment = require "spec.helpers.environment"
+    spec_env.Program = require "spec.helpers.program"
   end)
 
   spec_env.teardown(function()
@@ -18,6 +18,6 @@ return function()
     spec_env.TokenType = nil
     spec_env.Parser = nil
     spec_env.Transpiler = nil
-    spec_env.Environment = nil
+    spec_env.Program = nil
   end)
 end
