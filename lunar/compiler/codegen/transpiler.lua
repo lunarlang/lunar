@@ -17,6 +17,7 @@ function Transpiler.new(ast)
     [SyntaxKind.variable_statement] = self.visit_variable_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
     [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
+    [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
 
     -- exprs
     [SyntaxKind.number_literal_expression] = self.visit_number_literal_expression,
@@ -120,6 +121,12 @@ end
 
 function Transpiler:visit_assignment_statement(stat)
   return self:visit_varlist(stat.members) .. " = " .. self:visit_exprlist(stat.exprs)
+end
+
+function Transpiler:visit_repeat_until_statement(stat)
+  return "repeat\n" ..
+    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
+    "until " .. self:visit_node(stat.expr)
 end
 
 function Transpiler:visit_number_literal_expression(expr)
