@@ -249,19 +249,7 @@ function Transpiler:visit_prefix_expression(expr)
 end
 
 function Transpiler:visit_lambda_expression(expr)
-  -- lower to FunctionExpression and visit that and return it
-  local block
-
-  if expr.implicit_return then
-    -- rewrites the body to a return statement
-    block = { AST.ReturnStatement.new({ expr.body }) }
-  else
-    -- compatible type, so we simply reuse it
-    block = expr.body
-  end
-
-  local lowered = AST.FunctionExpression.new(expr.parameters, block)
-  return self:visit_function_expression(lowered)
+  return self:visit_function_expression(expr:lower())
 end
 
 function Transpiler:visit_member_expression(member)
