@@ -28,6 +28,7 @@ function Transpiler.new(ast)
     [SyntaxKind.member_expression] = self.visit_member_expression,
     [SyntaxKind.argument_expression] = self.visit_argument_expression,
     [SyntaxKind.function_expression] = self.visit_function_expression,
+    [SyntaxKind.unary_op_expression] = self.visit_unary_op_expression,
     [SyntaxKind.binary_op_expression] = self.visit_binary_op_expression,
     [SyntaxKind.nil_literal_expression] = self.visit_nil_literal_expression,
     [SyntaxKind.function_call_expression] = self.visit_function_call_expression,
@@ -57,6 +58,12 @@ function Transpiler.new(ast)
     [AST.BinaryOpKind.greater_or_equal_op] = ">=",
     [AST.BinaryOpKind.and_op] = "and",
     [AST.BinaryOpKind.or_op] = "or",
+  }
+
+  self.unary_op_map = {
+    [AST.UnaryOpKind.negative_op] = "-",
+    [AST.UnaryOpKind.not_op] = "not ", -- space is intentional!
+    [AST.UnaryOpKind.length_op] = "#",
   }
 
   return self
@@ -280,6 +287,11 @@ end
 
 function Transpiler:visit_function_call_expression(expr)
   return self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
+end
+
+function Transpiler:visit_unary_op_expression(expr)
+  -- wrapping around parenthesis because if we have "- -1" as the input, we would get out "--1"
+  return "(" .. self.unary_op_map[expr.operator] .. self:visit_node(expr.right_operand) .. ")"
 end
 
 function Transpiler:visit_binary_op_expression(expr)
