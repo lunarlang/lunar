@@ -80,7 +80,8 @@ function Lexer.new(source, file_name)
     pair(TokenType.semi_colon, ";"),
     pair(TokenType.colon, ":"),
     pair(TokenType.comma, ","),
-    pair(TokenType.dot, ".")
+    pair(TokenType.dot, "."),
+    pair(TokenType.bar, "|"),
   }
 
   return self

@@ -59,4 +59,5 @@ return {
   right_brace = 423,
   left_bracket = 424,
   right_bracket = 425,
+  bar = 426,
 }

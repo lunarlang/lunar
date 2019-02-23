@@ -25,6 +25,7 @@ function Transpiler.new(ast)
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
 
     -- exprs
+    [SyntaxKind.lambda_expression] = self.visit_lambda_expression,
     [SyntaxKind.member_expression] = self.visit_member_expression,
     [SyntaxKind.argument_expression] = self.visit_argument_expression,
     [SyntaxKind.function_expression] = self.visit_function_expression,
@@ -240,6 +241,22 @@ function Transpiler:visit_repeat_until_statement(stat)
   return "repeat\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "until " .. self:visit_node(stat.expr)
+end
+
+function Transpiler:visit_lambda_expression(expr)
+  -- lower to FunctionExpression and visit that and return it
+  local block
+
+  if expr.implicit_return then
+    -- rewrites the body to a return statement
+    block = { AST.ReturnStatement.new({ expr.body }) }
+  else
+    -- compatible type, so we simply reuse it
+    block = expr.body
+  end
+
+  local lowered = AST.FunctionExpression.new(expr.parameters, block)
+  return self:visit_function_expression(lowered)
 end
 
 function Transpiler:visit_member_expression(member)

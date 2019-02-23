@@ -74,4 +74,55 @@ describe("FunctionStatement transpilation", function()
     assert.equal(1, program.result[1])
     assert.equal(2, program.result[2])
   end)
+
+  it("should support lambda expressions that does not implicitly return", function()
+    local input = "return do return 1 end"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(1, program.result[1]())
+  end)
+
+  it("should support lambda expresssions that has parameters and does not implicitly return", function()
+    local input = "return do |a, b| return a + b end"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(2, program.result[1](1, 1))
+    assert.equal(4, program.result[1](1, 3))
+  end)
+
+  it("should support lambda expresssions that has parameters and does implicitly return", function()
+    local input = "return |a, b| a + b"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(2, program.result[1](1, 1))
+    assert.equal(4, program.result[1](1, 3))
+  end)
+
+  it("should support lambda expresssions that has no parameters and does implicitly return", function()
+    local input = "return || 1"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(1, program.result[1]())
+    assert.equal(1, program.result[1]())
+  end)
 end)

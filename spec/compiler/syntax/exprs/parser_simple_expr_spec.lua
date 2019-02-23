@@ -67,4 +67,55 @@ describe("LiteralExpression syntax", function()
 
     assert.same(AST.TableLiteralExpression.new(expected_fields), result)
   end)
+
+  it("should return one LambdaExpression node with two arguments and does not implicitly return", function()
+    local tokens = Lexer.new("do |a, b| return a + b end"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local expected_params = {
+      AST.ParameterDeclaration.new("a"),
+      AST.ParameterDeclaration.new("b")
+    }
+
+    local expected_block = {
+      AST.ReturnStatement.new({
+        AST.BinaryOpExpression.new(
+          AST.MemberExpression.new("a"),
+          AST.BinaryOpKind.addition_op,
+          AST.MemberExpression.new("b")
+        )
+      })
+    }
+
+    assert.same(AST.LambdaExpression.new(expected_params, expected_block, false), result)
+  end)
+
+  it("should return one LambdaExpression node without any arguments and does not implicitly return", function()
+    local tokens = Lexer.new("do return 1 end"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local expected_block = {
+      AST.ReturnStatement.new({ AST.NumberLiteralExpression.new(1) })
+    }
+
+    assert.same(AST.LambdaExpression.new({}, expected_block, false), result)
+  end)
+
+  it("should return one LambdaExpression node with two arguments and does implicitly return", function()
+    local tokens = Lexer.new("|a, b| a + b"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local expected_params = {
+      AST.ParameterDeclaration.new("a"),
+      AST.ParameterDeclaration.new("b")
+    }
+
+    local expected_expr = AST.BinaryOpExpression.new(
+      AST.MemberExpression.new("a"),
+      AST.BinaryOpKind.addition_op,
+      AST.MemberExpression.new("b")
+    )
+
+    assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true), result)
+  end)
 end)

@@ -393,6 +393,27 @@ function Parser:simple_expression()
     return AST.FunctionExpression.new(paramlist, block)
   end
 
+  -- 'do' ['|' paramlist '|'] block 'end' | '|' [paramlist] '|' expr
+  if self:match(TokenType.do_keyword) then
+    local params = {}
+
+    if self:match(TokenType.bar) then
+      params = self:parameter_list()
+      self:expect(TokenType.bar, "Expected '|' to close '|' near 'do'")
+    end
+
+    local block = self:block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
+
+    return AST.LambdaExpression.new(params, block, false)
+  elseif self:match(TokenType.bar) then
+    local params = self:parameter_list()
+    self:expect(TokenType.bar, "Expected '|' to close '|'")
+    local expr = self:expression()
+
+    return AST.LambdaExpression.new(params, expr, true)
+  end
+
   return self:primary_expression()
 end
 
