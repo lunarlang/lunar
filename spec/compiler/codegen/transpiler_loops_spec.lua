@@ -106,4 +106,23 @@ describe("Loop statement transpilation", function()
 
     assert.spy(test).was.called(5)
   end)
+
+  it("should support generic for loops calling 'test' for each item in the array", function()
+    local input = "for i, v in pairs({ 6, 7, 8, 9, 10 }) do test(i, v) end"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local test = spy.new(function() end)
+
+    local program = Program.new(result, { test = test }):run()
+
+    assert.spy(test).was.called(5)
+    assert.spy(test).was.called_with(1, 6)
+    assert.spy(test).was.called_with(2, 7)
+    assert.spy(test).was.called_with(3, 8)
+    assert.spy(test).was.called_with(4, 9)
+    assert.spy(test).was.called_with(5, 10)
+  end)
 end)

@@ -20,6 +20,7 @@ function Transpiler.new(ast)
     [SyntaxKind.range_for_statement] = self.visit_range_for_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
     [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
+    [SyntaxKind.generic_for_statement] = self.visit_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
 
     -- exprs
@@ -198,6 +199,12 @@ end
 
 function Transpiler:visit_assignment_statement(stat)
   return self:visit_varlist(stat.members) .. " = " .. self:visit_exprlist(stat.exprs)
+end
+
+function Transpiler:visit_generic_for_statement(stat)
+  return "for " .. table.concat(stat.identifiers, ", ") .. " in " .. self:visit_exprlist(stat.exprlist) .. "do\n" ..
+    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
+    "end"
 end
 
 function Transpiler:visit_repeat_until_statement(stat)
