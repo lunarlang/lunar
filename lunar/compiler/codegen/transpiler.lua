@@ -14,6 +14,7 @@ function Transpiler.new(ast)
     [SyntaxKind.while_statement] = self.visit_while_statement,
     [SyntaxKind.break_statement] = self.visit_break_statement,
     [SyntaxKind.return_statement] = self.visit_return_statement,
+    [SyntaxKind.variable_statement] = self.visit_variable_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
     [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
 
@@ -107,6 +108,10 @@ function Transpiler:visit_return_statement(stat)
   end
 
   return "return"
+end
+
+function Transpiler:visit_variable_statement(stat)
+  return "local " .. table.concat(stat.namelist, ", ") .. " = " .. self:visit_exprlist(stat.exprlist)
 end
 
 function Transpiler:visit_expression_statement(stat)

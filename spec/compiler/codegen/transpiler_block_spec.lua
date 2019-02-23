@@ -32,4 +32,18 @@ describe("Block transpilation", function()
 
     assert.spy(test).was.called(1)
   end)
+
+  it("should support shadowing of local variables", function()
+    local input = "local a = 1\n" ..
+      "do local a = 2 end\n" ..
+      "return a"
+
+      local tokens = Lexer.new(input):tokenize()
+      local ast = Parser.new(tokens):parse()
+      local result = Transpiler.new(ast):transpile()
+
+      local program = Program.new(result):run()
+
+      assert.equal(1, program.result[1])
+  end)
 end)
