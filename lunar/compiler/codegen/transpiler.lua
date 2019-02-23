@@ -12,6 +12,7 @@ function Transpiler.new(ast)
     -- stats
     [SyntaxKind.while_statement] = self.visit_while_statement,
     [SyntaxKind.break_statement] = self.visit_break_statement,
+    [SyntaxKind.return_statement] = self.visit_return_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
 
     -- exprs
@@ -62,6 +63,16 @@ function Transpiler:visit_args(args)
   return table.concat(out, ", ")
 end
 
+function Transpiler:visit_exprlist(exprlist)
+  local out = {}
+
+  for _, expr in pairs(exprlist) do
+    table.insert(out, self:visit_node(expr))
+  end
+
+  return table.concat(out, ", ")
+end
+
 function Transpiler:visit_while_statement(stat)
   return "while " .. self:visit_node(stat.expr) .. " do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
@@ -70,6 +81,14 @@ end
 
 function Transpiler:visit_break_statement(stat)
   return "break"
+end
+
+function Transpiler:visit_return_statement(stat)
+  if stat.exprlist then
+    return "return " .. self:visit_exprlist(stat.exprlist)
+  end
+
+  return "return"
 end
 
 function Transpiler:visit_expression_statement(stat)

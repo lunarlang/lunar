@@ -40,4 +40,18 @@ describe("WhileStatement transpilation", function()
 
     assert.spy(test).was.called(1)
   end)
+
+  it("should support return statement to return out of the infinite while loop", function()
+    local input = "while true do test() return end"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local test = spy.new(function() end)
+
+    local program = Program.new(result, { test = test }):run()
+
+    assert.spy(test).was.called(1)
+  end)
 end)
