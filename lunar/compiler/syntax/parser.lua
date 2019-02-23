@@ -34,6 +34,16 @@ function Parser.new(tokens)
     ["#"] = AST.UnaryOpKind.length_op,
   }
 
+  self.self_assignment_op_map = {
+    ["="] = AST.SelfAssignmentOpKind.equal_op,
+    ["..="] = AST.SelfAssignmentOpKind.concatenation_equal_op,
+    ["+="] = AST.SelfAssignmentOpKind.addition_equal_op,
+    ["-="] = AST.SelfAssignmentOpKind.subtraction_equal_op,
+    ["*="] = AST.SelfAssignmentOpKind.multiplication_equal_op,
+    ["/="] = AST.SelfAssignmentOpKind.division_equal_op,
+    ["^="] = AST.SelfAssignmentOpKind.power_equal_op,
+  }
+
   return self
 end
 
@@ -91,10 +101,25 @@ function Parser:statement()
         end
       end
 
-      self:expect(TokenType.equal, "Expected '=' to follow this member")
+      local self_assignable_ops = {
+        TokenType.equal,
+        TokenType.double_dot_equal,
+        TokenType.plus_equal,
+        TokenType.minus_equal,
+        TokenType.asterisk_equal,
+        TokenType.slash_equal,
+        TokenType.caret_equal
+      }
+
+      local op
+      if not self:assert(unpack(self_assignable_ops)) then
+        self:expect(TokenType.equal, "Expected '=' to follow this member")
+      else
+        op = self:consume(unpack(self_assignable_ops))
+      end
       local exprs = self:expression_list()
 
-      return AST.AssignmentStatement.new(members, exprs)
+      return AST.AssignmentStatement.new(members, self.self_assignment_op_map[op.value], exprs)
     else
       -- no other cases are allowed from primary_expression, so we bail out and let the error bubble up
       return nil

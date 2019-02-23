@@ -10,7 +10,7 @@ describe("AssignmentStatement syntax", function()
     local members = { AST.MemberExpression.new("hello") }
     local exprs = { AST.NumberLiteralExpression.new(1) }
 
-    assert.same({ AST.AssignmentStatement.new(members, exprs) }, result)
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
   it("should return one AssignmentStatement with one MemberExpression using bracket notation and one expression", function()
@@ -20,7 +20,7 @@ describe("AssignmentStatement syntax", function()
     local members = { AST.MemberExpression.new(AST.MemberExpression.new("hello"), AST.StringLiteralExpression.new("'world'")) }
     local exprs = { AST.NumberLiteralExpression.new(1) }
 
-    assert.same({ AST.AssignmentStatement.new(members, exprs) }, result)
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
   it("should return one AssignmentStatement with one MemberExpression using dot notation and one expression", function()
@@ -30,7 +30,7 @@ describe("AssignmentStatement syntax", function()
     local members = { AST.MemberExpression.new(AST.MemberExpression.new("hello"), "world") }
     local exprs = { AST.NumberLiteralExpression.new(1) }
 
-    assert.same({ AST.AssignmentStatement.new(members, exprs) }, result)
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
   it("should return one AssignmentStatement with two MemberExpression and one expression", function()
@@ -40,7 +40,80 @@ describe("AssignmentStatement syntax", function()
     local members = { AST.MemberExpression.new("hello"), AST.MemberExpression.new("world") }
     local exprs = { AST.VariableArgumentExpression.new() }
 
-    assert.same({ AST.AssignmentStatement.new(members, exprs) }, result)
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
+  end)
+
+  it("should return one AssignmentStatement whose operator is concatenation_equal_op", function()
+    local tokens = Lexer.new("hello ..= 'world'"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local members = { AST.MemberExpression.new("hello") }
+    local exprs = { AST.StringLiteralExpression.new("'world'") }
+
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.concatenation_equal_op, exprs) }, result)
+  end)
+
+  it("should return one AssignmentStatement whose operator is addition_equal_op", function()
+    local tokens = Lexer.new("hello += 1"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local members = { AST.MemberExpression.new("hello") }
+    local exprs = { AST.NumberLiteralExpression.new(1) }
+
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.addition_equal_op, exprs) }, result)
+  end)
+
+  it("should return one AssignmentStatement whose operator is subtraction_equal_op", function()
+    local tokens = Lexer.new("hello -= 1"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local members = { AST.MemberExpression.new("hello") }
+    local exprs = { AST.NumberLiteralExpression.new(1) }
+
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.subtraction_equal_op, exprs) }, result)
+  end)
+
+  it("should return one AssignmentStatement whose operator is multiplication_equal_op", function()
+    local tokens = Lexer.new("hello *= 1"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local members = { AST.MemberExpression.new("hello") }
+    local exprs = { AST.NumberLiteralExpression.new(1) }
+
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.multiplication_equal_op, exprs) }, result)
+  end)
+
+  it("should return one AssignmentStatement whose operator is division_equal_op", function()
+    local tokens = Lexer.new("hello /= 1"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local members = { AST.MemberExpression.new("hello") }
+    local exprs = { AST.NumberLiteralExpression.new(1) }
+
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.division_equal_op, exprs) }, result)
+  end)
+
+  it("should return one AssignmentStatement whose operator is power_equal_op", function()
+    local tokens = Lexer.new("hello ^= 1"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local members = { AST.MemberExpression.new("hello") }
+    local exprs = { AST.NumberLiteralExpression.new(1) }
+
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.power_equal_op, exprs) }, result)
+  end)
+
+  it("should return one AssignmentStatement with one member and two expressions with concatenation_equal_op", function()
+    local tokens = Lexer.new("hello ..= 'world', a()"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local members = { AST.MemberExpression.new("hello") }
+    local exprs = {
+      AST.StringLiteralExpression.new("'world'"),
+      AST.FunctionCallExpression.new(AST.MemberExpression.new("a"), {})
+    }
+
+    assert.same({ AST.AssignmentStatement.new(members, AST.SelfAssignmentOpKind.concatenation_equal_op, exprs) }, result)
   end)
 
   it("should throw an error given an invalid left-hand side member", function()

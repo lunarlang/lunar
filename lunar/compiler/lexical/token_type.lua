@@ -60,4 +60,10 @@ return {
   left_bracket = 424,
   right_bracket = 425,
   bar = 426,
+  double_dot_equal = 427,
+  plus_equal = 428,
+  minus_equal = 429,
+  asterisk_equal = 430,
+  slash_equal = 431,
+  caret_equal = 432,
 }

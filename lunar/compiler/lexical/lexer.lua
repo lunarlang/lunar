@@ -54,12 +54,18 @@ function Lexer.new(source, file_name)
 
   self.operators = {
     pair(TokenType.triple_dot, "..."),
+    pair(TokenType.double_dot_equal, "..="),
 
     pair(TokenType.double_equal, "=="),
     pair(TokenType.tilde_equal, "~="),
     pair(TokenType.left_angle_equal, "<="),
     pair(TokenType.right_angle_equal, ">="),
     pair(TokenType.double_dot, ".."),
+    pair(TokenType.plus_equal, "+="),
+    pair(TokenType.minus_equal, "-="),
+    pair(TokenType.asterisk_equal, "*="),
+    pair(TokenType.slash_equal, "/="),
+    pair(TokenType.caret_equal, "^="),
 
     pair(TokenType.left_paren, "("),
     pair(TokenType.right_paren, ")"),

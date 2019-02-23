@@ -229,7 +229,8 @@ function Transpiler:visit_expression_statement(stat)
 end
 
 function Transpiler:visit_assignment_statement(stat)
-  return self:visit_varlist(stat.members) .. " = " .. self:visit_exprlist(stat.exprs)
+  local lowered = stat:lower()
+  return self:visit_varlist(lowered.members) .. " = " .. self:visit_exprlist(lowered.exprs)
 end
 
 function Transpiler:visit_generic_for_statement(stat)
