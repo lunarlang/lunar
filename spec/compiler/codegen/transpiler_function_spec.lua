@@ -42,4 +42,28 @@ describe("FunctionStatement transpilation", function()
 
     assert.equal(program.env.a, program.env.a:b())
   end)
+
+  it("should support varargs", function()
+    local input = "function a(...) return ... end"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+    spy.on(program.env, "a")
+
+    local r = { program.env.a(1, 2) }
+    assert.spy(program.env.a).was.called_with(1, 2)
+    assert.equal(2, #r)
+    assert.equal(1, r[1])
+    assert.equal(2, r[2])
+
+    local r = { program.env.a(4, "abc", false) }
+    assert.spy(program.env.a).was.called_with(4, "abc", false)
+    assert.equal(3, #r)
+    assert.equal(4, r[1])
+    assert.equal("abc", r[2])
+    assert.equal(false, r[3])
+  end)
 end)

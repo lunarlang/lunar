@@ -32,6 +32,7 @@ function Transpiler.new(ast)
     [SyntaxKind.number_literal_expression] = self.visit_number_literal_expression,
     [SyntaxKind.string_literal_expression] = self.visit_string_literal_expression,
     [SyntaxKind.boolean_literal_expression] = self.visit_boolean_literal_expression,
+    [SyntaxKind.variable_argument_expression] = self.visit_variable_argument_expression,
 
     -- decls
     [SyntaxKind.field_declaration] = self.visit_field_declaration,
@@ -269,6 +270,10 @@ end
 
 function Transpiler:visit_boolean_literal_expression(expr)
   return tostring(expr.value)
+end
+
+function Transpiler:visit_variable_argument_expression(expr)
+  return "..."
 end
 
 function Transpiler:visit_field_declaration(field)
