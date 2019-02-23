@@ -17,6 +17,7 @@ function Transpiler.new(ast)
     [SyntaxKind.return_statement] = self.visit_return_statement,
     [SyntaxKind.function_statement] = self.visit_function_statement,
     [SyntaxKind.variable_statement] = self.visit_variable_statement,
+    [SyntaxKind.range_for_statement] = self.visit_range_for_statement,
     [SyntaxKind.expression_statement] = self.visit_expression_statement,
     [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
@@ -162,6 +163,21 @@ end
 
 function Transpiler:visit_variable_statement(stat)
   return "local " .. table.concat(stat.namelist, ", ") .. " = " .. self:visit_exprlist(stat.exprlist)
+end
+
+function Transpiler:visit_range_for_statement(stat)
+  local out = "for " .. stat.identifier .. " = " ..
+    self:visit_node(stat.start_expr) .. ", " .. self:visit_node(stat.end_expr)
+
+  if stat.incremental_expr then
+    out = out .. ", " .. self:visit_node(stat.incremental_expr)
+  end
+
+  out = out .. " do" ..
+    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
+    "end"
+
+  return out
 end
 
 function Transpiler:visit_expression_statement(stat)

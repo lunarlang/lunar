@@ -1,6 +1,6 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("WhileStatement transpilation", function()
+describe("Loop statement transpilation", function()
   require_dev()
 
   it("should support while loops calling 'test' 5 times and 'loop_was_ran' 4 times", function()
@@ -77,5 +77,33 @@ describe("WhileStatement transpilation", function()
     assert.equal(5, n)
     assert.spy(test).was.called(5)
     assert.spy(loop_was_ran).was.called(5)
+  end)
+
+  it("should support ranged for loops calling 'test' 5 times", function()
+    local input = "for i = 1, 5 do test() end"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local test = spy.new(function() end)
+
+    local program = Program.new(result, { test = test }):run()
+
+    assert.spy(test).was.called(5)
+  end)
+
+  it("should support ranged for loops calling 'test' 5 times in increments of 2", function()
+    local input = "for i = 1, 10, 2 do test() end"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local test = spy.new(function() end)
+
+    local program = Program.new(result, { test = test }):run()
+
+    assert.spy(test).was.called(5)
   end)
 end)
