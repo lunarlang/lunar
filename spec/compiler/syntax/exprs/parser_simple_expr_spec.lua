@@ -61,7 +61,7 @@ describe("LiteralExpression syntax", function()
 
     local expected_fields = {
       AST.FieldDeclaration.new(AST.StringLiteralExpression.new("'hello'"), AST.BooleanLiteralExpression.new(true)),
-      AST.FieldDeclaration.new(TokenInfo.new(TokenType.identifier, "world", 21), AST.BooleanLiteralExpression.new(false)),
+      AST.FieldDeclaration.new("world", AST.BooleanLiteralExpression.new(false)),
       AST.FieldDeclaration.new(nil, AST.NilLiteralExpression.new()),
     }
 

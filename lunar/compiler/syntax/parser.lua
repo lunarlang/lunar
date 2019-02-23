@@ -532,7 +532,7 @@ function Parser:field_declaration()
     self:consume() -- consumes the equal token, because we asserted it earlier
     local value = self:expression()
 
-    return AST.FieldDeclaration.new(key, value)
+    return AST.FieldDeclaration.new(key.value, value)
   end
 
   -- expr
