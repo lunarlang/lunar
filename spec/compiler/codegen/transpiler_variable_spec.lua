@@ -68,4 +68,19 @@ describe("Variables transpilation", function()
     assert.equal(2, program.result[1]['l o l'])
     assert.equal(3, program.result[1].c)
   end)
+
+  it("should support nil value", function()
+    -- we know returning a value works as expected from other cases
+    -- but to increase confidence, we'll return 2 as well after the nil value
+    local input = "local a = nil; return a, 2"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(nil, program.result[1])
+    assert.equal(2, program.result[2])
+  end)
 end)

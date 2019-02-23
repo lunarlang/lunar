@@ -26,6 +26,7 @@ function Transpiler.new(ast)
     -- exprs
     [SyntaxKind.member_expression] = self.visit_member_expression,
     [SyntaxKind.argument_expression] = self.visit_argument_expression,
+    [SyntaxKind.nil_literal_expression] = self.visit_nil_literal_expression,
     [SyntaxKind.function_call_expression] = self.visit_function_call_expression,
     [SyntaxKind.table_literal_expression] = self.visit_table_literal_expression,
     [SyntaxKind.number_literal_expression] = self.visit_number_literal_expression,
@@ -244,6 +245,10 @@ end
 
 function Transpiler:visit_argument_expression(arg)
   return self:visit_node(arg.value)
+end
+
+function Transpiler:visit_nil_literal_expression(expr)
+  return "nil"
 end
 
 function Transpiler:visit_function_call_expression(expr)
