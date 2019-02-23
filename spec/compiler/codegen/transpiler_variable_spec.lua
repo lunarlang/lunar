@@ -54,4 +54,18 @@ describe("Variables transpilation", function()
     assert.equal(2, program.result[2])
     assert.equal(3, program.result[3])
   end)
+
+  it("should support table literals", function()
+    local input = "local a = { 1, ['l o l'] = 2, c = 3 }; return a"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(1, program.result[1][1])
+    assert.equal(2, program.result[1]['l o l'])
+    assert.equal(3, program.result[1].c)
+  end)
 end)

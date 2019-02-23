@@ -23,14 +23,16 @@ function Transpiler.new(ast)
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
 
     -- exprs
-    [SyntaxKind.number_literal_expression] = self.visit_number_literal_expression,
-    [SyntaxKind.boolean_literal_expression] = self.visit_boolean_literal_expression,
-    [SyntaxKind.string_literal_expression] = self.visit_string_literal_expression,
-    [SyntaxKind.function_call_expression] = self.visit_function_call_expression,
     [SyntaxKind.member_expression] = self.visit_member_expression,
     [SyntaxKind.argument_expression] = self.visit_argument_expression,
+    [SyntaxKind.function_call_expression] = self.visit_function_call_expression,
+    [SyntaxKind.table_literal_expression] = self.visit_table_literal_expression,
+    [SyntaxKind.number_literal_expression] = self.visit_number_literal_expression,
+    [SyntaxKind.string_literal_expression] = self.visit_string_literal_expression,
+    [SyntaxKind.boolean_literal_expression] = self.visit_boolean_literal_expression,
 
     -- decls
+    [SyntaxKind.field_declaration] = self.visit_field_declaration,
     [SyntaxKind.parameter_declaration] = self.visit_parameter_declaration,
   }
 
@@ -66,6 +68,16 @@ function Transpiler:visit_varlist(varlist)
 
   for _, var in pairs(varlist) do
     table.insert(out, self:visit_member_expression(var))
+  end
+
+  return table.concat(out, ", ")
+end
+
+function Transpiler:visit_fields(fields)
+  local out = {}
+
+  for _, field in pairs(fields) do
+    table.insert(out, self:visit_field_declaration(field))
   end
 
   return table.concat(out, ", ")
@@ -194,22 +206,6 @@ function Transpiler:visit_repeat_until_statement(stat)
     "until " .. self:visit_node(stat.expr)
 end
 
-function Transpiler:visit_number_literal_expression(expr)
-  return tostring(expr.value)
-end
-
-function Transpiler:visit_boolean_literal_expression(expr)
-  return tostring(expr.value)
-end
-
-function Transpiler:visit_string_literal_expression(expr)
-  return expr.value -- already a string
-end
-
-function Transpiler:visit_function_call_expression(expr)
-  return self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
-end
-
 function Transpiler:visit_member_expression(member)
   local out = ""
   local current = member
@@ -241,6 +237,36 @@ end
 
 function Transpiler:visit_argument_expression(arg)
   return self:visit_node(arg.value)
+end
+
+function Transpiler:visit_function_call_expression(expr)
+  return self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
+end
+
+function Transpiler:visit_table_literal_expression(expr)
+  return "{" .. self:visit_fields(expr.fields) .. "}"
+end
+
+function Transpiler:visit_number_literal_expression(expr)
+  return tostring(expr.value)
+end
+
+function Transpiler:visit_string_literal_expression(expr)
+  return expr.value -- already a string
+end
+
+function Transpiler:visit_boolean_literal_expression(expr)
+  return tostring(expr.value)
+end
+
+function Transpiler:visit_field_declaration(field)
+  if field.key == nil then
+    return self:visit_node(field.value)
+  elseif type(field.key) == "string" then
+    return field.key .. " = " .. self:visit_node(field.value)
+  else
+    return "[" .. self:visit_node(field.key) .. "] = " .. self:visit_node(field.value)
+  end
 end
 
 function Transpiler:visit_parameter_declaration(param)
