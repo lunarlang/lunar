@@ -156,19 +156,22 @@ end
 
 function Transpiler:visit_if_statement(stat)
   local out = self:get_indent() .. "if " .. self:visit_node(stat.expr) .. " then\n" ..
-    self:indent() .. self:visit_block(stat.block) .. self:dedent()
+    self:indent() .. self:visit_block(stat.block)
+  self:dedent()
 
   for _, elseif_branch in pairs(stat.elseif_branches) do
     out = out .. self:get_indent() .. "elseif " .. self:visit_node(elseif_branch.expr) .. " then\n" ..
-      self:indent() .. self:visit_block(elseif_branch.block) .. self:dedent()
+      self:indent() .. self:visit_block(elseif_branch.block)
+    self:dedent()
   end
 
   if stat.else_branch then
     out = out .. self:get_indent() .. "else\n" ..
-      self:indent() .. self:visit_block(stat.else_branch.block) .. self:dedent()
+      self:indent() .. self:visit_block(stat.else_branch.block)
+    self:dedent()
   end
 
-  out = out .. "end"
+  out = out .. self:get_indent() .. "end"
   return out
 end
 
@@ -314,7 +317,7 @@ function Transpiler:visit_nil_literal_expression(expr)
 end
 
 function Transpiler:visit_function_call_expression(expr)
-  return self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
+  return self:get_indent() .. self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
 end
 
 function Transpiler:visit_unary_op_expression(expr)
