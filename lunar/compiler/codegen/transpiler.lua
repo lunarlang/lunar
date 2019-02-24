@@ -13,6 +13,7 @@ function Transpiler.new(ast)
     -- stats
     [SyntaxKind.do_statement] = self.visit_do_statement,
     [SyntaxKind.if_statement] = self.visit_if_statement,
+    [SyntaxKind.class_statement] = self.visit_class_statement,
     [SyntaxKind.while_statement] = self.visit_while_statement,
     [SyntaxKind.break_statement] = self.visit_break_statement,
     [SyntaxKind.return_statement] = self.visit_return_statement,
@@ -168,6 +169,21 @@ function Transpiler:visit_if_statement(stat)
   end
 
   out = out .. "end"
+  return out
+end
+
+function Transpiler:visit_class_statement(stat)
+  local lowered = stat:lower()
+
+  local out = self:visit_node(lowered.static_def) .. "\n" ..
+    self:visit_block(lowered.static_members) ..
+    self:visit_node(lowered.instance_def) .. "\n"
+
+  if lowered.class_inherit_super then
+    out = out .. self:visit_node(lowered.class_inherit_super) .. "\n"
+  end
+
+  out = out .. self:visit_block(lowered.instance_members)
   return out
 end
 

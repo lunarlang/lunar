@@ -66,4 +66,5 @@ return {
   asterisk_equal = 430,
   slash_equal = 431,
   caret_equal = 432,
+  double_left_angle = 433,
 }

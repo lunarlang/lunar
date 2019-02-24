@@ -66,6 +66,7 @@ function Lexer.new(source, file_name)
     pair(TokenType.asterisk_equal, "*="),
     pair(TokenType.slash_equal, "/="),
     pair(TokenType.caret_equal, "^="),
+    pair(TokenType.double_left_angle, "<<"),
 
     pair(TokenType.left_paren, "("),
     pair(TokenType.right_paren, ")"),

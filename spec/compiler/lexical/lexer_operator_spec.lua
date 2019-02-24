@@ -28,6 +28,7 @@ describe("Lexer:next_operator", function()
   it("should return one asterisk_equal token", operator_equals("*=", TokenType.asterisk_equal))
   it("should return one slash_equal token", operator_equals("/=", TokenType.slash_equal))
   it("should return one caret_equal token", operator_equals("^=", TokenType.caret_equal))
+  it("should return one double_left_angle token", operator_equals("<<", TokenType.double_left_angle))
 
   it("should return one left_paren token", operator_equals("(", TokenType.left_paren))
   it("should return one right_paren token", operator_equals(")", TokenType.right_paren))

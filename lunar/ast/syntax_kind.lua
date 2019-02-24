@@ -27,4 +27,7 @@ return {
   assignment_statement = 26,
   lambda_expression = 27,
   prefix_expression = 28,
+  class_statement = 29,
+  constructor_declaration = 30,
+  class_function_declaration = 31,
 }

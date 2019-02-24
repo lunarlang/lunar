@@ -10,6 +10,7 @@ return {
   ExpressionStatement = require "lunar.ast.stats.expression_statement",
   AssignmentStatement = require "lunar.ast.stats.assignment_statement",
   SelfAssignmentOpKind = require "lunar.ast.stats.self_assignment_op_kind",
+  ClassStatement = require "lunar.ast.stats.class_statement",
   BreakStatement = require "lunar.ast.stats.break_statement",
   ReturnStatement = require "lunar.ast.stats.return_statement",
   BinaryOpExpression = require "lunar.ast.exprs.binary_op_expression",
@@ -30,4 +31,6 @@ return {
   PrefixExpression = require "lunar.ast.exprs.prefix_expression",
   FieldDeclaration = require "lunar.ast.decls.field_declaration",
   ParameterDeclaration = require "lunar.ast.decls.parameter_declaration",
+  ConstructorDeclaration = require "lunar.ast.decls.constructor_declaration",
+  ClassFunctionDeclaration = require "lunar.ast.decls.class_function_declaration",
 }

@@ -83,7 +83,66 @@ function Parser:block()
   return stats
 end
 
+function Parser:class_member()
+  if self:peek().value == "constructor" then
+    self:move(1)
+    self:expect(TokenType.left_paren, "Expected '(' after 'constructor'")
+    local params = self:parameter_list()
+    self:expect(TokenType.right_paren, "Expected ')' to close '('")
+    local block = self:block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'constructor'")
+
+    return AST.ConstructorDeclaration.new(params, block)
+  end
+
+  -- possibly a static member?
+  local old_position = self.position
+  local is_static = false
+  if self:peek().value == "static" then
+    self:move(1)
+    is_static = true
+  end
+
+  if self:match(TokenType.function_keyword) then
+    local name = self:expect(TokenType.identifier, "Expected identifier after 'function'").value
+    self:expect(TokenType.left_paren, "Expected '(' after " .. name)
+    local params = self:parameter_list()
+    self:expect(TokenType.right_paren, "Expected ')' to close '(' after 'function " .. name .. "'")
+    local block = self:block()
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'function " .. name .. "'")
+
+    return AST.ClassFunctionDeclaration.new(is_static, name, params, block)
+  end
+
+  -- nothing was returned and we did something with the 'static' token so we need to move the position back
+  self.position = old_position
+end
+
 function Parser:statement()
+  -- 'class' identifier ['<<' identifier] {class_member} 'end'
+  -- 'class' is a contextual keyword that depends on the next token being an identifier
+  if self:peek().value == "class" and self:peek(1).token_type == TokenType.identifier then
+    self:move(1)
+    local name = self:expect(TokenType.identifier, "Expected identifier after 'class'").value
+
+    local base_name
+    if self:match(TokenType.double_left_angle) then
+      base_name = self:expect(TokenType.identifier, "Expected an identifier after '<<'").value
+    end
+
+    local members = {}
+    repeat
+      local member = self:class_member()
+
+      if member ~= nil then
+        table.insert(members, member)
+      end
+    until member == nil
+    self:expect(TokenType.end_keyword, "Expected 'end' to close 'class'")
+
+    return AST.ClassStatement.new(name, base_name, members)
+  end
+
   local primaryexpr = self:primary_expression()
   if primaryexpr ~= nil then
     -- immediately return this if it is a FunctionCallExpression as an ExpressionStatement
