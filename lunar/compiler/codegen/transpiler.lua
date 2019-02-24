@@ -244,7 +244,7 @@ function Transpiler:visit_range_for_statement(stat)
 end
 
 function Transpiler:visit_expression_statement(stat)
-  return self:visit_node(stat.expr)
+  return self:get_indent() .. self:visit_node(stat.expr)
 end
 
 function Transpiler:visit_assignment_statement(stat)
@@ -307,7 +307,7 @@ function Transpiler:visit_argument_expression(arg)
 end
 
 function Transpiler:visit_function_expression(expr)
-  return self:get_indent() .. "function(" .. self:visit_params(expr.parameters) .. ")\n" ..
+  return "function(" .. self:visit_params(expr.parameters) .. ")\n" ..
     self:indent() .. self:visit_block(expr.block) .. self:dedent() ..
     "end"
 end
@@ -317,7 +317,7 @@ function Transpiler:visit_nil_literal_expression(expr)
 end
 
 function Transpiler:visit_function_call_expression(expr)
-  return self:get_indent() .. self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
+  return self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
 end
 
 function Transpiler:visit_unary_op_expression(expr)
