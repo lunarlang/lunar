@@ -225,7 +225,11 @@ function Transpiler:visit_function_statement(stat)
 end
 
 function Transpiler:visit_variable_statement(stat)
-  return self:get_indent() .. "local " .. table.concat(stat.namelist, ", ") .. " = " .. self:visit_exprlist(stat.exprlist)
+  if stat.exprlist then
+    return self:get_indent() .. "local " .. table.concat(stat.namelist, ", ") .. " = " .. self:visit_exprlist(stat.exprlist)
+  else
+    return self:get_indent() .. "local " .. table.concat(stat.namelist, ", ")
+  end
 end
 
 function Transpiler:visit_range_for_statement(stat)
@@ -326,20 +330,9 @@ function Transpiler:visit_unary_op_expression(expr)
 end
 
 function Transpiler:visit_binary_op_expression(expr)
-  local out = ""
-
-  -- while left_operand is of BinaryOpExpression, visit left
-  repeat
-    local current = expr
-
-    out = self:visit_node(current.left_operand) ..
-      " " .. self.binary_op_map[expr.operator] .. " " ..
-      self:visit_node(current.right_operand) .. out
-
-    current = current.left_operand
-  until current.left_operand == nil or current.left_operand.syntax_kind ~= SyntaxKind.binary_op_expression
-
-  return out
+  return self:visit_node(current.left_operand) ..
+    " " .. self.binary_op_map[expr.operator] .. " " ..
+    self:visit_node(current.right_operand)
 end
 
 function Transpiler:visit_table_literal_expression(expr)
