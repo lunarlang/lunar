@@ -274,6 +274,7 @@ function Transpiler:visit_member_expression(member)
     else
       -- otherwise we'll visit left, recursively
       out = self:visit_node(current.left_member) .. out
+      break
     end
 
     current = current.left_member
