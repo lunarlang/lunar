@@ -48,7 +48,7 @@ describe("BinaryOp expressions transpilation", function()
   it("should support one greater_than_op BinaryOpExpression", binary_op_equals("2 > 1", true))
   it("should support one greater_or_equal_op BinaryOpExpression", binary_op_equals("2 >= 1", true))
 
-  it("should support nested BinaryOpExpression", binary_op_equals("true == true and false == false and false", true))
+  it("should support nested BinaryOpExpression", binary_op_equals("true == true and false == false or false", true))
   it("should support one and_op BinaryOpExpression", binary_op_equals("1 and 2", 2))
   it("should support one or_op BinaryOpExpression", binary_op_equals("1 or 2", 1))
 end)
