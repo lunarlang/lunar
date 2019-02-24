@@ -326,20 +326,9 @@ function Transpiler:visit_unary_op_expression(expr)
 end
 
 function Transpiler:visit_binary_op_expression(expr)
-  local out = ""
-
-  -- while left_operand is of BinaryOpExpression, visit left
-  repeat
-    local current = expr
-
-    out = self:visit_node(current.left_operand) ..
-      " " .. self.binary_op_map[expr.operator] .. " " ..
-      self:visit_node(current.right_operand) .. out
-
-    current = current.left_operand
-  until current.operator ~= 13 or current.left_operand == nil or current.left_operand.syntax_kind ~= SyntaxKind.binary_op_expression
-
-  return out
+  return self:visit_node(expr.left_operand) ..
+    " " .. self.binary_op_map[expr.operator] .. " " ..
+    self:visit_node(expr.right_operand)
 end
 
 function Transpiler:visit_table_literal_expression(expr)
