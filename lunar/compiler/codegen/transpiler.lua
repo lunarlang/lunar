@@ -238,7 +238,7 @@ end
 
 function Transpiler:visit_assignment_statement(stat)
   local lowered = stat:lower()
-  return self:visit_varlist(lowered.members) .. " = " .. self:visit_exprlist(lowered.exprs)
+  return self:get_indent() .. self:visit_varlist(lowered.members) .. " = " .. self:visit_exprlist(lowered.exprs)
 end
 
 function Transpiler:visit_generic_for_statement(stat)
