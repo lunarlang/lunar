@@ -330,9 +330,9 @@ function Transpiler:visit_unary_op_expression(expr)
 end
 
 function Transpiler:visit_binary_op_expression(expr)
-  return self:visit_node(current.left_operand) ..
+  return self:visit_node(expr.left_operand) ..
     " " .. self.binary_op_map[expr.operator] .. " " ..
-    self:visit_node(current.right_operand)
+    self:visit_node(expr.right_operand)
 end
 
 function Transpiler:visit_table_literal_expression(expr)
