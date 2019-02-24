@@ -149,22 +149,22 @@ function Transpiler:visit_exprlist(exprlist)
 end
 
 function Transpiler:visit_do_statement(stat)
-  return "do\n" ..
+  return self:get_indent() .. "do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
 end
 
 function Transpiler:visit_if_statement(stat)
-  local out = "if " .. self:visit_node(stat.expr) .. " then\n" ..
+  local out = self:get_indent() .. "if " .. self:visit_node(stat.expr) .. " then\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent()
 
   for _, elseif_branch in pairs(stat.elseif_branches) do
-    out = out .. "elseif " .. self:visit_node(elseif_branch.expr) .. " then\n" ..
+    out = out .. self:get_indent() .. "elseif " .. self:visit_node(elseif_branch.expr) .. " then\n" ..
       self:indent() .. self:visit_block(elseif_branch.block) .. self:dedent()
   end
 
   if stat.else_branch then
-    out = out .. "else\n" ..
+    out = out .. self:get_indent() .. "else\n" ..
       self:indent() .. self:visit_block(stat.else_branch.block) .. self:dedent()
   end
 
@@ -188,25 +188,25 @@ function Transpiler:visit_class_statement(stat)
 end
 
 function Transpiler:visit_while_statement(stat)
-  return "while " .. self:visit_node(stat.expr) .. " do\n" ..
+  return self:get_indent() .. "while " .. self:visit_node(stat.expr) .. " do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
 end
 
 function Transpiler:visit_break_statement(stat)
-  return "break"
+  return self:get_indent() .. "break"
 end
 
 function Transpiler:visit_return_statement(stat)
   if stat.exprlist then
-    return "return " .. self:visit_exprlist(stat.exprlist)
+    return self:get_indent() .. "return " .. self:visit_exprlist(stat.exprlist)
   end
 
-  return "return"
+  return self:get_indent() .. "return"
 end
 
 function Transpiler:visit_function_statement(stat)
-  local out = ""
+  local out = self:get_indent()
 
   if stat.is_local then
     out = "local function " .. stat.name
@@ -222,11 +222,11 @@ function Transpiler:visit_function_statement(stat)
 end
 
 function Transpiler:visit_variable_statement(stat)
-  return "local " .. table.concat(stat.namelist, ", ") .. " = " .. self:visit_exprlist(stat.exprlist)
+  return self:get_indent() .. "local " .. table.concat(stat.namelist, ", ") .. " = " .. self:visit_exprlist(stat.exprlist)
 end
 
 function Transpiler:visit_range_for_statement(stat)
-  local out = "for " .. stat.identifier .. " = " ..
+  local out = self:get_indent() .. "for " .. stat.identifier .. " = " ..
     self:visit_node(stat.start_expr) .. ", " .. self:visit_node(stat.end_expr)
 
   if stat.incremental_expr then
@@ -250,13 +250,13 @@ function Transpiler:visit_assignment_statement(stat)
 end
 
 function Transpiler:visit_generic_for_statement(stat)
-  return "for " .. table.concat(stat.identifiers, ", ") .. " in " .. self:visit_exprlist(stat.exprlist) .. "do\n" ..
+  return self:get_indent() .. "for " .. table.concat(stat.identifiers, ", ") .. " in " .. self:visit_exprlist(stat.exprlist) .. "do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
 end
 
 function Transpiler:visit_repeat_until_statement(stat)
-  return "repeat\n" ..
+  return self:get_indent() .. "repeat\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "until " .. self:visit_node(stat.expr)
 end
@@ -304,7 +304,7 @@ function Transpiler:visit_argument_expression(arg)
 end
 
 function Transpiler:visit_function_expression(expr)
-  return "function(" .. self:visit_params(expr.parameters) .. ")\n" ..
+  return self:get_indent() .. "function(" .. self:visit_params(expr.parameters) .. ")\n" ..
     self:indent() .. self:visit_block(expr.block) .. self:dedent() ..
     "end"
 end
