@@ -24,7 +24,7 @@ end
 
 function BaseTranspiler:indent()
   self.indent_count = self.indent_count + 1
-  return self:get_indent()
+  return "" -- messy workaround for all the concatenated indent calls
 end
 
 function BaseTranspiler:dedent()
