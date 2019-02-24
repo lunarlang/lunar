@@ -176,18 +176,7 @@ function Transpiler:visit_if_statement(stat)
 end
 
 function Transpiler:visit_class_statement(stat)
-  local lowered = stat:lower()
-
-  local out = self:visit_node(lowered.static_def) .. "\n" ..
-    self:visit_block(lowered.static_members) ..
-    self:visit_node(lowered.instance_def) .. "\n"
-
-  if lowered.class_inherit_super then
-    out = out .. self:visit_node(lowered.class_inherit_super) .. "\n"
-  end
-
-  out = out .. self:visit_block(lowered.instance_members)
-  return out
+  return self:visit_block(stat:lower())
 end
 
 function Transpiler:visit_while_statement(stat)

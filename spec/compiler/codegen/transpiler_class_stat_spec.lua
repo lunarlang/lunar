@@ -66,4 +66,23 @@ describe("ClassStatement transpilation", function()
 
       assert.same("test", C.new("test"):get_name())
   end)
+
+  it("should support inheritance with super call", function()
+    local input = "class S\n" ..
+      "constructor(name) self.name = name end\n" ..
+      "end\n" ..
+      "class C << S\n" ..
+      "constructor() super('bob') end\n" ..
+      "end\n" ..
+      "return C"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+    local C = program.result[1]
+
+    assert.same("bob", C.new().name)
+  end)
 end)

@@ -1,11 +1,14 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 local MemberExpression = require "lunar.ast.exprs.member_expression"
+local ArgumentExpression = require "lunar.ast.exprs.argument_expression"
 local TableLiteralExpression = require "lunar.ast.exprs.table_literal_expression"
 local FunctionCallExpression = require "lunar.ast.exprs.function_call_expression"
+local ExpressionStatement = require "lunar.ast.stats.expression_statement"
 local FunctionStatement = require "lunar.ast.stats.function_statement"
 local VariableStatement = require "lunar.ast.stats.variable_statement"
 local ReturnStatement = require "lunar.ast.stats.return_statement"
+local ParameterDeclaration = require "lunar.ast.decls.parameter_declaration"
 
 local ConstructorDeclaration = setmetatable({}, SyntaxNode)
 ConstructorDeclaration.__index = ConstructorDeclaration
@@ -26,29 +29,45 @@ function ConstructorDeclaration:lower(class, class_base_name)
     for index, stat in pairs(self.block) do
       if stat.syntax_kind == SyntaxKind.expression_statement
         and stat.expr.syntax_kind == SyntaxKind.function_call_expression
-        and stat.expr.member_expressions.name == "super"
+        and stat.expr.member_expression.left_member == "super"
       then
         local super = stat.expr
 
         -- rewrite super_stat to a variable named super that calls new on the super class
-        local super_member_expr = MemberExpression.new(MemberExpression.new(class_base_name), "new")
-        local super_call_expr = FunctionCallExpression.new(super_member_expr, super.arguments)
-        local super_variable = VariableStatement.new({ "super" }, { super_call_expr })
-        self.block[index] = super_variable
+        local super_member_expr = MemberExpression.new(MemberExpression.new(class_base_name), "constructor")
+        local super_call_expr = FunctionCallExpression.new(super_member_expr, {
+          ArgumentExpression.new(MemberExpression.new("self")), unpack(super.arguments)
+        })
+        self.block[index] = ExpressionStatement.new(super_call_expr)
 
         break
       end
     end
   end
 
-  local constructor_block = self.block
-  local new_self_instance = FunctionCallExpression.new(
-    MemberExpression.new("setmetatable"), { TableLiteralExpression.new({}), class }
-  )
-  table.insert(self.block, 1, VariableStatement.new({ "self" }, { new_self_instance }))
+  local new_block = {
+    -- return
+    ReturnStatement.new({
+      -- ClassName.constructor()
+      FunctionCallExpression.new(MemberExpression.new(class, "constructor"), {
+        -- setmetatable()
+        FunctionCallExpression.new(MemberExpression.new("setmetatable"), {
+          -- {}, ClassName
+          TableLiteralExpression.new({}), class
+        }),
+        unpack(self.params)
+      })
+    })
+  }
+
   table.insert(self.block, ReturnStatement.new({ MemberExpression.new("self") }))
 
-  return FunctionStatement.new(MemberExpression.new(class, "new"), self.params, self.block)
+  return {
+    new = FunctionStatement.new(MemberExpression.new(class, "new"), self.params, new_block),
+    constructor = FunctionStatement.new(MemberExpression.new(class, "constructor"), {
+      ParameterDeclaration.new("self"), unpack(self.params)
+    }, self.block),
+  }
 end
 
 return ConstructorDeclaration
