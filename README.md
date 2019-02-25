@@ -8,6 +8,32 @@
 The Lua 5.1 superset programming language.
 
 ## Examples
+Classes, the staple of object-oriented programming, is implemented in Lunar.
+```lua
+-- unfortunately no syntax highlighting for lunar yet, so we'll stick with lua
+class Account
+  constructor(name, balance)
+    self.name = name
+    self.balance = balance or 0
+  end
+
+  function deposit(credit)
+    self.balance += credit
+  end
+
+  function withdraw(debit)
+    self.balance -= debit
+  end
+end
+
+local account = Account.new("Jeff Bezos", 500)
+print(account.balance) --> 500
+account:deposit(250)
+print(account.balance) --> 750
+account:withdraw(300)
+print(account.balance) --> 450
+```
+
 Lunar adds 6 new operators: `..=`, `+=`, `-=`, `*=`, `/=`, and `^=`.
 ```lua
 local message = "hello"

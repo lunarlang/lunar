@@ -23,54 +23,49 @@ function ClassStatement.new(name, base_name, members)
 end
 
 function ClassStatement:lower()
-  local statics, instances, constructor = {}, {}
+  local empty_table = TableLiteralExpression.new({})
+  local class_def = VariableStatement.new({ self.name }, {})
 
-  -- categorize static vs instance members for transpilation purposes
+  if self.base_name ~= nil then
+    local setmt_member_expr = MemberExpression.new("setmetatable")
+    table.insert(class_def.exprlist, FunctionCallExpression.new(setmt_member_expr, {
+      empty_table, MemberExpression.new(self.base_name)
+    }))
+  else
+    table.insert(class_def.exprlist, empty_table)
+  end
+
+  local class_index = MemberExpression.new(MemberExpression.new(self.name), "__index")
+  local class_index_def = AssignmentStatement.new({ class_index }, SelfAssignmentOpKind.equal_op, { empty_table })
+
+  local statics, instances, ctor_decl = {}, {}
   for _, member in pairs(self.members) do
     -- since ConstructorDeclaration cannot be static but everything else can be, we'll exclude this
     if member.syntax_kind ~= SyntaxKind.constructor_declaration then
       table.insert(member.is_static and statics or instances, member)
     else
-      -- prefer the first constructor declared, the rest should be semantically invalid
-      constructor = constructor or member
+      ctor_decl = ctor_decl or member
     end
   end
 
-  local class_name = MemberExpression.new(self.name)
-  local empty_table = TableLiteralExpression.new({})
+  ctor_decl = ctor_decl or ConstructorDeclaration.new({}, {})
+  ctor_decl = ctor_decl:lower(MemberExpression.new(self.name), self.base_name)
 
-  -- declares the class that'll hold the static members
-  local class = VariableStatement.new({ self.name }, { empty_table })
-  local class_statics = {}
-  for _, member in pairs(statics) do
-    table.insert(class_statics, member:lower(class_name))
+  for index, member in pairs(statics) do
+    statics[index] = member:lower(MemberExpression.new(self.name))
   end
 
-  -- if there is no user-defined constructor, place a default one
-  constructor = constructor or ConstructorDeclaration.new({}, {})
-  table.insert(class_statics, constructor:lower(class_name, self.base_name))
-
-  -- declares __index on the class that'll hold the instance members
-  local index_member = MemberExpression.new(class_name, "__index")
-  local class_index = AssignmentStatement.new({ index_member }, SelfAssignmentOpKind.equal_op, { empty_table })
-  local class_instances = {}
-  for _, member in pairs(instances) do
-    table.insert(class_instances, member:lower(index_member))
-  end
-
-  local class_inherit_super
-  if self.base_name then
-    local setmt_member_expr = MemberExpression.new("setmetatable")
-    local args = { index_member, MemberExpression.new(self.base_name) }
-    class_inherit_super = ExpressionStatement.new(FunctionCallExpression.new(setmt_member_expr, args))
+  for index, member in pairs(instances) do
+    instances[index] = member:lower(class_index)
   end
 
   return {
-    static_def = class,
-    static_members = class_statics,
-    instance_def = class_index,
-    class_inherit_super = class_inherit_super,
-    instance_members = class_instances
+    class_def,
+    class_index_def,
+    unpack(statics),
+    unpack(instances),
+    ctor_decl.new,
+    ctor_decl.constructor,
   }
 end
 
