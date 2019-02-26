@@ -7,8 +7,6 @@ function SyntaxNode.new(syntax_kind)
 
   -- Binding-initialized fields (should be of optional type)
   self.symbol = nil -- Symbol | nil
-  self.contained_symbols = nil -- SymbolTable | nil
-  self.next_symbol_container = nil -- Node | nil
 
   return self
 end

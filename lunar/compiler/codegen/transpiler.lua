@@ -12,6 +12,8 @@ function Transpiler.new(ast)
   self.chunk = AST.Chunk.new(ast)
   self.binder = Binder.new(self.chunk)
   self.visitors = {
+    [SyntaxKind.chunk] = self.visit_chunk,
+
     -- stats
     [SyntaxKind.do_statement] = self.visit_do_statement,
     [SyntaxKind.if_statement] = self.visit_if_statement,
@@ -215,9 +217,9 @@ function Transpiler:visit_function_statement(stat)
   local out = self:get_indent()
 
   if stat.is_local then
-    out = "local function " .. self:visit_node(stat.base)
+    out = out .. "local function " .. self:visit_node(stat.base)
   else
-    out = "function " .. self:visit_node(stat.base)
+    out = out .. "function " .. self:visit_node(stat.base)
   end
 
   out = out .. "(" .. self:visit_params(stat.parameters) .. ")\n" ..
@@ -240,8 +242,6 @@ function Transpiler:visit_variable_statement(stat)
   else
     return out
   end
-
-  return out
 end
 
 function Transpiler:visit_identifier(node)

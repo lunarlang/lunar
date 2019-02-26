@@ -8,6 +8,7 @@ function Identifier.new(name, type_annotation)
   local super = SyntaxNode.new(SyntaxKind.identifier)
   local self = setmetatable(super, Identifier)
   self.name = name
+  self.type_annotation = type_annotation
 
   return self
 end

@@ -2,7 +2,7 @@ local SymbolTable = {}
 SymbolTable.__index = {}
 
 function SymbolTable.constructor(self)
-	self.symbols = {}    
+	self.symbols = {}
 end
 
 function SymbolTable.__index:get(name)
@@ -15,7 +15,7 @@ end
 
 function SymbolTable.__index:has(name)
 	for i = 1, #self.symbols do
-		if self.sybols[i].name == name then
+		if self.symbols[i].name == name then
 			return true
 		end
 	end
@@ -26,9 +26,9 @@ function SymbolTable.__index:add(symbol)
 	table.insert(self.symbols, symbol)
 end
 
-function SymbolTable.new()
+function SymbolTable.new(...)
 	local self = setmetatable({}, SymbolTable)
-	SymbolTable.constructor(self)
+	SymbolTable.constructor(self, ...)
 	return self
 end
 
