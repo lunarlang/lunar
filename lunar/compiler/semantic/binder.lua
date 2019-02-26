@@ -2,11 +2,7 @@
 
 	TODO NEXT:
 Refactor rest vararg parameter
-Store declarations within symbols
-Migrate return in bind_member_expression to a separate util call that recurs after binding
-Handle "self" and "super" identifiers as special cases
-Handle statics of declared classes within member expressions
-Refactor builtins and add environment argument (still include primitive types)
+Refactor builtins and add environment argument (always include primitive types)
 
 ]]
 
