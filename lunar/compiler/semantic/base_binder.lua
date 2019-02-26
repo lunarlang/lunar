@@ -76,14 +76,14 @@ end
 --[[ Creates a new symbol in the current scope if it does not exist, and binds it to a given node.
 Returns the registered symbol ]]
 function BaseBinder.__index:bind_local_type_symbol(node, name)
-  local existing = self.scope:get_value(name)
+  local existing = self.scope:get_type(name)
   if existing then
     node.symbol = existing
     return existing
   else
     local symbol = Symbol.new(name)
     node.symbol = symbol
-    self.scope:add_value(symbol)
+    self.scope:add_type(symbol)
   
     return symbol
   end
@@ -92,14 +92,14 @@ end
 --[[ Creates a new symbol in the global scope if it does not exist, and binds it to a given node.
 Returns the registered symbol ]]
 function BaseBinder.__index:bind_global_type_symbol(node, name)
-  local existing = self.global_scope:get_value(name)
+  local existing = self.global_scope:get_type(name)
   if existing then
     node.symbol = existing
     return existing
   else
     local symbol = Symbol.new(name)
     node.symbol = symbol
-    self.global_scope:add_value(symbol)
+    self.global_scope:add_type(symbol)
   
     return symbol
   end
