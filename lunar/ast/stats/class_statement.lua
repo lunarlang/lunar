@@ -3,6 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 local MemberExpression = require "lunar.ast.exprs.member_expression"
 local FunctionCallExpression = require "lunar.ast.exprs.function_call_expression"
 local TableLiteralExpression = require "lunar.ast.exprs.table_literal_expression"
+local Identifier = require "lunar.ast.exprs.identifier"
 local VariableStatement = require "lunar.ast.stats.variable_statement"
 local ExpressionStatement = require "lunar.ast.stats.expression_statement"
 local AssignmentStatement = require "lunar.ast.stats.assignment_statement"
@@ -12,11 +13,11 @@ local ConstructorDeclaration = require "lunar.ast.decls.constructor_declaration"
 local ClassStatement = {}
 ClassStatement.__index = ClassStatement
 
-function ClassStatement.new(name, base_name, members)
+function ClassStatement.new(identifier, super_identifier, members)
   local super = SyntaxNode.new(SyntaxKind.class_statement)
   local self = setmetatable(super, ClassStatement)
-  self.name = name
-  self.base_name = base_name
+  self.identifier = identifier
+  self.super_identifier = super_identifier
   self.members = members
 
   return self
@@ -24,18 +25,18 @@ end
 
 function ClassStatement:lower()
   local empty_table = TableLiteralExpression.new({})
-  local class_def = VariableStatement.new({ self.name }, {}, {})
+  local class_def = VariableStatement.new({ self.identifier }, {}, {})
 
-  if self.base_name ~= nil then
-    local setmt_member_expr = MemberExpression.new("setmetatable")
-    table.insert(class_def.exprlist, FunctionCallExpression.new(setmt_member_expr, {
-      empty_table, MemberExpression.new(self.base_name)
+  if self.super_identifier ~= nil then
+    local setmt_base = Identifier.new("setmetatable")
+    table.insert(class_def.exprlist, FunctionCallExpression.new(setmt_base, {
+      empty_table, self.super_identifier
     }))
   else
     table.insert(class_def.exprlist, empty_table)
   end
 
-  local class_index = MemberExpression.new(MemberExpression.new(self.name), "__index")
+  local class_index = MemberExpression.new(self.identifier, Identifier.new("__index"))
   local class_index_def = AssignmentStatement.new({ class_index }, SelfAssignmentOpKind.equal_op, { empty_table })
 
   local statics, instances, ctor_decl = {}, {}
@@ -49,10 +50,10 @@ function ClassStatement:lower()
   end
 
   ctor_decl = ctor_decl or ConstructorDeclaration.new({}, {})
-  ctor_decl = ctor_decl:lower(MemberExpression.new(self.name), self.base_name)
+  ctor_decl = ctor_decl:lower(self.identifier, self.super_identifier)
 
   for index, member in pairs(statics) do
-    statics[index] = member:lower(MemberExpression.new(self.name))
+    statics[index] = member:lower(self.identifier)
   end
 
   for index, member in pairs(instances) do

@@ -49,7 +49,7 @@ describe("LiteralExpression syntax", function()
     local tokens = Lexer.new("function(hello, ...) break end"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local expected_params = { AST.ParameterDeclaration.new("hello"), AST.ParameterDeclaration.new("...") }
+    local expected_params = { AST.ParameterDeclaration.new(AST.Identifier.new("hello")), AST.ParameterDeclaration.new(AST.Identifier.new("...")) }
     local expected_block = { AST.BreakStatement.new() }
 
     assert.same(AST.FunctionExpression.new(expected_params, expected_block), result)
@@ -61,7 +61,7 @@ describe("LiteralExpression syntax", function()
 
     local expected_fields = {
       AST.FieldDeclaration.new(AST.StringLiteralExpression.new("'hello'"), AST.BooleanLiteralExpression.new(true)),
-      AST.FieldDeclaration.new("world", AST.BooleanLiteralExpression.new(false)),
+      AST.FieldDeclaration.new(AST.Identifier.new("world"), AST.BooleanLiteralExpression.new(false)),
       AST.FieldDeclaration.new(nil, AST.NilLiteralExpression.new()),
     }
 
@@ -73,16 +73,16 @@ describe("LiteralExpression syntax", function()
     local result = Parser.new(tokens):expression()
 
     local expected_params = {
-      AST.ParameterDeclaration.new("a"),
-      AST.ParameterDeclaration.new("b")
+      AST.ParameterDeclaration.new(AST.Identifier.new("a")),
+      AST.ParameterDeclaration.new(AST.Identifier.new("b"))
     }
 
     local expected_block = {
       AST.ReturnStatement.new({
         AST.BinaryOpExpression.new(
-          AST.MemberExpression.new("a"),
+          AST.Identifier.new("a"),
           AST.BinaryOpKind.addition_op,
-          AST.MemberExpression.new("b")
+          AST.Identifier.new("b")
         )
       })
     }
@@ -106,14 +106,14 @@ describe("LiteralExpression syntax", function()
     local result = Parser.new(tokens):expression()
 
     local expected_params = {
-      AST.ParameterDeclaration.new("a"),
-      AST.ParameterDeclaration.new("b")
+      AST.ParameterDeclaration.new(AST.Identifier.new("a")),
+      AST.ParameterDeclaration.new(AST.Identifier.new("b"))
     }
 
     local expected_expr = AST.BinaryOpExpression.new(
-      AST.MemberExpression.new("a"),
+      AST.Identifier.new("a"),
       AST.BinaryOpKind.addition_op,
-      AST.MemberExpression.new("b")
+      AST.Identifier.new("b")
     )
 
     assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true), result)

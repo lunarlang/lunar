@@ -6,11 +6,11 @@ local FunctionStatement = require "lunar.ast.stats.function_statement"
 local ClassFunctionDeclaration = setmetatable({}, SyntaxNode)
 ClassFunctionDeclaration.__index = ClassFunctionDeclaration
 
-function ClassFunctionDeclaration.new(is_static, name, params, block)
+function ClassFunctionDeclaration.new(is_static, identifier, params, block)
   local super = SyntaxNode.new(SyntaxKind.class_function_declaration)
   local self = setmetatable(super, ClassFunctionDeclaration)
   self.is_static = is_static
-  self.name = name
+  self.identifier = identifier
   self.params = params
   self.block = block
 
@@ -18,7 +18,7 @@ function ClassFunctionDeclaration.new(is_static, name, params, block)
 end
 
 function ClassFunctionDeclaration:lower(class_member_expr)
-  local new_class_member_expr = MemberExpression.new(class_member_expr, self.name, not self.is_static)
+  local new_class_member_expr = MemberExpression.new(class_member_expr, self.identifier, not self.is_static)
   return FunctionStatement.new(new_class_member_expr, self.params, self.block, nil)
 end
 

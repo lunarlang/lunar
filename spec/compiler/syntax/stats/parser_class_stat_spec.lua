@@ -7,14 +7,14 @@ describe("ClassStatement syntax", function()
     local tokens = Lexer.new("class C end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    assert.same({ AST.ClassStatement.new("C", nil, {}) }, result)
+    assert.same({ AST.ClassStatement.new(AST.Identifier.new("C"), nil, {}) }, result)
   end)
 
   it("should return one ClassStatement node whose name is 'C' and inherits from 'BaseC'", function()
     local tokens = Lexer.new("class C << BaseC end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    assert.same({ AST.ClassStatement.new("C", "BaseC", {}) }, result)
+    assert.same({ AST.ClassStatement.new(AST.Identifier.new("C"), AST.Identifier.new("BaseC"), {}) }, result)
   end)
 
   it("should return one ClassStatement node with one instance function", function()
@@ -22,8 +22,8 @@ describe("ClassStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ClassStatement.new("C", nil, {
-        AST.ClassFunctionDeclaration.new(false, "m", {}, {})
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
+        AST.ClassFunctionDeclaration.new(false, AST.Identifier.new("m"), {}, {})
       })
     }, result)
   end)
@@ -33,8 +33,8 @@ describe("ClassStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ClassStatement.new("C", nil, {
-        AST.ClassFunctionDeclaration.new(true, "m", {}, {})
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
+        AST.ClassFunctionDeclaration.new(true, AST.Identifier.new("m"), {}, {})
       })
     }, result)
   end)
@@ -44,7 +44,7 @@ describe("ClassStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ClassStatement.new("C", nil, {
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
         AST.ConstructorDeclaration.new({}, {})
       })
     }, result)
@@ -55,7 +55,7 @@ describe("ClassStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ExpressionStatement.new(AST.FunctionCallExpression.new(AST.MemberExpression.new("class"), {}))
+      AST.ExpressionStatement.new(AST.FunctionCallExpression.new(AST.Identifier.new("class"), {}))
     }, result)
   end)
 end)

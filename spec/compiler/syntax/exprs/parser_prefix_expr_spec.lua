@@ -17,26 +17,26 @@ describe("PrefixExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(outer_left_operand, AST.BinaryOpKind.addition_op, right_operand), result)
   end)
 
-  it("should return a MemberExpression named hello", function()
+  it("should return an Identifier named hello", function()
     local tokens = Lexer.new("hello"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.MemberExpression.new("hello"), result)
+    assert.same(AST.Identifier.new("hello"), result)
   end)
 
-  it("should return a left MemberExpression named hello with a right MemberExpression named world", function()
+  it("should return a left Identifier named hello with a right MemberExpression named world", function()
     local tokens = Lexer.new("hello.world"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.MemberExpression.new(AST.MemberExpression.new("hello"), "world"), result)
+    assert.same(AST.MemberExpression.new(AST.Identifier.new("hello"), AST.Identifier.new("world")), result)
   end)
 
-  it("should return a left MemberExpression named hello with a right MemberExpression of StringLiteralExpression whose value is 'world'", function()
+  it("should return a left Identifier named hello with a right MemberExpression of StringLiteralExpression whose value is 'world'", function()
     local tokens = Lexer.new("hello['world']"):tokenize()
     local result = Parser.new(tokens):expression()
 
     local right_member = AST.StringLiteralExpression.new("'world'")
 
-    assert.same(AST.MemberExpression.new(AST.MemberExpression.new("hello"), right_member), result)
+    assert.same(AST.MemberExpression.new(AST.Identifier.new("hello"), right_member), result)
   end)
 end)

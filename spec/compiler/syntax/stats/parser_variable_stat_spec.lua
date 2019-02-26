@@ -7,32 +7,32 @@ describe("VariableStatement syntax", function()
     local tokens = Lexer.new("local a, b = 1, 2"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local names = { "a", "b" }
+    local names = { AST.Identifier.new("a"), AST.Identifier.new("b") }
     local exprs = {
       AST.NumberLiteralExpression.new(1),
       AST.NumberLiteralExpression.new(2)
     }
 
-    assert.same({ AST.VariableStatement.new(names, {}, exprs) }, result)
+    assert.same({ AST.VariableStatement.new(names, exprs) }, result)
   end)
 
   it("should return one VariableSyntax node with two names and one expression", function()
     local tokens = Lexer.new("local a, b = ..."):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local names = { "a", "b" }
+    local names = { AST.Identifier.new("a"), AST.Identifier.new("b") }
     local exprs = { AST.VariableArgumentExpression.new() }
 
-    assert.same({ AST.VariableStatement.new(names, {}, exprs) }, result)
+    assert.same({ AST.VariableStatement.new(names, exprs) }, result)
   end)
 
   it("should return one VariableSyntax node with one name and no expression", function()
     local tokens = Lexer.new("local a"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local names = { "a" }
+    local names = { AST.Identifier.new("a") }
 
-    assert.same({ AST.VariableStatement.new(names, {}, nil) }, result)
+    assert.same({ AST.VariableStatement.new(names, nil) }, result)
   end)
 
   it("should return two VariableSyntax node with one name and one expression, each", function()
@@ -40,8 +40,8 @@ describe("VariableStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.VariableStatement.new({ "a" }, {}, { AST.NumberLiteralExpression.new(1) }),
-      AST.VariableStatement.new({ "b" }, {}, { AST.NumberLiteralExpression.new(2) })
+      AST.VariableStatement.new({ AST.Identifier.new("a") }, { AST.NumberLiteralExpression.new(1) }),
+      AST.VariableStatement.new({ AST.Identifier.new("b") }, { AST.NumberLiteralExpression.new(2) })
     }, result)
   end)
 
@@ -51,8 +51,7 @@ describe("VariableStatement syntax", function()
 
     assert.same({
       AST.VariableStatement.new(
-        { "a", "b", "c" },
-        { [1] = "string", [2] = nil, [3] = "any" },
+        { AST.Identifier.new("a", AST.Identifier.new("string")), AST.Identifier.new("b"), AST.Identifier.new("c", AST.Identifier.new("any")) },
         { AST.NumberLiteralExpression.new(1), AST.NumberLiteralExpression.new(2), AST.NumberLiteralExpression.new(3) }),
     }, result)
   end)
@@ -62,7 +61,7 @@ describe("VariableStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.VariableStatement.new({ "a" }, {[1] = "string"}),
+      AST.VariableStatement.new({ AST.Identifier.new("a", AST.Identifier.new("string")) }),
     }, result)
   end)
 end)

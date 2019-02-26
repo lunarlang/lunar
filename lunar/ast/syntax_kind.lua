@@ -31,4 +31,5 @@ return {
   class_statement = 29,
   constructor_declaration = 30,
   class_function_declaration = 31,
+  identifier = 32,
 }
