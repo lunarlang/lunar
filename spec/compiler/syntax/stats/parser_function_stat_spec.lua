@@ -14,7 +14,7 @@ describe("FunctionStatement syntax", function()
     }
 
     assert.same({
-      AST.FunctionStatement.new(expected_name, expected_params, {})
+      AST.FunctionStatement.new(expected_name, expected_params, {}, nil)
     }, result)
   end)
 
@@ -27,7 +27,7 @@ describe("FunctionStatement syntax", function()
     local top_member_expr = AST.MemberExpression.new(middle_member_expr, "c", true)
 
     assert.same({
-      AST.FunctionStatement.new(top_member_expr, {}, {})
+      AST.FunctionStatement.new(top_member_expr, {}, {}, nil)
     }, result)
   end)
 
@@ -36,7 +36,32 @@ describe("FunctionStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.FunctionStatement.new("test", {}, {}, true)
+      AST.FunctionStatement.new("test", {}, {}, nil, true)
+    }, result)
+  end)
+
+  it("should attach return type annotation", function()
+    local tokens = Lexer.new("local function test(): string end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.FunctionStatement.new("test", {}, {}, "string", true)
+    }, result)
+  end)
+
+  it("should attach type annotation to formal parameters", function()
+    local tokens = Lexer.new("function test(a: string, b, c: any) end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local expected_name = AST.MemberExpression.new("test")
+    local expected_params = {
+      AST.ParameterDeclaration.new("a", "string"),
+      AST.ParameterDeclaration.new("b", nil),
+      AST.ParameterDeclaration.new("c", "any")
+    }
+
+    assert.same({
+      AST.FunctionStatement.new(expected_name, expected_params, {}, nil)
     }, result)
   end)
 end)

@@ -19,7 +19,7 @@ end
 
 function ClassFunctionDeclaration:lower(class_member_expr)
   local new_class_member_expr = MemberExpression.new(class_member_expr, self.name, not self.is_static)
-  return FunctionStatement.new(new_class_member_expr, self.params, self.block)
+  return FunctionStatement.new(new_class_member_expr, self.params, self.block, nil)
 end
 
 return ClassFunctionDeclaration
