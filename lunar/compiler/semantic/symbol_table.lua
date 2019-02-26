@@ -14,8 +14,8 @@ function SymbolTable.__index:get(name)
 end
 
 function SymbolTable.__index:has(name)
-	for i = 1, #symbols do
-		if sybols[i].name == name then
+	for i = 1, #self.symbols do
+		if self.sybols[i].name == name then
 			return true
 		end
 	end
