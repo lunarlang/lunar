@@ -188,7 +188,12 @@ function Lexer:next_string()
         error(("unfinished string near '%s'"):format(delimit .. buffer))
       end
 
-      escaping = self:peek() == "\\"
+      -- we just escaped something last step!
+      if escaping then
+        escaping = false
+      else
+        escaping = self:peek() == "\\"
+      end
       buffer = buffer .. self:consume()
     until not escaping and self:match(delimit)
 

@@ -11,6 +11,30 @@ describe("Lexer:next_string", function()
     }, tokens)
   end)
 
+  it("should return a string token that has an escaped backslash at the end", function()
+    local tokens = Lexer.new("'\\\\'"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "'\\\\'", 1)
+    }, tokens)
+  end)
+
+  it("should return a string token that has an escaped linefeed at the end", function()
+    local tokens = Lexer.new("'\\n'"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "'\\n'", 1)
+    }, tokens)
+  end)
+
+  it("should return a string token that has an escaped single-quote at the end", function()
+    local tokens = Lexer.new("'\\''"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "'\\''", 1)
+    }, tokens)
+  end)
+
   it("should return a string token using single quotes", function()
     local tokens = Lexer.new("'Hello, world!'"):tokenize()
 
