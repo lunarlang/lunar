@@ -2,33 +2,45 @@ local SymbolTable = {}
 SymbolTable.__index = {}
 
 function SymbolTable.constructor(self)
-	self.symbols = {}    
+	self.values = {}
+	self.types = {}
 end
 
-function SymbolTable.__index:get(name)
-	for i = #self.symbols, 1, -1 do
-		if self.symbols[i].name == name then
-			return self.symbols[i]
-		end
+function SymbolTable.__index:get_value(name)
+	return self.values[name]
+end
+
+function SymbolTable.__index:get_type(name)
+	return self.types[name]
+end
+
+function SymbolTable.__index:has_value(name)
+	return self.values[name] ~= nil
+end
+
+function SymbolTable.__index:has_type(name)
+	return self.types[name] ~= nil
+end
+
+function SymbolTable.__index:add_value(symbol)
+	if self.values[symbol.name] then
+		error("Duplicate value symbol '" .. symbol.name .. "' was declared in the same scope")
+	else
+		self.values[symbol.name] = symbol
 	end
 end
 
-function SymbolTable.__index:has(name)
-	for i = 1, #self.symbols do
-		if self.sybols[i].name == name then
-			return true
-		end
+function SymbolTable.__index:add_type(symbol)
+	if self.types[symbol.name] then
+		error("Duplicate type symbol '" .. symbol.name .. "' was declared in the same scope")
+	else
+		self.types[symbol.name] = symbol
 	end
-	return false
 end
 
-function SymbolTable.__index:add(symbol)
-	table.insert(self.symbols, symbol)
-end
-
-function SymbolTable.new()
+function SymbolTable.new(...)
 	local self = setmetatable({}, SymbolTable)
-	SymbolTable.constructor(self)
+	SymbolTable.constructor(self, ...)
 	return self
 end
 

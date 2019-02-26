@@ -3,16 +3,21 @@ Symbol.__index = {}
 
 function Symbol.constructor(self, name)
 	self.name = name
-end
+	self.is_referenced = false
+	self.is_assigned = false
 
-function Symbol.new(name)
-	local self = setmetatable({}, Symbol)
-	Symbol.constructor(self, name)
-	return self
+	self.declaration = nil -- Node | nil
+	self.members = nil -- SymbolTable | nil
 end
 
 Symbol.__tostring = function(self)
-	return "Symbol (" .. self.name .. ")"
+	return "Symbol (" .. tostring(self.name) .. ")"
+end
+
+function Symbol.new(...)
+	local self = setmetatable({}, Symbol)
+	Symbol.constructor(self, ...)
+	return self
 end
 
 return Symbol

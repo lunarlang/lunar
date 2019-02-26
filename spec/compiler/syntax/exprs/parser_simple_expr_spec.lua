@@ -60,9 +60,9 @@ describe("LiteralExpression syntax", function()
     local result = Parser.new(tokens):expression()
 
     local expected_fields = {
-      AST.FieldDeclaration.new(AST.StringLiteralExpression.new("'hello'"), AST.BooleanLiteralExpression.new(true)),
-      AST.FieldDeclaration.new(AST.Identifier.new("world"), AST.BooleanLiteralExpression.new(false)),
-      AST.FieldDeclaration.new(nil, AST.NilLiteralExpression.new()),
+      AST.IndexFieldDeclaration.new(AST.StringLiteralExpression.new("'hello'"), AST.BooleanLiteralExpression.new(true)),
+      AST.MemberFieldDeclaration.new(AST.Identifier.new("world"), AST.BooleanLiteralExpression.new(false)),
+      AST.SequentialFieldDeclaration.new(AST.NilLiteralExpression.new()),
     }
 
     assert.same(AST.TableLiteralExpression.new(expected_fields), result)
@@ -88,6 +88,36 @@ describe("LiteralExpression syntax", function()
     }
 
     assert.same(AST.LambdaExpression.new(expected_params, expected_block, false), result)
+  end)
+
+  it("should return one LambdaExpression with a return type annotation of 'number'", function()
+    local tokens = Lexer.new("||: number do return 1 end"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local expected_params = {}
+
+    local expected_block = {
+      AST.ReturnStatement.new({
+        AST.NumberLiteralExpression.new(1)
+      })
+    }
+
+    local expected_return_annotaiton = AST.Identifier.new("number")
+
+    assert.same(AST.LambdaExpression.new(expected_params, expected_block, false, expected_return_annotaiton), result)
+  end)
+
+  it("should return one LambdaExpression with a return type annotation of 'number' and an implicit return", function()
+    local tokens = Lexer.new("||: number 1"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local expected_params = {}
+
+    local expected_expr = AST.NumberLiteralExpression.new(1)
+
+    local expected_return_annotaiton = AST.Identifier.new("number")
+
+    assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true, expected_return_annotaiton), result)
   end)
 
   it("should return one LambdaExpression node without any arguments and does not implicitly return", function()

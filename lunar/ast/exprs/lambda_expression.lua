@@ -6,12 +6,13 @@ local FunctionExpression = require "lunar.ast.exprs.function_expression"
 local LambdaExpression = setmetatable({}, SyntaxNode)
 LambdaExpression.__index = LambdaExpression
 
-function LambdaExpression.new(parameters, body, implicit_return)
+function LambdaExpression.new(parameters, body, implicit_return, return_type_annotation)
   local super = SyntaxNode.new(SyntaxKind.lambda_expression)
   local self = setmetatable(super, LambdaExpression)
   self.parameters = parameters
   self.body = body -- could be a block or a single expression
   self.implicit_return = implicit_return -- if single expression, it is implicitly returned
+  self.return_type_annotation = return_type_annotation
 
   return self
 end

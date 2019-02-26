@@ -12,6 +12,8 @@ function Transpiler.new(ast)
   self.chunk = AST.Chunk.new(ast)
   self.binder = Binder.new(self.chunk)
   self.visitors = {
+    [SyntaxKind.chunk] = self.visit_chunk,
+
     -- stats
     [SyntaxKind.do_statement] = self.visit_do_statement,
     [SyntaxKind.if_statement] = self.visit_if_statement,
@@ -43,9 +45,12 @@ function Transpiler.new(ast)
     [SyntaxKind.boolean_literal_expression] = self.visit_boolean_literal_expression,
     [SyntaxKind.variable_argument_expression] = self.visit_variable_argument_expression,
     [SyntaxKind.identifier] = self.visit_identifier,
+    [SyntaxKind.index_expression] = self.visit_index_expression,
 
     -- decls
-    [SyntaxKind.field_declaration] = self.visit_field_declaration,
+    [SyntaxKind.index_field_declaration] = self.visit_index_field_declaration,
+    [SyntaxKind.member_field_declaration] = self.visit_member_field_declaration,
+    [SyntaxKind.sequential_field_declaration] = self.visit_sequential_field_declaration,
     [SyntaxKind.parameter_declaration] = self.visit_parameter_declaration,
   }
 
@@ -215,9 +220,9 @@ function Transpiler:visit_function_statement(stat)
   local out = self:get_indent()
 
   if stat.is_local then
-    out = "local function " .. self:visit_node(stat.base)
+    out = out .. "local function " .. self:visit_node(stat.base)
   else
-    out = "function " .. self:visit_node(stat.base)
+    out = out .. "function " .. self:visit_node(stat.base)
   end
 
   out = out .. "(" .. self:visit_params(stat.parameters) .. ")\n" ..
@@ -240,8 +245,6 @@ function Transpiler:visit_variable_statement(stat)
   else
     return out
   end
-
-  return out
 end
 
 function Transpiler:visit_identifier(node)
@@ -300,19 +303,19 @@ function Transpiler:visit_lambda_expression(expr)
 end
 
 function Transpiler:visit_member_expression(member)
-  local out = ""
-
-  if member.right_member.syntax_kind == SyntaxKind.identifier then
-    -- right_member is a string, so possibly has ':' or '.'
-    out = (member.has_colon and ":" or ".") .. member.right_member.name .. out
-  else
-    -- right_member wasn't a string but should not be nil
-    -- therefore right_member should be any expression
-    out = "[" .. self:visit_node(member.right_member) .. "]" .. out
-  end
+  local out = (member.has_colon and ":" or ".") .. member.member_identifier.name
 
   -- we'll visit left, recursively
-  out = self:visit_node(member.left_member) .. out
+  out = self:visit_node(member.base) .. out
+
+  return out
+end
+
+function Transpiler:visit_index_expression(expr)
+  local out = "[" .. self:visit_node(expr.index) .. "]"
+
+  -- we'll visit left, recursively
+  out = self:visit_node(expr.base) .. out
 
   return out
 end
@@ -367,13 +370,25 @@ function Transpiler:visit_variable_argument_expression(expr)
 end
 
 function Transpiler:visit_field_declaration(field)
-  if field.key == nil then
-    return self:visit_node(field.value)
-  elseif field.key.syntax_kind == SyntaxKind.identifier then
-    return field.key.name .. " = " .. self:visit_node(field.value)
+  if field.syntax_kind == SyntaxKind.sequential_field_declaration then
+    return self:visit_sequential_field_declaration(field)
+  elseif field.syntax_kind == SyntaxKind.member_field_declaration then
+    return self:visit_member_field_declaration(field)
   else
-    return "[" .. self:visit_node(field.key) .. "] = " .. self:visit_node(field.value)
+    return self:visit_index_field_declaration(field)
   end
+end
+
+function Transpiler:visit_sequential_field_declaration(field)
+  return self:visit_node(field.value)
+end
+
+function Transpiler:visit_member_field_declaration(field)
+  return field.member_identifier.name .. " = " .. self:visit_node(field.value)
+end
+
+function Transpiler:visit_index_field_declaration(field)
+  return "[" .. self:visit_node(field.key) .. "] = " .. self:visit_node(field.value)
 end
 
 function Transpiler:visit_parameter_declaration(param)

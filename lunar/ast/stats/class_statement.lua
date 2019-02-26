@@ -5,7 +5,6 @@ local FunctionCallExpression = require "lunar.ast.exprs.function_call_expression
 local TableLiteralExpression = require "lunar.ast.exprs.table_literal_expression"
 local Identifier = require "lunar.ast.exprs.identifier"
 local VariableStatement = require "lunar.ast.stats.variable_statement"
-local ExpressionStatement = require "lunar.ast.stats.expression_statement"
 local AssignmentStatement = require "lunar.ast.stats.assignment_statement"
 local SelfAssignmentOpKind = require "lunar.ast.stats.self_assignment_op_kind"
 local ConstructorDeclaration = require "lunar.ast.decls.constructor_declaration"
