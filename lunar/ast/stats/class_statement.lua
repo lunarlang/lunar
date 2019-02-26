@@ -24,7 +24,7 @@ end
 
 function ClassStatement:lower()
   local empty_table = TableLiteralExpression.new({})
-  local class_def = VariableStatement.new({ self.name }, {})
+  local class_def = VariableStatement.new({ self.name }, {}, {})
 
   if self.base_name ~= nil then
     local setmt_member_expr = MemberExpression.new("setmetatable")

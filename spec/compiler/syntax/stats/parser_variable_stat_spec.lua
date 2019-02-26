@@ -13,7 +13,7 @@ describe("VariableStatement syntax", function()
       AST.NumberLiteralExpression.new(2)
     }
 
-    assert.same({ AST.VariableStatement.new(names, exprs) }, result)
+    assert.same({ AST.VariableStatement.new(names, {}, exprs) }, result)
   end)
 
   it("should return one VariableSyntax node with two names and one expression", function()
@@ -23,7 +23,7 @@ describe("VariableStatement syntax", function()
     local names = { "a", "b" }
     local exprs = { AST.VariableArgumentExpression.new() }
 
-    assert.same({ AST.VariableStatement.new(names, exprs) }, result)
+    assert.same({ AST.VariableStatement.new(names, {}, exprs) }, result)
   end)
 
   it("should return one VariableSyntax node with one name and no expression", function()
@@ -32,7 +32,7 @@ describe("VariableStatement syntax", function()
 
     local names = { "a" }
 
-    assert.same({ AST.VariableStatement.new(names) }, result)
+    assert.same({ AST.VariableStatement.new(names, {}, nil) }, result)
   end)
 
   it("should return two VariableSyntax node with one name and one expression, each", function()
@@ -40,8 +40,29 @@ describe("VariableStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.VariableStatement.new({ "a" }, { AST.NumberLiteralExpression.new(1) }),
-      AST.VariableStatement.new({ "b" }, { AST.NumberLiteralExpression.new(2) })
+      AST.VariableStatement.new({ "a" }, {}, { AST.NumberLiteralExpression.new(1) }),
+      AST.VariableStatement.new({ "b" }, {}, { AST.NumberLiteralExpression.new(2) })
+    }, result)
+  end)
+
+  it("should attach type annotations in a number dictionary", function()
+    local tokens = Lexer.new("local a: string, b, c: any = 1, 2, 3"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.VariableStatement.new(
+        { "a", "b", "c" },
+        { [1] = "string", [2] = nil, [3] = "any" },
+        { AST.NumberLiteralExpression.new(1), AST.NumberLiteralExpression.new(2), AST.NumberLiteralExpression.new(3) }),
+    }, result)
+  end)
+
+  it("should attach a type annotation in a statement with one name and no expression", function()
+    local tokens = Lexer.new("local a: string"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.VariableStatement.new({ "a" }, {[1] = "string"}),
     }, result)
   end)
 end)

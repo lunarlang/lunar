@@ -295,10 +295,16 @@ function Parser:statement()
     self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
     local paramlist = self:parameter_list()
     self:expect(TokenType.right_paren, "Expected ')' to close '('")
+
+    local return_type_annotation = nil
+    if self:match(TokenType.colon) then
+      return_type_annotation = self:type_expression()
+    end
+
     local block = self:block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
-    return AST.FunctionStatement.new(member_expr, paramlist, block)
+    return AST.FunctionStatement.new(member_expr, paramlist, block, return_type_annotation)
   end
 
   -- 'local'
@@ -309,27 +315,38 @@ function Parser:statement()
       self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
       local paramlist = self:parameter_list()
       self:expect(TokenType.right_paren, "Expected ')' to close '('")
+
+      local return_type_annotation = nil
+      if self:match(TokenType.colon) then
+        return_type_annotation = self:type_expression()
+      end
+
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
-      return AST.FunctionStatement.new(name.value, paramlist, block, true)
+      return AST.FunctionStatement.new(name.value, paramlist, block, return_type_annotation, true)
     end
 
     -- identifier {',' identifier} ['=' exprlist]
     if self:assert(TokenType.identifier) then
-      local first_identifier = self:consume()
-      local namelist = { first_identifier.value }
+      local namelist = {}
+      local type_annotations = {}
       local exprlist
 
-      while self:match(TokenType.comma) do
+      local i = 0
+      repeat
+        i = i + 1
         table.insert(namelist, self:expect(TokenType.identifier, "Expected identifier after ','").value)
-      end
+        if self:match(TokenType.colon) then
+          type_annotations[i] = self:type_expression()
+        end
+      until not self:match(TokenType.comma)
 
       if self:match(TokenType.equal) then
         exprlist = self:expression_list()
       end
 
-      return AST.VariableStatement.new(namelist, exprlist)
+      return AST.VariableStatement.new(namelist, type_annotations, exprlist)
     end
   end
 end
@@ -503,6 +520,12 @@ function Parser:simple_expression()
   return self:primary_expression()
 end
 
+function Parser:type_expression()
+  if self:assert(TokenType.identifier) then
+    return self:consume().value
+  end
+end
+
 -- using this as the basis for unary, binary, and simple expressions
 -- https://github.com/lua/lua/blob/98194db4295726069137d13b8d24fca8cbf892b6/lparser.c#L778-L853
 function Parser:get_unary_op()
@@ -602,7 +625,13 @@ function Parser:parameter_declaration()
   -- identifier | '...'
   if self:assert(TokenType.identifier, TokenType.triple_dot) then
     local param = self:consume()
-    return AST.ParameterDeclaration.new(param.value)
+
+    local type_annotation = nil
+    if self:match(TokenType.colon) then
+      type_annotation = self:type_expression()
+    end
+
+    return AST.ParameterDeclaration.new(param.value, type_annotation)
   end
 end
 

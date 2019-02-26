@@ -63,10 +63,10 @@ function ConstructorDeclaration:lower(class, class_base_name)
   table.insert(self.block, ReturnStatement.new({ MemberExpression.new("self") }))
 
   return {
-    new = FunctionStatement.new(MemberExpression.new(class, "new"), self.params, new_block),
+    new = FunctionStatement.new(MemberExpression.new(class, "new"), self.params, new_block, nil),
     constructor = FunctionStatement.new(MemberExpression.new(class, "constructor"), {
       ParameterDeclaration.new("self"), unpack(self.params)
-    }, self.block),
+    }, self.block, nil),
   }
 end
 
