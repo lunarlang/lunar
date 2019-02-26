@@ -97,10 +97,9 @@ function Parser:class_member()
 
   -- possibly a static member?
   local old_position = self.position
-  local is_static = false
-  if self:peek().value == "static" then
+  local is_static = self:peek().value == "static"
+  if is_static then
     self:move(1)
-    is_static = true
   end
 
   if self:match(TokenType.function_keyword) then
