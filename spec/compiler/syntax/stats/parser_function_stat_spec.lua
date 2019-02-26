@@ -48,4 +48,20 @@ describe("FunctionStatement syntax", function()
       AST.FunctionStatement.new(AST.Identifier.new("test"), {}, {}, AST.Identifier.new("string"), true)
     }, result)
   end)
+
+  it("should attach type annotation to formal parameters", function()
+    local tokens = Lexer.new("function test(a: string, b, c: any) end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local expected_name = AST.Identifier.new("test")
+    local expected_params = {
+      AST.ParameterDeclaration.new(AST.Identifier.new("a", AST.Identifier.new("string"))),
+      AST.ParameterDeclaration.new(AST.Identifier.new("b", nil)),
+      AST.ParameterDeclaration.new(AST.Identifier.new("c", AST.Identifier.new("any"))),
+    }
+
+    assert.same({
+      AST.FunctionStatement.new(expected_name, expected_params, {}, nil)
+    }, result)
+  end)
 end)
