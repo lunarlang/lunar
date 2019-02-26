@@ -1,6 +1,7 @@
 local AST = require "lunar.ast"
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local BaseTranspiler = require "lunar.compiler.codegen.base_transpiler"
+local Binder = require "lunar.compiler.semantic.binder"
 
 local Transpiler = setmetatable({}, BaseTranspiler)
 Transpiler.__index = Transpiler
@@ -8,7 +9,8 @@ Transpiler.__index = Transpiler
 function Transpiler.new(ast)
   local super = BaseTranspiler.new()
   local self = setmetatable(super, Transpiler)
-  self.ast = ast
+  self.chunk = AST.Chunk.new(ast)
+  self.binder = Binder.new(self.chunk)
   self.visitors = {
     -- stats
     [SyntaxKind.do_statement] = self.visit_do_statement,
@@ -73,7 +75,9 @@ function Transpiler.new(ast)
 end
 
 function Transpiler:transpile()
-  self:write(self:visit_block(self.ast))
+  self.binder:bind()
+
+  self:write(self:visit_chunk(self.chunk))
   return self.source
 end
 
@@ -94,6 +98,10 @@ function Transpiler:visit_block(block)
   end
 
   return out
+end
+
+function Transpiler:visit_chunk(chunk)
+  return self:visit_block(chunk.block)
 end
 
 function Transpiler:visit_varlist(varlist)

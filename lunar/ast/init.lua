@@ -1,4 +1,5 @@
 return {
+  Chunk = require "lunar.ast.chunk",
   DoStatement = require "lunar.ast.stats.do_statement",
   WhileStatement = require "lunar.ast.stats.while_statement",
   RepeatUntilStatement = require "lunar.ast.stats.repeat_until_statement",

@@ -1,4 +1,5 @@
 return {
+  chunk = 0,
   break_statement = 1,
   nil_literal_expression = 2,
   boolean_literal_expression = 3,
