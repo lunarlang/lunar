@@ -46,7 +46,7 @@ local function parse_sources_in_directory(path)
         parse_sources_in_directory(file_path)
       elseif attrs and attrs.mode == "file" and is_file_lunar(name) then
         local out = parse_and_emit(io.open(file_path):read("*a"), name)
-        local out_file, err = io.open(join(out_dir, path, name:sub(1, -5) .. ".lua"), "w")
+        local out_file, err = io.open(join(out_dir, path, name:sub(1, -7) .. ".lua"), "w")
 
         if err then
           if out_file then out_file:close() end -- close the file if it exists
