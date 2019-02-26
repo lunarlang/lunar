@@ -13,11 +13,11 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement with one MemberExpression using bracket notation and one expression", function()
+  it("should return one AssignmentStatement with one IndexExpression using bracket notation and one expression", function()
     local tokens = Lexer.new("hello['world'] = 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local variables = { AST.MemberExpression.new(AST.Identifier.new("hello"), AST.StringLiteralExpression.new("'world'")) }
+    local variables = { AST.IndexExpression.new(AST.Identifier.new("hello"), AST.StringLiteralExpression.new("'world'")) }
     local exprs = { AST.NumberLiteralExpression.new(1) }
 
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)

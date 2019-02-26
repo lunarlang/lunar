@@ -11,7 +11,6 @@ return {
   function_expression = 9,
   parameter_declaration = 10,
   table_literal_expression = 11,
-  field_declaration = 12,
   binary_op_expression = 13,
   unary_op_expression = 14,
   member_expression = 15,
@@ -32,4 +31,8 @@ return {
   constructor_declaration = 30,
   class_function_declaration = 31,
   identifier = 32,
+  index_expression = 33,
+  index_field_declaration = 34,
+  member_field_declaration = 35,
+  sequential_field_declaration = 36,
 }

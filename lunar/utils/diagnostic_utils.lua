@@ -34,16 +34,16 @@ function DiagnosticUtils.inspectAST(tab, maxDepth, _indentation)
     elseif type(k) == "string" then
       if k == "syntax_kind" and type(v) == "number" then
         valueStr = tostring(v)
-        comments = " " .. DiagnosticUtils.index_of(SyntaxKind, v) .. ""
+        comments = " " .. tostring(DiagnosticUtils.index_of(SyntaxKind, v)) .. ""
       elseif k == "operator" and type(v) == "number" and tab.syntax_kind == SyntaxKind.binary_op_expression then
         valueStr = tostring(v)
-        comments = " " .. DiagnosticUtils.index_of(BinaryOpKind, v) .. ""
+        comments = " " .. tostring(DiagnosticUtils.index_of(BinaryOpKind, v)) .. ""
       elseif k == "operator" and type(v) == "number" and tab.syntax_kind == SyntaxKind.unary_op_expression then
         valueStr = tostring(v)
-        comments = " " .. DiagnosticUtils.index_of(UnaryOpKind, v) .. ""
+        comments = " " .. tostring(DiagnosticUtils.index_of(UnaryOpKind, v)) .. ""
       elseif k == "token_type" and type(v) == "number" then
         valueStr = tostring(v)
-        comments = " " .. DiagnosticUtils.index_of(TokenType, v) .. ""
+        comments = " " .. tostring(DiagnosticUtils.index_of(TokenType, v)) .. ""
       end
     end
 

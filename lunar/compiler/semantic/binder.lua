@@ -6,6 +6,7 @@ Store declarations within symbols
 Migrate return in bind_member_expression to a separate util call that recurs after binding
 Handle "self" and "super" identifiers as special cases
 Handle statics of declared classes within member expressions
+Refactor builtins and add environment argument (still include primitive types)
 
 ]]
 
@@ -70,9 +71,12 @@ function Binder.constructor(self, chunk)
     [SyntaxKind.boolean_literal_expression] = self.bind_boolean_literal_expression,
     [SyntaxKind.variable_argument_expression] = self.bind_variable_argument_expression,
 		[SyntaxKind.identifier] = self.bind_identifier,
+    [SyntaxKind.index_expression] = self.bind_index_expression,
 		
     -- Declarations
-    [SyntaxKind.field_declaration] = self.bind_field_declaration,
+    [SyntaxKind.index_field_declaration] = self.bind_index_field_declaration,
+    [SyntaxKind.member_field_declaration] = self.bind_member_field_declaration,
+    [SyntaxKind.sequential_field_declaration] = self.bind_sequential_field_declaration,
     [SyntaxKind.parameter_declaration] = self.bind_parameter_declaration,
 
   }
@@ -101,12 +105,12 @@ function Binder.__index:bind_node_list(stats)
 end
 
 function Binder.__index:bind_identifier(identifier)
-	self:bind_identifier_reference(identifier)
+	self:bind_value_reference(identifier)
 end
 
-function Binder.__index:bind_identifier_reference(identifier)
-	if self.scope:has(identifier.name) then
-		local symbol = self:bind_local_symbol(identifier, identifier.name)
+function Binder.__index:bind_value_reference(identifier)
+	if self.scope:has_value(identifier.name) then
+		local symbol = self:bind_local_value_symbol(identifier, identifier.name)
 		symbol.is_referenced = true
 	else
 		-- else it is unbound
@@ -114,43 +118,72 @@ function Binder.__index:bind_identifier_reference(identifier)
 	end
 end
 
-function Binder.__index:bind_identifier_assignment(identifier)
+function Binder.__index:bind_value_assignment(identifier, declaring_node)
 	local symbol
-	if self.scope:has(identifier.name) then
-		symbol = self:bind_local_symbol(identifier, identifier.name)
+	if self.scope:has_value(identifier.name) then
+		symbol = self:bind_local_value_symbol(identifier, identifier.name)
 	else
-		-- else it is a global assignment; todo: add warning to diagnostic chain
-		symbol = self:bind_global_symbol(identifier, identifier.name)
+		-- else it is a first global assignment; todo: add warning to diagnostic chain if in strict mode
+		symbol = self:bind_global_value_symbol(identifier, identifier.name)
+		symbol.declaration = declaring_node
 	end
 	symbol.is_assigned = true
 end
 
-function Binder.__index:bind_identifier_assignment_declaration(identifier)
+function Binder.__index:bind_value_assignment_declaration(identifier, declaring_node)
 	-- In a non-strict mode, we should push the scope for re-declared variable
-	if self.scope:has(identifier) then
+	if self.scope:has_value(identifier.name) then
 		self:push_scope(false)
 	end
+	
+	local symbol = Symbol.new(identifier.name)
+	identifier.symbol = symbol
+	symbol.is_assigned = true
+	symbol.declaration = declaring_node
+	self.scope:add_value(symbol)
 
 	-- Allow types to be annotated in declarations
 	if identifier.type_annotation then
-		self:bind_node(identifier.type_annotation)
+		self:bind_type_expression(identifier.type_annotation)
 	end
-
-	self:bind_identifier_assignment(identifier)
 end
 
-function Binder.__index:bind_identifier_declaration(identifier)
+function Binder.__index:bind_value_declaration(identifier, declaring_node)
 	-- In a non-strict mode, we should push the scope for re-declared variable
-	if self.scope:has(identifier) then
+	if self.scope:has_value(identifier.name) then
 		self:push_scope(false)
 	end
+	
+	local symbol = Symbol.new(identifier.name)
+	identifier.symbol = symbol
+	symbol.declaration = declaring_node
+	self.scope:add_value(symbol)
 
 	-- Allow types to be annotated in declarations
 	if identifier.type_annotation then
-		self:bind_node(identifier.type_annotation)
+		self:bind_type_expression(identifier.type_annotation)
 	end
+end
 
-	self:bind_local_symbol(identifier, identifier.name)
+function Binder.__index:bind_type_reference(identifier)
+	if self.scope:has_type(identifier.name) then
+		local symbol = self:bind_local_type_symbol(identifier, identifier.name)
+		symbol.is_referenced = true
+	else
+		-- else it is unbound
+		-- todo: add warning to diagnostic chain
+	end
+end
+
+function Binder.__index:bind_type_expression(expr)
+	if expr.syntax_kind == SyntaxKind.identifier then
+		self:bind_type_reference(expr)
+	else
+		error("Unbound type expression of syntax kind '"
+			.. tostring(DiagnosticUtils.index_of(SyntaxKind, expr.syntax_kind))
+			.. "'"
+		)
+	end
 end
 
 function Binder.__index:bind_chunk(node)
@@ -174,9 +207,9 @@ function Binder.__index:bind_variable_statement(stat)
 		local identifier = identifiers[i]
 
 		if assignments and assignments[i] then
-			self:bind_identifier_assignment_declaration(identifier)
+			self:bind_value_assignment_declaration(identifier, stat)
 		else
-			self:bind_identifier_declaration(identifier)
+			self:bind_value_declaration(identifier, stat)
 		end
 	end
 end
@@ -209,35 +242,59 @@ end
 
 function Binder.__index:bind_class_statement(stat)
 	local identifier = stat.identifier
-	-- Determine if a variable was re-declared
+	-- Determine if the statics or type were declared
 	-- In a non-strict mode, we should push the scope for re-declared variable
-	if self.scope:has(identifier) then
+	if self.scope:has_value(identifier.name) or self.scope:has_type(identifier.name) then
 		self:push_scope(false)
 	end
 
-	-- Add symbol
-	local symbol = self:bind_local_symbol(identifier, identifier.name)
+	self:push_scope()
 
-	-- Flag as assigned
-	symbol.is_assigned = true
+	-- Add static and type symbols
+	self:bind_value_assignment_declaration(identifier, stat)
+	local type_symbol = Symbol.new(identifier.name)
+	self.scope:add_type(type_symbol)
+	type_symbol.is_assigned = true
+	type_symbol.declaration = stat
+
+	-- Bind superclass identifier
+	if stat.super_identifier then
+		if self.scope:has_value(stat.super_identifier) then
+			local super_symbol = self.scope:add_value("super")
+			super_symbol.is_assigned = stat.super_identifier.is_assigned
+			super_symbol.declaration = stat.super_identifier.declaration
+		end
+		self:bind_type_reference(stat.super_identifier)
+		self:bind_value_reference(stat.super_identifier)
+	end
+
+	-- Bind "self" and "super" types for this scope
+	local self_symbol = Symbol.new("self")
+	self.scope:add_value(self_symbol)
+	self_symbol.is_assigned = true
+	self_symbol.declaration = stat
 
 	-- Bind class member declarations in a new SymbolTable
-	symbol.members = SymbolTable.new()
+	type_symbol.members = SymbolTable.new()
 	for i = 1, #stat.members do
 		local member = stat.members[i]
 		if member.syntax_kind == SyntaxKind.class_function_declaration then
-			
+			local member_symbol = Symbol.new(member.identifier.name)
+			member_symbol.is_assigned = true
+
+			if not member.is_static then
+				type_symbol.members:add_value(member_symbol)
+			end
+
+			self:bind_function_like_expression(member.params, member.block, member.return_type_annotation)
+		elseif member.syntax_kind == SyntaxKind.constructor_declaration then
+			self:bind_function_like_expression(member.params, member.block)
 		else
 			error("Unbound class declaration of syntax kind '"
-				.. DiagnosticUtils.index_of(SyntaxKind, tostring(member.syntax_kind))
+				.. tostring(DiagnosticUtils.index_of(SyntaxKind, member.syntax_kind))
 				.. "'"
 			)
 		end
-	end
-
-	-- Bind superclass identifier
-	if self.super_identifier then
-		self:bind_identifier(self.super_identifier)
 	end
 end
 
@@ -263,25 +320,18 @@ function Binder.__index:bind_function_statement(stat)
 	-- stat.base should be an identifier in local statements; the identifier should be included in the
 	-- function's block scope
 	if stat.is_local then
-		self:bind_identifier_assignment_declaration(stat.base)
+		self:bind_value_assignment_declaration(stat.base, stat)
 	else
-		if self.base.syntax_kind == SyntaxKind.member_expression then
+		if stat.base.syntax_kind == SyntaxKind.member_expression then
 			-- Bind member expression and see if it resolved to a bindable symbol
-			local member_symbol = self:bind_member_expression(self.base)
-			if member_symbol then
-				-- Mark as assigned
-				member_symbol.is_assigned = true
-			end
+			self:bind_member_expression(stat.base)
 		else
 			-- base should be an identifier
-			self:bind_identifier_assignment(stat.base)
+			self:bind_value_assignment(stat.base, stat)
 		end
 	end
-	
-	self:push_scope(true)
-	self:bind_node_list(stat.parameters)
-	self:bind_node_list(stat.block)
-	self:pop_level_scopes()
+
+	self:bind_function_like_expression(stat.parameters, stat.block, stat.return_type_annotation)
 end
 
 function Binder.__index:bind_range_for_statement(stat)
@@ -294,7 +344,7 @@ function Binder.__index:bind_range_for_statement(stat)
 
 	-- Bind parameter inside of loop scope
 	self:push_scope(true)
-	self:bind_identifier_assignment_declaration(stat.identifier)
+	self:bind_value_assignment_declaration(stat.identifier, stat)
 	self:bind_node_list(stat.block)
 	self:pop_level_scopes()
 end
@@ -310,15 +360,11 @@ function Binder.__index:bind_assignment_statement(stat)
 	-- Bind variables
 	for i = 1, #stat.variables do
 		local variable = stat.variables[i]
-		if variable.syntax_kind == SyntaxKind.member_expression then
-			local member_symbol = self:bind_member_expression(self.base)
-			if member_symbol then
-				-- Mark as assigned
-				member_symbol.is_assigned = true
-			end
+		if variable.syntax_kind == SyntaxKind.identifier then
+			self:bind_value_assignment(variable, stat)
 		else
-			-- Should be an identifier
-			self:bind_identifier_assignment(variable)
+			-- Should be a member expression or index expression
+			self:bind_node(variable)
 		end
 	end
 end
@@ -330,7 +376,7 @@ function Binder.__index:bind_generic_for_statement(stat)
 	-- Bind parameters inside of loop scope
 	self:push_scope(true)
 	for i = 1, #stat.identifiers do
-		self:bind_identifier_assignment_declaration(stat.identifiers[i])
+		self:bind_value_assignment_declaration(stat.identifiers[i], stat)
 	end
 	self:bind_node_list(stat.block)
 	self:pop_level_scopes()
@@ -351,7 +397,9 @@ function Binder.__index:bind_prefix_expression(stat)
 end
 
 function Binder.__index:bind_lambda_expression(stat)
-	self:bind_node(stat.expr)
+	if stat.expr then
+		self:bind_node(stat.expr)
+	end
 	
 	self:push_scope(true)
 	self:bind_node_list(stat.parameters)
@@ -364,16 +412,111 @@ function Binder.__index:bind_lambda_expression(stat)
 end
 
 -- Should return the symbol of the rightmost member if it is a member of an identifier on the left
-function Binder.__index:bind_member_expression(stat)
+function Binder.__index:bind_member_expression(expr)
+	-- Bind left symbol
+	local left_base = expr.base
+	while left_base.syntax_kind == SyntaxKind.prefix_expression do
+		left_base = left_base.expr
+	end
+	if left_base.syntax_kind == SyntaxKind.identifier then
+		self:bind_value_reference(left_base)
+	elseif left_base.syntax_kind == SyntaxKind.member_expression then
+		self:bind_member_expression(left_base)
+	end
 
+	-- Do not bind right identifier
 end
 
---[[
-
-function Binder.__index:(stat)
+function Binder.__index:bind_index_expression(expr)
+	-- Bind left expression
+	self:bind_node(expr.base)
+	-- Bind right expression
+	self:bind_node(expr.index)
 end
 
-]]
+function Binder.__index:bind_argument_expression(expr)
+	self:bind_node(expr.value)
+end
+
+function Binder.__index:bind_function_like_expression(params, block, return_type_annotation)
+	self:push_scope(true)
+	self:bind_node_list(params)
+	self:bind_node_list(block)
+	self:pop_level_scopes()
+
+	if return_type_annotation then
+		self:bind_type_expression(return_type_annotation)
+	end
+end
+
+function Binder.__index:bind_function_expression(expr)
+	self:bind_function_like_expression(expr.parameters, expr.block, expr.return_type_annotation)
+end
+
+function Binder.__index:bind_unary_op_expression(expr)
+	self:bind_node(expr.right_operand)
+end
+
+function Binder.__index:bind_binary_op_expression(expr)
+	self:bind_node(expr.left_operand)
+	self:bind_node(expr.right_operand)
+end
+
+function Binder.__index:bind_nil_literal_expression(expr)
+	-- Pass
+end
+
+function Binder.__index:bind_function_call_expression(expr)
+	self:bind_node(expr.base)
+	self:bind_node_list(expr.arguments)
+end
+
+function Binder.__index:bind_table_literal_expression(expr)
+	self:bind_node_list(expr.fields)
+end
+
+function Binder.__index:bind_number_literal_expression(expr)
+	-- Pass
+end
+
+function Binder.__index:bind_string_literal_expression(expr)
+	-- Pass
+end
+
+function Binder.__index:bind_boolean_literal_expression(expr)
+	-- Pass
+end
+
+function Binder.__index:bind_variable_argument_expression(expr)
+	self:bind_local_value_symbol(expr, "...")
+end
+
+function Binder.__index:bind_index_field_declaration(expr)
+	self:bind_node(expr.key)
+	self:bind_node(expr.value)
+end
+
+function Binder.__index:bind_member_field_declaration(expr)
+	-- Do not bind identifier
+	self:bind_node(expr.value)
+end
+
+function Binder.__index:bind_sequential_field_declaration(expr)
+	self:bind_node(expr.value)
+end
+
+function Binder.__index:bind_parameter_declaration(expr)
+	if self.scope:has_value(expr.identifier.name) then
+		-- Todo: show diagnostics for shadowing definitions
+
+		-- Todo: in strict mode, we should guard against repeaeted parameters
+		if self.scope:has_level_value(expr.identifier.name) then
+			self:push_scope(true)
+		end
+	end
+
+	self:bind_value_assignment_declaration(expr.identifier, expr)
+end
 
 function Binder.new(...)
 	local self = setmetatable({}, Binder)

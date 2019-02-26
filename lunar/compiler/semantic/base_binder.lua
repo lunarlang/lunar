@@ -44,30 +44,62 @@ function BaseBinder.__index:pop_level_scopes()
 end
 
 --[[ Creates a new symbol in the current scope if it does not exist, and binds it to a given node ]]
-function BaseBinder.__index:bind_local_symbol(node, name)
-  local existing = self.scope:get(name)
+function BaseBinder.__index:bind_local_value_symbol(node, name)
+  local existing = self.scope:get_value(name)
   if existing then
     node.symbol = existing
     return existing
   else
     local symbol = Symbol.new(name)
     node.symbol = symbol
-    self.scope:add(symbol)
+    self.scope:add_value(symbol)
   
     return symbol
   end
 end
 
 --[[ Creates a new symbol in the global scope if it does not exist, and binds it to a given node ]]
-function BaseBinder.__index:bind_global_symbol(node, name)
-  local existing = self.global_scope:get(name)
+function BaseBinder.__index:bind_global_value_symbol(node, name)
+  local existing = self.global_scope:get_value(name)
   if existing then
     node.symbol = existing
     return existing
   else
     local symbol = Symbol.new(name)
     node.symbol = symbol
-    self.global_scope:add(symbol)
+    self.global_scope:add_value(symbol)
+  
+    return symbol
+  end
+end
+
+--[[ Creates a new symbol in the current scope if it does not exist, and binds it to a given node.
+Returns the registered symbol ]]
+function BaseBinder.__index:bind_local_type_symbol(node, name)
+  local existing = self.scope:get_value(name)
+  if existing then
+    node.symbol = existing
+    return existing
+  else
+    local symbol = Symbol.new(name)
+    node.symbol = symbol
+    self.scope:add_value(symbol)
+  
+    return symbol
+  end
+end
+
+--[[ Creates a new symbol in the global scope if it does not exist, and binds it to a given node.
+Returns the registered symbol ]]
+function BaseBinder.__index:bind_global_type_symbol(node, name)
+  local existing = self.global_scope:get_value(name)
+  if existing then
+    node.symbol = existing
+    return existing
+  else
+    local symbol = Symbol.new(name)
+    node.symbol = symbol
+    self.global_scope:add_value(symbol)
   
     return symbol
   end

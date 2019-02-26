@@ -6,11 +6,12 @@ function Symbol.constructor(self, name)
 	self.is_referenced = false
 	self.is_assigned = false
 
+	self.declaration = nil -- Node | nil
 	self.members = nil -- SymbolTable | nil
 end
 
 Symbol.__tostring = function(self)
-	return "Symbol (" .. self.name .. ")"
+	return "Symbol (" .. tostring(self.name) .. ")"
 end
 
 function Symbol.new(...)

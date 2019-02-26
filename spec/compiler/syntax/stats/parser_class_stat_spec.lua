@@ -28,6 +28,17 @@ describe("ClassStatement syntax", function()
     }, result)
   end)
 
+  it("should return one ClassStatement node with one instance function and a return type annotation of 'nil'", function()
+    local tokens = Lexer.new("class C function m(): nil end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
+        AST.ClassFunctionDeclaration.new(false, AST.Identifier.new("m"), {}, {}, AST.Identifier.new("nil"))
+      })
+    }, result)
+  end)
+
   it("should return one ClassStatement node with one static function", function()
     local tokens = Lexer.new("class C static function m() end end"):tokenize()
     local result = Parser.new(tokens):parse()
