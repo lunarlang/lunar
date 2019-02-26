@@ -3,14 +3,14 @@ local require_dev = require "spec.helpers.require_dev"
 describe("FunctionStatement syntax", function()
   require_dev()
 
-  it("should return one FunctionStatement node with a MemberExpression named test and two ParameterDeclaration", function()
+  it("should return one FunctionStatement node with an Identifier named test and two ParameterDeclaration", function()
     local tokens = Lexer.new("function test(a, b) end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_name = AST.MemberExpression.new("test")
+    local expected_name = AST.Identifier.new("test")
     local expected_params = {
-      AST.ParameterDeclaration.new("a"),
-      AST.ParameterDeclaration.new("b")
+      AST.ParameterDeclaration.new(AST.Identifier.new("a")),
+      AST.ParameterDeclaration.new(AST.Identifier.new("b"))
     }
 
     assert.same({
@@ -22,9 +22,9 @@ describe("FunctionStatement syntax", function()
     local tokens = Lexer.new("function a.b:c() end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local root_member_expr = AST.MemberExpression.new("a")
-    local middle_member_expr = AST.MemberExpression.new(root_member_expr, "b")
-    local top_member_expr = AST.MemberExpression.new(middle_member_expr, "c", true)
+    local root_ident = AST.Identifier.new("a")
+    local middle_member_expr = AST.MemberExpression.new(root_ident, AST.Identifier.new("b"))
+    local top_member_expr = AST.MemberExpression.new(middle_member_expr, AST.Identifier.new("c"), true)
 
     assert.same({
       AST.FunctionStatement.new(top_member_expr, {}, {}, nil)
@@ -36,7 +36,7 @@ describe("FunctionStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.FunctionStatement.new("test", {}, {}, nil, true)
+      AST.FunctionStatement.new(AST.Identifier.new("test"), {}, {}, nil, true)
     }, result)
   end)
 
@@ -45,7 +45,7 @@ describe("FunctionStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.FunctionStatement.new("test", {}, {}, "string", true)
+      AST.FunctionStatement.new(AST.Identifier.new("test"), {}, {}, AST.Identifier.new("string"), true)
     }, result)
   end)
 
@@ -53,11 +53,11 @@ describe("FunctionStatement syntax", function()
     local tokens = Lexer.new("function test(a: string, b, c: any) end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_name = AST.MemberExpression.new("test")
+    local expected_name = AST.Identifier.new("test")
     local expected_params = {
-      AST.ParameterDeclaration.new("a", "string"),
-      AST.ParameterDeclaration.new("b", nil),
-      AST.ParameterDeclaration.new("c", "any")
+      AST.ParameterDeclaration.new(AST.Identifier.new("a", AST.Identifier.new("string"))),
+      AST.ParameterDeclaration.new(AST.Identifier.new("b", nil)),
+      AST.ParameterDeclaration.new(AST.Identifier.new("c", AST.Identifier.new("any"))),
     }
 
     assert.same({

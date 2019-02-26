@@ -1,4 +1,5 @@
 return {
+  Chunk = require "lunar.ast.chunk",
   DoStatement = require "lunar.ast.stats.do_statement",
   WhileStatement = require "lunar.ast.stats.while_statement",
   RepeatUntilStatement = require "lunar.ast.stats.repeat_until_statement",
@@ -29,6 +30,7 @@ return {
   ArgumentExpression = require "lunar.ast.exprs.argument_expression",
   LambdaExpression = require "lunar.ast.exprs.lambda_expression",
   PrefixExpression = require "lunar.ast.exprs.prefix_expression",
+  Identifier = require "lunar.ast.exprs.identifier",
   FieldDeclaration = require "lunar.ast.decls.field_declaration",
   ParameterDeclaration = require "lunar.ast.decls.parameter_declaration",
   ConstructorDeclaration = require "lunar.ast.decls.constructor_declaration",

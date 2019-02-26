@@ -8,10 +8,10 @@ local SelfAssignmentOpKind = require "lunar.ast.stats.self_assignment_op_kind"
 local AssignmentStatement = setmetatable({}, SyntaxNode)
 AssignmentStatement.__index = AssignmentStatement
 
-function AssignmentStatement.new(members, operator, exprs)
+function AssignmentStatement.new(variables, operator, exprs)
   local super = SyntaxNode.new(SyntaxKind.assignment_statement)
   local self = setmetatable(super, AssignmentStatement)
-  self.members = members
+  self.variables = variables
   self.operator = operator
   self.exprs = exprs
 
@@ -33,7 +33,7 @@ function AssignmentStatement:lower()
   end
 
   -- otherwise, we need to rewrite the assignments using this operator
-  local members = {}
+  local variables = {}
   local exprs = {}
 
   for index, expr in pairs(self.exprs) do
@@ -42,34 +42,34 @@ function AssignmentStatement:lower()
     -- the problem is, if we discarded the 3rd expression
     -- then we would accidentally introduce a subtle bug where c wasn't called
     -- however, lua would call c despite it not being assigned to any variable
-    -- solution: don't do any self-assignability and don't discard expressions where its members is out of range
+    -- solution: don't do any self-assignability and don't discard expressions where its variables is out of range
     -- so the result should be: "a, b = a + 1, b + 2, c()"
 
-    local member = self.members[index]
-    if member ~= nil then
-      table.insert(members, member)
+    local variable = self.variables[index]
+    if variable ~= nil then
+      table.insert(variables, variable)
       local op = self.binary_op_map[self.operator]
-      table.insert(exprs, BinaryOpExpression.new(member, op, expr))
+      table.insert(exprs, BinaryOpExpression.new(variable, op, expr))
     else
       -- simply insert while doing nothing with it
       table.insert(exprs, expr)
     end
   end
 
-  -- possibly have members without any corresponding expressions?
-  if #self.members > #members then
-    -- if the members without their corresponding expressions are a part of this self-assignment
+  -- possibly have variables without any corresponding expressions?
+  if #self.variables > #variables then
+    -- if the variables without their corresponding expressions are a part of this self-assignment
     -- we should rewrite these still, but with nil as the right operand so that it'll throw an error at runtime
 
-    for index = #members, #self.members do
-      local member = self.members[index]
-      table.insert(members, member)
+    for index = #variables, #self.variables do
+      local variable = self.variables[index]
+      table.insert(variables, variable)
       local op = self.binary_op_map[self.operator]
-      table.insert(exprs, BinaryOpExpression.new(member, op, NilLiteralExpression.new()))
+      table.insert(exprs, BinaryOpExpression.new(variable, op, NilLiteralExpression.new()))
     end
   end
 
-  return AssignmentStatement.new(members, SelfAssignmentOpKind.equal_op, exprs)
+  return AssignmentStatement.new(variables, SelfAssignmentOpKind.equal_op, exprs)
 end
 
 return AssignmentStatement

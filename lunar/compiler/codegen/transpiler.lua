@@ -1,6 +1,7 @@
 local AST = require "lunar.ast"
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local BaseTranspiler = require "lunar.compiler.codegen.base_transpiler"
+local Binder = require "lunar.compiler.semantic.binder"
 
 local Transpiler = setmetatable({}, BaseTranspiler)
 Transpiler.__index = Transpiler
@@ -8,7 +9,8 @@ Transpiler.__index = Transpiler
 function Transpiler.new(ast)
   local super = BaseTranspiler.new()
   local self = setmetatable(super, Transpiler)
-  self.ast = ast
+  self.chunk = AST.Chunk.new(ast)
+  self.binder = Binder.new(self.chunk)
   self.visitors = {
     -- stats
     [SyntaxKind.do_statement] = self.visit_do_statement,
@@ -40,6 +42,7 @@ function Transpiler.new(ast)
     [SyntaxKind.string_literal_expression] = self.visit_string_literal_expression,
     [SyntaxKind.boolean_literal_expression] = self.visit_boolean_literal_expression,
     [SyntaxKind.variable_argument_expression] = self.visit_variable_argument_expression,
+    [SyntaxKind.identifier] = self.visit_identifier,
 
     -- decls
     [SyntaxKind.field_declaration] = self.visit_field_declaration,
@@ -73,7 +76,9 @@ function Transpiler.new(ast)
 end
 
 function Transpiler:transpile()
-  self:write(self:visit_block(self.ast))
+  self.binder:bind()
+
+  self:write(self:visit_chunk(self.chunk))
   return self.source
 end
 
@@ -96,11 +101,15 @@ function Transpiler:visit_block(block)
   return out
 end
 
+function Transpiler:visit_chunk(chunk)
+  return self:visit_block(chunk.block)
+end
+
 function Transpiler:visit_varlist(varlist)
   local out = {}
 
   for _, var in pairs(varlist) do
-    table.insert(out, self:visit_member_expression(var))
+    table.insert(out, self:visit_node(var))
   end
 
   return table.concat(out, ", ")
@@ -206,9 +215,9 @@ function Transpiler:visit_function_statement(stat)
   local out = self:get_indent()
 
   if stat.is_local then
-    out = out .. "local function " .. stat.name
+    out = "local function " .. self:visit_node(stat.base)
   else
-    out = out .. "function " .. self:visit_node(stat.name)
+    out = "function " .. self:visit_node(stat.base)
   end
 
   out = out .. "(" .. self:visit_params(stat.parameters) .. ")\n" ..
@@ -219,17 +228,28 @@ function Transpiler:visit_function_statement(stat)
 end
 
 function Transpiler:visit_variable_statement(stat)
-  local out = self:get_indent() .. "local " .. table.concat(stat.namelist, ", ")
-
+  local out = self:get_indent() .. "local "
+  for i = 1, #stat.identlist do
+    if i > 1 then
+      out = out .. ", "
+    end
+    out = out .. stat.identlist[i].name
+  end
   if stat.exprlist then
-    out = out .. " = " .. self:visit_exprlist(stat.exprlist)
+    return out .. " = " .. self:visit_exprlist(stat.exprlist)
+  else
+    return out
   end
 
   return out
 end
 
+function Transpiler:visit_identifier(node)
+  return node.name
+end
+
 function Transpiler:visit_range_for_statement(stat)
-  local out = self:get_indent() .. "for " .. stat.identifier .. " = " ..
+  local out = self:get_indent() .. "for " .. stat.identifier.name .. " = " ..
     self:visit_node(stat.start_expr) .. ", " .. self:visit_node(stat.end_expr)
 
   if stat.incremental_expr then
@@ -249,11 +269,18 @@ end
 
 function Transpiler:visit_assignment_statement(stat)
   local lowered = stat:lower()
-  return self:get_indent() .. self:visit_varlist(lowered.members) .. " = " .. self:visit_exprlist(lowered.exprs)
+  return self:get_indent() .. self:visit_varlist(lowered.variables) .. " = " .. self:visit_exprlist(lowered.exprs)
 end
 
 function Transpiler:visit_generic_for_statement(stat)
-  return self:get_indent() .. "for " .. table.concat(stat.identifiers, ", ") .. " in " .. self:visit_exprlist(stat.exprlist) .. " do\n" ..
+  local out = self:get_indent() .. "for "
+  for i = 1, #stat.identifiers do
+    if i > 1 then
+      out = out .. ", "
+    end
+    out = out .. stat.identifiers[i].name
+  end
+  return out .. " in " .. self:visit_exprlist(stat.exprlist) .. "do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
 end
@@ -274,30 +301,18 @@ end
 
 function Transpiler:visit_member_expression(member)
   local out = ""
-  local current = member
 
-  repeat
-    if type(current.right_member) == "string" then
-      -- right_member is a string, so possibly has ':' or '.'
-      out = (current.has_colon and ":" or ".") .. current.right_member .. out
-    elseif current.right_member ~= nil then
-      -- right_member wasn't a string but should not be nil
-      -- therefore right_member should be any expression
-      out = "[" .. self:visit_node(current.right_member) .. "]" .. out
-    end
+  if member.right_member.syntax_kind == SyntaxKind.identifier then
+    -- right_member is a string, so possibly has ':' or '.'
+    out = (member.has_colon and ":" or ".") .. member.right_member.name .. out
+  else
+    -- right_member wasn't a string but should not be nil
+    -- therefore right_member should be any expression
+    out = "[" .. self:visit_node(member.right_member) .. "]" .. out
+  end
 
-    if type(current.left_member) == "string" then
-      -- left_member was a string which means we're at the innermost MemberExpression
-      out = current.left_member .. out
-      break
-    else
-      -- otherwise we'll visit left, recursively
-      out = self:visit_node(current.left_member) .. out
-      break
-    end
-
-    current = current.left_member
-  until current.right_member == nil -- innermost, therefore last
+  -- we'll visit left, recursively
+  out = self:visit_node(member.left_member) .. out
 
   return out
 end
@@ -317,7 +332,7 @@ function Transpiler:visit_nil_literal_expression(expr)
 end
 
 function Transpiler:visit_function_call_expression(expr)
-  return self:visit_node(expr.member_expression) .. "(" .. self:visit_args(expr.arguments) .. ")"
+  return self:visit_node(expr.base) .. "(" .. self:visit_args(expr.arguments) .. ")"
 end
 
 function Transpiler:visit_unary_op_expression(expr)
@@ -354,15 +369,15 @@ end
 function Transpiler:visit_field_declaration(field)
   if field.key == nil then
     return self:visit_node(field.value)
-  elseif type(field.key) == "string" then
-    return field.key .. " = " .. self:visit_node(field.value)
+  elseif field.key.syntax_kind == SyntaxKind.identifier then
+    return field.key.name .. " = " .. self:visit_node(field.value)
   else
     return "[" .. self:visit_node(field.key) .. "] = " .. self:visit_node(field.value)
   end
 end
 
 function Transpiler:visit_parameter_declaration(param)
-  return param.name
+  return self:visit_identifier(param.identifier)
 end
 
 return Transpiler

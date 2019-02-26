@@ -111,7 +111,7 @@ function Parser:class_member()
     local block = self:block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'function " .. name .. "'")
 
-    return AST.ClassFunctionDeclaration.new(is_static, name, params, block)
+    return AST.ClassFunctionDeclaration.new(is_static, AST.Identifier.new(name), params, block)
   end
 
   -- nothing was returned and we did something with the 'static' token so we need to move the position back
@@ -125,9 +125,9 @@ function Parser:statement()
     self:move(1)
     local name = self:expect(TokenType.identifier, "Expected identifier after 'class'").value
 
-    local base_name
+    local super_identifier
     if self:match(TokenType.double_left_angle) then
-      base_name = self:expect(TokenType.identifier, "Expected an identifier after '<<'").value
+      super_identifier = AST.Identifier.new(self:expect(TokenType.identifier, "Expected an identifier after '<<'").value)
     end
 
     local members = {}
@@ -140,7 +140,7 @@ function Parser:statement()
     until member == nil
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'class'")
 
-    return AST.ClassStatement.new(name, base_name, members)
+    return AST.ClassStatement.new(AST.Identifier.new(name), super_identifier, members)
   end
 
   local primaryexpr = self:primary_expression()
@@ -148,13 +148,13 @@ function Parser:statement()
     -- immediately return this if it is a FunctionCallExpression as an ExpressionStatement
     if primaryexpr.syntax_kind == SyntaxKind.function_call_expression then
       return AST.ExpressionStatement.new(primaryexpr)
-    elseif primaryexpr.syntax_kind == SyntaxKind.member_expression then
-      local members = { primaryexpr }
+    elseif primaryexpr.syntax_kind == SyntaxKind.member_expression or primaryexpr.syntax_kind == SyntaxKind.identifier then
+      local variables = { primaryexpr }
 
       while self:match(TokenType.comma) do
         local expr = self:primary_expression()
-        if expr and expr.syntax_kind == SyntaxKind.member_expression then
-          table.insert(members, expr)
+        if expr and (expr.syntax_kind == SyntaxKind.member_expression or  primaryexpr.syntax_kind == SyntaxKind.identifier) then
+          table.insert(variables, expr)
         else
           return nil
         end
@@ -172,13 +172,13 @@ function Parser:statement()
 
       local op
       if not self:assert(unpack(self_assignable_ops)) then
-        self:expect(TokenType.equal, "Expected '=' to follow this member")
+        self:expect(TokenType.equal, "Expected '=' to follow this variable")
       else
         op = self:consume(unpack(self_assignable_ops))
       end
       local exprs = self:expression_list()
 
-      return AST.AssignmentStatement.new(members, self.self_assignment_op_map[op.value], exprs)
+      return AST.AssignmentStatement.new(variables, self.self_assignment_op_map[op.value], exprs)
     else
       -- no other cases are allowed from primary_expression, so we bail out and let the error bubble up
       return nil
@@ -255,19 +255,24 @@ function Parser:statement()
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'for'")
 
-      return AST.RangeForStatement.new(first_identifier.value, start_expr, end_expr, incremental_expr, block)
+      return AST.RangeForStatement.new(AST.Identifier.new(first_identifier.value), start_expr, end_expr, incremental_expr, block)
     end
 
     -- {',' identifier} 'in' exprlist 'do' block 'end'
     if self:assert(TokenType.comma, TokenType.in_keyword) then
-      local identifiers = { first_identifier.value }
+      local identifiers = { AST.Identifier.new(first_identifier.value) }
 
       while self:match(TokenType.comma) do
-        local identifier = self:expect(TokenType.identifier, "Expected identifier after ','")
-        table.insert(identifiers, identifier.value)
+        local identifier_token = self:expect(TokenType.identifier, "Expected identifier after ','")
+        local type_annotation = nil
+        if self:match(TokenType.colon) then
+          type_annotation = self:type_expression()
+        end
+
+        table.insert(identifiers, AST.Identifier.new(identifier_token.value, type_annotation))
       end
 
-      self:expect(TokenType.in_keyword, "Expected 'in' after namelist")
+      self:expect(TokenType.in_keyword, "Expected 'in' after identifier list")
       local exprlist = self:expression_list()
       self:expect(TokenType.do_keyword, "Expected 'do' to close 'for'")
       local block = self:block()
@@ -280,16 +285,16 @@ function Parser:statement()
   -- 'function' identifier {'.' identifier} [':' identifier] '(' [paramlist] ')' block 'end'
   if self:match(TokenType.function_keyword) then
     local first_identifier = self:expect(TokenType.identifier, "Expected identifier after 'function'")
-    local member_expr = AST.MemberExpression.new(first_identifier.value)
+    local base = AST.Identifier.new(first_identifier.value)
 
     while self:match(TokenType.dot) do
       local identifier = self:expect(TokenType.identifier, "Expected identifier after '.'")
-      member_expr = AST.MemberExpression.new(member_expr, identifier.value)
+      base = AST.MemberExpression.new(base, AST.Identifier.new(identifier.value))
     end
 
     if self:match(TokenType.colon) then
       local identifier = self:expect(TokenType.identifier, "Expected identifier after ':'")
-      member_expr = AST.MemberExpression.new(member_expr, identifier.value, true)
+      base = AST.MemberExpression.new(base, AST.Identifier.new(identifier.value), true)
     end
 
     self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
@@ -304,14 +309,14 @@ function Parser:statement()
     local block = self:block()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
-    return AST.FunctionStatement.new(member_expr, paramlist, block, return_type_annotation)
+    return AST.FunctionStatement.new(base, paramlist, block, return_type_annotation)
   end
 
   -- 'local'
   if self:match(TokenType.local_keyword) then
     -- 'function' identifier '(' [paramlist] ')' block 'end'
     if self:match(TokenType.function_keyword) then
-      local name = self:expect(TokenType.identifier, "Expected identifier after 'function'")
+      local name = self:expect(TokenType.identifier, "Expected identifier after 'function'").value
       self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
       local paramlist = self:parameter_list()
       self:expect(TokenType.right_paren, "Expected ')' to close '('")
@@ -324,29 +329,30 @@ function Parser:statement()
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
-      return AST.FunctionStatement.new(name.value, paramlist, block, return_type_annotation, true)
+      return AST.FunctionStatement.new(AST.Identifier.new(name), paramlist, block, return_type_annotation, true)
     end
 
     -- identifier {',' identifier} ['=' exprlist]
     if self:assert(TokenType.identifier) then
-      local namelist = {}
-      local type_annotations = {}
+      local identlist = {}
       local exprlist
 
       local i = 0
       repeat
         i = i + 1
-        table.insert(namelist, self:expect(TokenType.identifier, "Expected identifier after ','").value)
+        local name = self:expect(TokenType.identifier, "Expected identifier after ','").value
+        local type_annotation = nil
         if self:match(TokenType.colon) then
-          type_annotations[i] = self:type_expression()
+          type_annotation = self:type_expression()
         end
+        table.insert(identlist, AST.Identifier.new(name, type_annotation))
       until not self:match(TokenType.comma)
 
       if self:match(TokenType.equal) then
         exprlist = self:expression_list()
       end
 
-      return AST.VariableStatement.new(namelist, type_annotations, exprlist)
+      return AST.VariableStatement.new(identlist, exprlist)
     end
   end
 end
@@ -414,7 +420,7 @@ function Parser:prefix_expression()
   -- identifier
   if self:assert(TokenType.identifier) then
     local identifier = self:consume()
-    return AST.MemberExpression.new(identifier.value, nil)
+    return AST.Identifier.new(identifier.value)
   end
 end
 
@@ -428,7 +434,7 @@ function Parser:primary_expression()
   while true do
     if self:match(TokenType.dot) then
       local identifier = self:expect(TokenType.identifier, "Expected identifier after '.'")
-      expr = AST.MemberExpression.new(expr, identifier.value)
+      expr = AST.MemberExpression.new(expr, AST.Identifier.new(identifier.value))
     elseif self:match(TokenType.left_bracket) then
       local inner_expr = self:expression()
       self:expect(TokenType.right_bracket, "Expected ']' to close '['")
@@ -436,7 +442,7 @@ function Parser:primary_expression()
     elseif self:match(TokenType.colon) then
       local identifier = self:expect(TokenType.identifier, "Expected identifier after ':'")
       local args = self:function_arg_list()
-      expr = AST.FunctionCallExpression.new(AST.MemberExpression.new(expr, identifier.value, true), args)
+      expr = AST.FunctionCallExpression.new(AST.MemberExpression.new(expr, AST.Identifier.new(identifier.value), true), args)
     elseif self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
       local args = self:function_arg_list()
       expr = AST.FunctionCallExpression.new(expr, args)
@@ -522,7 +528,7 @@ end
 
 function Parser:type_expression()
   if self:assert(TokenType.identifier) then
-    return self:consume().value
+    return AST.Identifier.new(self:consume().value)
   end
 end
 
@@ -631,7 +637,7 @@ function Parser:parameter_declaration()
       type_annotation = self:type_expression()
     end
 
-    return AST.ParameterDeclaration.new(param.value, type_annotation)
+    return AST.ParameterDeclaration.new(AST.Identifier.new(param.value, type_annotation))
   end
 end
 
@@ -646,7 +652,7 @@ function Parser:parameter_list()
     if param ~= nil then
       table.insert(paramlist, param)
     end
-  until not self:match(TokenType.comma) or param.name == "..."
+  until not self:match(TokenType.comma) or param.identifier.name == "..."
 
   return paramlist
 end
@@ -668,7 +674,7 @@ function Parser:field_declaration()
     self:consume() -- consumes the equal token, because we asserted it earlier
     local value = self:expression()
 
-    return AST.FieldDeclaration.new(key.value, value)
+    return AST.FieldDeclaration.new(AST.Identifier.new(key.value), value)
   end
 
   -- expr

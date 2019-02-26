@@ -1,4 +1,5 @@
 return {
+  chunk = 0,
   break_statement = 1,
   nil_literal_expression = 2,
   boolean_literal_expression = 3,
@@ -30,4 +31,5 @@ return {
   class_statement = 29,
   constructor_declaration = 30,
   class_function_declaration = 31,
+  identifier = 32,
 }

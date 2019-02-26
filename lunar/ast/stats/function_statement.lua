@@ -4,12 +4,12 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 local FunctionStatement = setmetatable({}, SyntaxNode)
 FunctionStatement.__index = FunctionStatement
 
-function FunctionStatement.new(name, parameters, block, return_type_annotation, is_local)
+function FunctionStatement.new(base, parameters, block, return_type_annotation, is_local)
   if is_local == nil then is_local = false end
 
   local super = SyntaxNode.new(SyntaxKind.function_statement)
   local self = setmetatable(super, FunctionStatement)
-  self.name = name -- should only be a string if is_local is true
+  self.base = base -- should only be an identifier if is_local is true
   self.parameters = parameters
   self.block = block
   self.is_local = is_local

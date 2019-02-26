@@ -8,7 +8,7 @@ describe("ExpressionStatement syntax", function()
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ExpressionStatement.new(AST.FunctionCallExpression.new(AST.MemberExpression.new("hello"), {}))
+      AST.ExpressionStatement.new(AST.FunctionCallExpression.new(AST.Identifier.new("hello"), {}))
     }, result)
   end)
 end)
