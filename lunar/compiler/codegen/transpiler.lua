@@ -107,14 +107,19 @@ function Transpiler:visit_varlist(varlist)
 end
 
 function Transpiler:visit_fields(fields)
-  local out = {}
+  if #fields == 0 then return "" end
 
+  local out = "\n"
+
+  self:indent()
   for _, field in pairs(fields) do
-    table.insert(out, self:visit_field_declaration(field))
+    out = out .. self:get_indent() .. self:visit_field_declaration(field) .. ",\n"
   end
+  self:dedent()
 
-  return table.concat(out, ", ")
+  return out
 end
+
 
 function Transpiler:visit_params(params)
   local out = {}
@@ -201,9 +206,9 @@ function Transpiler:visit_function_statement(stat)
   local out = self:get_indent()
 
   if stat.is_local then
-    out = "local function " .. stat.name
+    out = out .. "local function " .. stat.name
   else
-    out = "function " .. self:visit_node(stat.name)
+    out = out .. "function " .. self:visit_node(stat.name)
   end
 
   out = out .. "(" .. self:visit_params(stat.parameters) .. ")\n" ..
@@ -214,11 +219,13 @@ function Transpiler:visit_function_statement(stat)
 end
 
 function Transpiler:visit_variable_statement(stat)
+  local out = self:get_indent() .. "local " .. table.concat(stat.namelist, ", ")
+
   if stat.exprlist then
-    return self:get_indent() .. "local " .. table.concat(stat.namelist, ", ") .. " = " .. self:visit_exprlist(stat.exprlist)
-  else
-    return self:get_indent() .. "local " .. table.concat(stat.namelist, ", ")
+    out = out .. " = " .. self:visit_exprlist(stat.exprlist)
   end
+
+  return out
 end
 
 function Transpiler:visit_range_for_statement(stat)
@@ -229,7 +236,7 @@ function Transpiler:visit_range_for_statement(stat)
     out = out .. ", " .. self:visit_node(stat.incremental_expr)
   end
 
-  out = out .. " do" ..
+  out = out .. " do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
 
@@ -246,7 +253,7 @@ function Transpiler:visit_assignment_statement(stat)
 end
 
 function Transpiler:visit_generic_for_statement(stat)
-  return self:get_indent() .. "for " .. table.concat(stat.identifiers, ", ") .. " in " .. self:visit_exprlist(stat.exprlist) .. "do\n" ..
+  return self:get_indent() .. "for " .. table.concat(stat.identifiers, ", ") .. " in " .. self:visit_exprlist(stat.exprlist) .. " do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
 end
@@ -325,7 +332,7 @@ function Transpiler:visit_binary_op_expression(expr)
 end
 
 function Transpiler:visit_table_literal_expression(expr)
-  return "{" .. self:visit_fields(expr.fields) .. "}"
+  return "{" .. self:visit_fields(expr.fields) .. self:get_indent() .. "}"
 end
 
 function Transpiler:visit_number_literal_expression(expr)
