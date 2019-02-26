@@ -116,14 +116,19 @@ function Transpiler:visit_varlist(varlist)
 end
 
 function Transpiler:visit_fields(fields)
-  local out = {}
+  if #fields == 0 then return "" end
 
+  local out = "\n"
+
+  self:indent()
   for _, field in pairs(fields) do
-    table.insert(out, self:visit_field_declaration(field))
+    out = out .. self:get_indent() .. self:visit_field_declaration(field) .. ",\n"
   end
+  self:dedent()
 
-  return table.concat(out, ", ")
+  return out
 end
+
 
 function Transpiler:visit_params(params)
   local out = {}
@@ -235,6 +240,8 @@ function Transpiler:visit_variable_statement(stat)
   else
     return out
   end
+
+  return out
 end
 
 function Transpiler:visit_identifier(node)
@@ -249,7 +256,7 @@ function Transpiler:visit_range_for_statement(stat)
     out = out .. ", " .. self:visit_node(stat.incremental_expr)
   end
 
-  out = out .. " do" ..
+  out = out .. " do\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "end"
 
@@ -340,7 +347,7 @@ function Transpiler:visit_binary_op_expression(expr)
 end
 
 function Transpiler:visit_table_literal_expression(expr)
-  return "{" .. self:visit_fields(expr.fields) .. "}"
+  return "{" .. self:visit_fields(expr.fields) .. self:get_indent() .. "}"
 end
 
 function Transpiler:visit_number_literal_expression(expr)
