@@ -1,11 +1,3 @@
---[[
-
-  TODO NEXT:
-Refactor builtins and add environment argument (always include primitive types)
-
-]]
-
-
 local BaseBinder = require "lunar.compiler.semantic.base_binder"
 local PrimitiveType = require "lunar.compiler.semantic.primitive_type"
 local SyntaxKind = require "lunar.ast.syntax_kind"
@@ -20,6 +12,7 @@ function Binder.constructor(self, chunk, environment)
   BaseBinder.constructor(self, environment)
 
   self.chunk = chunk
+  self.contextual_varargs = nil
 
   self.primitive_type_symbols = {
     [PrimitiveType.any_type] = Symbol.new("any"),
@@ -244,8 +237,6 @@ function Binder.__index:bind_class_statement(stat)
     self:push_scope(false)
   end
 
-  self:push_scope()
-
   -- Add static and type symbols
   self:bind_value_assignment_declaration(identifier, stat)
   local type_symbol = Symbol.new(identifier.name)
@@ -253,50 +244,31 @@ function Binder.__index:bind_class_statement(stat)
   type_symbol.is_assigned = true
   type_symbol.declaration = stat
 
-  -- Bind superclass identifier
+  self:push_scope(true)
+
+  -- Bind contextual self and super symbols
+  local contextual_self = Symbol.new("self")
+  self.scope:add_value(contextual_self)
+  contextual_self.is_assigned = true
+  contextual_self.declaration = stat
+  local contextual_super = Symbol.new("super")
+  self.scope:add_value(contextual_super)
+  contextual_super.is_assigned = stat.super_identifier ~= nil
+  contextual_super.declaration = stat.super_identifier ~= nil and stat or nil
+
+  -- Bind superclass identifier and contextual super
   if stat.super_identifier then
-    self:bind_type_reference(stat.super_identifier)
     self:bind_value_reference(stat.super_identifier)
-
-    -- Pass declaration status of the "super" identifier from the extended class
-    local super_symbol = Symbol.new("super")
-    self.scope:add_value(super_symbol)
-    super_symbol.is_assigned = stat.super_identifier.is_assigned
-    super_symbol.declaration = stat.super_identifier.declaration
   end
-
-  -- Bind "self" and "super" types for this scope
-  local self_symbol = Symbol.new("self")
-  self.scope:add_value(self_symbol)
-  self_symbol.is_assigned = true
-  self_symbol.declaration = stat
 
   -- Bind class member declarations in a new SymbolTable
   type_symbol.members = SymbolTable.new()
   for i = 1, #stat.members do
     local member = stat.members[i]
     if member.syntax_kind == SyntaxKind.class_function_declaration then
-      local member_symbol = Symbol.new(member.identifier.name)
-      member.identifier.symbol = member_symbol
-      member_symbol.is_assigned = true
-      member_symbol.declaration = member.identifier
-
-      if not member.is_static then
-        type_symbol.members:add_value(member_symbol)
-      end
-
-      self:bind_function_like_expression(member.params, member.block, member.return_type_annotation)
+      self:bind_class_function_declaration(member, type_symbol)
     elseif member.syntax_kind == SyntaxKind.class_field_declaration then
-      local member_symbol = Symbol.new(member.identifier.name)
-      member.identifier.symbol = member_symbol
-      member_symbol.is_assigned = true
-      member_symbol.declaration = member.identifier
-
-      if not member.is_static then
-        type_symbol.members:add_value(member_symbol)
-      end
-
-      self:bind_node(member.value)
+      self:bind_class_field_declaration(member, type_symbol)
     elseif member.syntax_kind == SyntaxKind.constructor_declaration then
       self:bind_function_like_expression(member.params, member.block)
     else
@@ -306,6 +278,34 @@ function Binder.__index:bind_class_statement(stat)
       )
     end
   end
+
+  self:pop_level_scopes()
+end
+
+function Binder.__index:bind_class_field_declaration(decl, class_type_symbol)
+  local member_symbol = Symbol.new(decl.identifier.name)
+  decl.identifier.symbol = member_symbol
+  member_symbol.is_assigned = true
+  member_symbol.declaration = decl.identifier
+
+  if not decl.is_static then
+    class_type_symbol.members:add_value(member_symbol)
+  end
+
+  self:bind_node(decl.value)
+end
+
+function Binder.__index:bind_class_function_declaration(decl, class_type_symbol)
+  local member_symbol = Symbol.new(decl.identifier.name)
+  decl.identifier.symbol = member_symbol
+  member_symbol.is_assigned = true
+  member_symbol.declaration = decl.identifier
+
+  if not decl.is_static then
+    class_type_symbol.members:add_value(member_symbol)
+  end
+
+  self:bind_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
 end
 
 function Binder.__index:bind_while_statement(stat)
@@ -411,7 +411,8 @@ function Binder.__index:bind_lambda_expression(stat)
     self:bind_node(stat.expr)
   end
 
-  self:push_scope(true, true)
+  self:push_scope(true)
+  self.contextual_varargs = nil
   self:bind_node_list(stat.parameters)
   if stat.implicit_return then
     self:bind_node(stat.body)
@@ -449,7 +450,8 @@ function Binder.__index:bind_argument_expression(expr)
 end
 
 function Binder.__index:bind_function_like_expression(params, block, return_type_annotation)
-  self:push_scope(true, true)
+  self:push_scope(true)
+  self.contextual_varargs = nil
   self:bind_node_list(params)
   self:bind_node_list(block)
   self:pop_level_scopes()
@@ -498,7 +500,7 @@ function Binder.__index:bind_boolean_literal_expression(expr)
 end
 
 function Binder.__index:bind_variable_argument_expression(expr)
-  local symbol = self:get_last_vararg_symbol()
+  local symbol = self.contextual_varargs
   if symbol then
     expr.symbol = symbol
     symbol.is_referenced = true
@@ -528,7 +530,9 @@ function Binder.__index:bind_parameter_declaration(expr)
   if expr.identifier.name == "..." then
     -- Special case: varargs
     local varargs_symbol = Symbol.new("...")
-    self:declare_varargs(varargs_symbol, expr)
+    varargs_symbol.declaration = expr
+    varargs_symbol.is_assigned = true
+    self.contextual_varargs = varargs_symbol
     self.scope:add_value(varargs_symbol)
   else
 
@@ -537,7 +541,7 @@ function Binder.__index:bind_parameter_declaration(expr)
 
       -- Todo: in strict mode, we should guard against repeated parameters
       if self.scope:has_level_value(expr.identifier.name) then
-        self:push_scope(true)
+        self:push_scope(false)
       end
     end
 

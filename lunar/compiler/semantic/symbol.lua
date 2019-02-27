@@ -5,9 +5,9 @@ function Symbol.constructor(self, name)
   self.name = name
   self.is_referenced = false
   self.is_assigned = false
+  self.declaration = nil -- Node or nil
 
-  self.declaration = nil -- Node | nil
-  self.members = nil -- SymbolTable | nil
+  self.members = nil -- SymbolTable or nil
 end
 
 Symbol.__tostring = function(self)

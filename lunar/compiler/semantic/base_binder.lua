@@ -11,7 +11,6 @@ BaseBinder.__index = {}
 function BaseBinder.constructor(self, environment)
   self.scope = nil
   self.level = 0
-  self.last_vararg = nil
   self.global_scope = self:push_scope(true)
 
   -- Copy environment into global scope
@@ -32,28 +31,13 @@ function BaseBinder.new(...)
 end
 
 --[[ Adds to the linked list of scopes ]]
-function BaseBinder.__index:push_scope(incrementLevel, reset_varargs)
+function BaseBinder.__index:push_scope(incrementLevel)
   if incrementLevel then
     self.level = self.level + 1
   end
   self.scope = Scope.new(self.level, self.scope)
-  if self.reset_varargs then
-    self.last_vararg = nil
-  end
 
   return self.scope
-end
-
---[[ Registers a vararg parameter declaration ]]
-function BaseBinder.__index:declare_varargs(symbol, declaration)
-  symbol.is_assigned = true
-  symbol.declaration = declaration
-  self.last_vararg = symbol
-end
-
---[[ Determines whether varargs can be accessed in the current scope ]]
-function BaseBinder.__index:get_last_vararg_symbol()
-  return self.last_vararg
 end
 
 --[[ Removes all scopes at the current level ]]
