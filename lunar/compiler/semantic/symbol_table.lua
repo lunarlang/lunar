@@ -38,6 +38,29 @@ function SymbolTable.__index:add_type(symbol)
   end
 end
 
+function SymbolTable.__index:merge_declarations(other)
+  for global_name, other_symbol in pairs(other.values) do
+    local our_symbol = self.values[global_name]
+    if our_symbol then
+      if other_symbol ~= our_symbol then
+        error("Attempt to merge declarations for duplicate value symbol '" .. global_name .. "'")
+      end
+    else
+      self.values[global_name] = other_symbol
+    end
+  end
+  for global_name, other_symbol in pairs(other.types) do
+    local our_symbol = self.types[global_name]
+    if our_symbol then
+      if other_symbol ~= our_symbol then
+        error("Attempt to merge declarations for duplicate type symbol '" .. global_name .. "'")
+      end
+    else
+      self.types[global_name] = other_symbol
+    end
+  end
+end
+
 function SymbolTable.new(...)
   local self = setmetatable({}, SymbolTable)
   SymbolTable.constructor(self, ...)

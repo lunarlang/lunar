@@ -1,5 +1,4 @@
 return {
-  Chunk = require "lunar.ast.chunk",
   DoStatement = require "lunar.ast.stats.do_statement",
   WhileStatement = require "lunar.ast.stats.while_statement",
   RepeatUntilStatement = require "lunar.ast.stats.repeat_until_statement",
@@ -14,6 +13,7 @@ return {
   ClassStatement = require "lunar.ast.stats.class_statement",
   BreakStatement = require "lunar.ast.stats.break_statement",
   ReturnStatement = require "lunar.ast.stats.return_statement",
+  DeclarationStatement = require "lunar.ast.stats.declaration_statement",
   BinaryOpExpression = require "lunar.ast.exprs.binary_op_expression",
   BinaryOpKind = require "lunar.ast.exprs.binary_op_kind",
   UnaryOpExpression = require "lunar.ast.exprs.unary_op_expression",

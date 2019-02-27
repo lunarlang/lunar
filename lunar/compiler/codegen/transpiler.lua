@@ -1,7 +1,6 @@
 local AST = require "lunar.ast"
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local BaseTranspiler = require "lunar.compiler.codegen.base_transpiler"
-local Binder = require "lunar.compiler.semantic.binder"
 
 local Transpiler = setmetatable({}, BaseTranspiler)
 Transpiler.__index = Transpiler
@@ -9,11 +8,9 @@ Transpiler.__index = Transpiler
 function Transpiler.new(ast)
   local super = BaseTranspiler.new()
   local self = setmetatable(super, Transpiler)
-  self.chunk = AST.Chunk.new(ast)
-  self.binder = Binder.new(self.chunk)
-  self.visitors = {
-    [SyntaxKind.chunk] = self.visit_chunk,
+  self.ast = ast
 
+  self.visitors = {
     -- stats
     [SyntaxKind.do_statement] = self.visit_do_statement,
     [SyntaxKind.if_statement] = self.visit_if_statement,
@@ -28,6 +25,7 @@ function Transpiler.new(ast)
     [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
     [SyntaxKind.generic_for_statement] = self.visit_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
+    [SyntaxKind.declaration_statement] = self.visit_declaration_statement,
 
     -- exprs
     [SyntaxKind.prefix_expression] = self.visit_prefix_expression,
@@ -82,9 +80,7 @@ function Transpiler.new(ast)
 end
 
 function Transpiler:transpile()
-  self.binder:bind()
-
-  self:write(self:visit_chunk(self.chunk))
+  self:write(self:visit_block(self.ast))
   return self.source
 end
 
@@ -101,14 +97,13 @@ function Transpiler:visit_block(block)
   local out = ""
 
   for _, stat in pairs(block) do
-    out = out .. self:visit_node(stat) .. "\n"
+    local node_out = self:visit_node(stat)
+    if node_out then
+      out = out .. node_out .. "\n"
+    end
   end
 
   return out
-end
-
-function Transpiler:visit_chunk(chunk)
-  return self:visit_block(chunk.block)
 end
 
 function Transpiler:visit_varlist(varlist)
@@ -293,6 +288,10 @@ function Transpiler:visit_repeat_until_statement(stat)
   return self:get_indent() .. "repeat\n" ..
     self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
     "until " .. self:visit_node(stat.expr)
+end
+
+function Transpiler:visit_declaration_statement(stat)
+  return nil
 end
 
 function Transpiler:visit_prefix_expression(expr)
