@@ -80,7 +80,7 @@ function Transpiler.new(ast)
 end
 
 function Transpiler:transpile()
-  self:write(self:visit_block(self.ast))
+  self:visit_block(self.ast)
   return self.source
 end
 
@@ -94,200 +94,224 @@ function Transpiler:visit_node(node)
 end
 
 function Transpiler:visit_block(block)
-  local out = ""
-
   for _, stat in pairs(block) do
-    local node_out = self:visit_node(stat)
-    if node_out then
-      out = out .. node_out .. "\n"
-    end
+    self:visit_node(stat)
+    self:writeln()
   end
-
-  return out
 end
 
 function Transpiler:visit_varlist(varlist)
-  local out = {}
+  for i, var in pairs(varlist) do
+    self:visit_node(var)
 
-  for _, var in pairs(varlist) do
-    table.insert(out, self:visit_node(var))
+    if i ~= #varlist then
+      self:write(", ")
+    end
   end
+end
 
-  return table.concat(out, ", ")
+function Transpiler:visit_identlist(identlist)
+  for i = 1, #identlist do
+    if i > 1 then
+      self:write(", ")
+    end
+
+    self:write(identlist[i].name)
+  end
 end
 
 function Transpiler:visit_fields(fields)
   if #fields == 0 then return "" end
 
-  local out = "\n"
-
   self:indent()
   for _, field in pairs(fields) do
-    out = out .. self:get_indent() .. self:visit_field_declaration(field) .. ",\n"
+    self:iwrite()
+    self:visit_field_declaration(field)
+    self:writeln(",")
   end
   self:dedent()
-
-  return out
 end
 
-
 function Transpiler:visit_params(params)
-  local out = {}
+  for i, param in pairs(params) do
+    self:visit_node(param)
 
-  for _, param in pairs(params) do
-    table.insert(out, self:visit_node(param))
+    if i ~= #params then
+      self:write(", ")
+    end
   end
-
-  return table.concat(out, ", ")
 end
 
 function Transpiler:visit_args(args)
-  -- since this one has to not have leading comma, otherwise we emit invalid lua
-  -- we use a list of string instead and then use table.concat for convenience
-  local out = {}
+  for i, expr in pairs(args) do
+    self:visit_node(expr)
 
-  for _, expr in pairs(args) do
-    table.insert(out, self:visit_node(expr))
+    if i ~= #args then
+      self:write(", ")
+    end
   end
-
-  return table.concat(out, ", ")
 end
 
 function Transpiler:visit_exprlist(exprlist)
-  local out = {}
+  for i, expr in pairs(exprlist) do
+    self:visit_node(expr)
 
-  for _, expr in pairs(exprlist) do
-    table.insert(out, self:visit_node(expr))
+    if i ~= #exprlist then
+      self:write(", ")
+    end
   end
-
-  return table.concat(out, ", ")
 end
 
 function Transpiler:visit_do_statement(stat)
-  return self:get_indent() .. "do\n" ..
-    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
-    "end"
+  self:iwriteln("do")
+  self:indent()
+  self:visit_block(stat.block)
+  self:dedent()
+  self:iwriteln("end")
 end
 
 function Transpiler:visit_if_statement(stat)
-  local out = self:get_indent() .. "if " .. self:visit_node(stat.expr) .. " then\n" ..
-    self:indent() .. self:visit_block(stat.block)
+  self:iwrite("if ")
+  self:visit_node(stat.expr)
+  self:writeln(" then")
+  self:indent()
+  self:visit_block(stat.block)
   self:dedent()
 
   for _, elseif_branch in pairs(stat.elseif_branches) do
-    out = out .. self:get_indent() .. "elseif " .. self:visit_node(elseif_branch.expr) .. " then\n" ..
-      self:indent() .. self:visit_block(elseif_branch.block)
+    self:iwrite("elseif ")
+    self:visit_node(elseif_branch.expr)
+    self:writeln(" then")
+    self:indent()
+    self:visit_block(elseif_branch.block)
     self:dedent()
   end
 
   if stat.else_branch then
-    out = out .. self:get_indent() .. "else\n" ..
-      self:indent() .. self:visit_block(stat.else_branch.block)
+    self:iwriteln("else")
+    self:indent()
+    self:visit_block(stat.else_branch.block)
     self:dedent()
   end
 
-  out = out .. self:get_indent() .. "end"
-  return out
+  self:iwriteln("end")
 end
 
 function Transpiler:visit_class_statement(stat)
-  return self:visit_block(stat:lower())
+  self:visit_block(stat:lower())
 end
 
 function Transpiler:visit_while_statement(stat)
-  return self:get_indent() .. "while " .. self:visit_node(stat.expr) .. " do\n" ..
-    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
-    "end"
+  self:iwrite("while ")
+  self:visit_node(stat.expr)
+  self:writeln(" do")
+  self:indent()
+  self:visit_block(stat.block)
+  self:dedent()
+  self:iwriteln("end")
 end
 
 function Transpiler:visit_break_statement(stat)
-  return self:get_indent() .. "break"
+  self:iwriteln("break")
 end
 
 function Transpiler:visit_return_statement(stat)
+  self:iwrite("return")
+
   if stat.exprlist then
-    return self:get_indent() .. "return " .. self:visit_exprlist(stat.exprlist)
+    self:write(" ")
+    self:visit_exprlist(stat.exprlist)
   end
 
-  return self:get_indent() .. "return"
+  self:write("\n")
 end
 
 function Transpiler:visit_function_statement(stat)
-  local out = self:get_indent()
-
   if stat.is_local then
-    out = out .. "local function " .. self:visit_node(stat.base)
-  else
-    out = out .. "function " .. self:visit_node(stat.base)
+    self:iwrite("local ")
   end
 
-  out = out .. "(" .. self:visit_params(stat.parameters) .. ")\n" ..
-    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
-    "end"
-
-  return out
+  self:write("function ")
+  self:visit_node(stat.base)
+  self:write("(")
+  self:visit_params(stat.parameters)
+  self:writeln(")")
+  self:indent()
+  self:visit_block(stat.block)
+  self:dedent()
+  self:iwriteln("end")
 end
 
 function Transpiler:visit_variable_statement(stat)
-  local out = self:get_indent() .. "local "
-  for i = 1, #stat.identlist do
-    if i > 1 then
-      out = out .. ", "
-    end
-    out = out .. stat.identlist[i].name
-  end
+  self:iwrite("local ")
+  self:visit_identlist(stat.identlist)
+
   if stat.exprlist then
-    return out .. " = " .. self:visit_exprlist(stat.exprlist)
-  else
-    return out
+    self:write(" = ")
+    self:visit_exprlist(stat.exprlist)
   end
 end
 
 function Transpiler:visit_identifier(node)
-  return node.name
+  self:write(node.name)
 end
 
 function Transpiler:visit_range_for_statement(stat)
-  local out = self:get_indent() .. "for " .. stat.identifier.name .. " = " ..
-    self:visit_node(stat.start_expr) .. ", " .. self:visit_node(stat.end_expr)
+  self:iwrite("for ")
+  self:visit_identifier(stat.identifier)
+  self:write(" = ")
+  self:visit_node(stat.start_expr)
+  self:write(", ")
+  self:visit_node(stat.end_expr)
 
   if stat.incremental_expr then
-    out = out .. ", " .. self:visit_node(stat.incremental_expr)
+    self:write(", ")
+    self:visit_node(stat.incremental_expr)
   end
 
-  out = out .. " do\n" ..
-    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
-    "end"
-
-  return out
+  self:writeln(" do")
+  self:indent()
+  self:visit_block(stat.block)
+  self:dedent()
+  self:iwriteln("end")
 end
 
 function Transpiler:visit_expression_statement(stat)
-  return self:get_indent() .. self:visit_node(stat.expr)
+  self:iwrite()
+  self:visit_node(stat.expr)
+  self:writeln()
 end
 
 function Transpiler:visit_assignment_statement(stat)
   local lowered = stat:lower()
-  return self:get_indent() .. self:visit_varlist(lowered.variables) .. " = " .. self:visit_exprlist(lowered.exprs)
+
+  self:iwrite()
+  self:visit_varlist(lowered.variables)
+  self:write(" = ")
+  self:visit_exprlist(lowered.exprs)
+  self:writeln()
 end
 
 function Transpiler:visit_generic_for_statement(stat)
-  local out = self:get_indent() .. "for "
-  for i = 1, #stat.identifiers do
-    if i > 1 then
-      out = out .. ", "
-    end
-    out = out .. stat.identifiers[i].name
-  end
-  return out .. " in " .. self:visit_exprlist(stat.exprlist) .. "do\n" ..
-    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
-    "end"
+  self:iwrite("for ")
+  self:visit_identlist(stat.identifiers)
+  self:write(" in ")
+  self:visit_exprlist(stat.exprlist)
+  self:writeln(" do")
+  self:indent()
+  self:visit_block(stat.block)
+  self:dedent()
+  self:writeln("end")
 end
 
 function Transpiler:visit_repeat_until_statement(stat)
-  return self:get_indent() .. "repeat\n" ..
-    self:indent() .. self:visit_block(stat.block) .. self:dedent() ..
-    "until " .. self:visit_node(stat.expr)
+  self:iwriteln("repeat")
+  self:indent()
+  self:visit_block(stat.block)
+  self:dedent()
+  self:iwrite("until ")
+  self:visit_node(stat.expr)
+  self:writeln()
 end
 
 function Transpiler:visit_declaration_statement(stat)
@@ -295,108 +319,130 @@ function Transpiler:visit_declaration_statement(stat)
 end
 
 function Transpiler:visit_prefix_expression(expr)
-  return "(" .. self:visit_node(expr.expr) .. ")"
+  self:write("(")
+  self:visit_node(expr.expr)
+  self:write(")")
 end
 
 function Transpiler:visit_lambda_expression(expr)
-  return self:visit_function_expression(expr:lower())
+  self:visit_function_expression(expr:lower())
 end
 
 function Transpiler:visit_member_expression(member)
-  local out = (member.has_colon and ":" or ".") .. member.member_identifier.name
-
   -- we'll visit left, recursively
-  out = self:visit_node(member.base) .. out
+  self:visit_node(member.base)
 
-  return out
+  -- and eventually ascend back to here
+  self:write(member.has_colon and ":" or ".")
+  self:write(member.member_identifier.name)
 end
 
 function Transpiler:visit_index_expression(expr)
-  local out = "[" .. self:visit_node(expr.index) .. "]"
-
   -- we'll visit left, recursively
-  out = self:visit_node(expr.base) .. out
+  self:visit_node(expr.base)
 
-  return out
+  -- and eventually ascend back to here
+  self:write("[")
+  self:visit_node(expr.index)
+  self:write("]")
 end
 
 function Transpiler:visit_argument_expression(arg)
-  return self:visit_node(arg.value)
+  self:visit_node(arg.value)
 end
 
 function Transpiler:visit_function_expression(expr)
-  return "function(" .. self:visit_params(expr.parameters) .. ")\n" ..
-    self:indent() .. self:visit_block(expr.block) .. self:dedent() ..
-    "end"
+  self:write("function(")
+  self:visit_params(expr.parameters)
+  self:writeln(")")
+  self:indent()
+  self:visit_block(expr.block)
+  self:dedent()
+  self:iwrite("end")
 end
 
 function Transpiler:visit_nil_literal_expression(expr)
-  return "nil"
+  self:write("nil")
 end
 
 function Transpiler:visit_function_call_expression(expr)
-  return self:visit_node(expr.base) .. "(" .. self:visit_args(expr.arguments) .. ")"
+  self:visit_node(expr.base)
+  self:write("(")
+  self:visit_args(expr.arguments)
+  self:write(")")
 end
 
 function Transpiler:visit_unary_op_expression(expr)
   -- wrapping around parenthesis because if we have "- -1" as the input, we would get out "--1"
-  return "(" .. self.unary_op_map[expr.operator] .. self:visit_node(expr.right_operand) .. ")"
+  self:write("(")
+  self:write(self.unary_op_map[expr.operator])
+  self:visit_node(expr.right_operand)
+  self:write(")")
 end
 
 function Transpiler:visit_binary_op_expression(expr)
-  return self:visit_node(expr.left_operand) ..
-    " " .. self.binary_op_map[expr.operator] .. " " ..
-    self:visit_node(expr.right_operand)
+  self:visit_node(expr.left_operand)
+  self:write(" ")
+  self:write(self.binary_op_map[expr.operator])
+  self:write(" ")
+  self:visit_node(expr.right_operand)
 end
 
 function Transpiler:visit_table_literal_expression(expr)
-  return "{" .. self:visit_fields(expr.fields) .. self:get_indent() .. "}"
+  self:write("{")
+  self:visit_fields(expr.fields)
+  self:iwrite("}")
 end
 
 function Transpiler:visit_number_literal_expression(expr)
-  return tostring(expr.value)
+  self:write(tostring(expr.value))
 end
 
 function Transpiler:visit_string_literal_expression(expr)
-  return expr.value -- already a string
+  self:write(expr.value) -- already a string
 end
 
 function Transpiler:visit_boolean_literal_expression(expr)
-  return tostring(expr.value)
+  self:write(tostring(expr.value))
 end
 
 function Transpiler:visit_variable_argument_expression(expr)
-  return "..."
+  self:write("...")
 end
 
 function Transpiler:visit_type_assertion_expression(expr)
-  return self:visit_node(expr.base)
+  self:visit_node(expr.base)
 end
 
 function Transpiler:visit_field_declaration(field)
   if field.syntax_kind == SyntaxKind.sequential_field_declaration then
-    return self:visit_sequential_field_declaration(field)
+    self:visit_sequential_field_declaration(field)
   elseif field.syntax_kind == SyntaxKind.member_field_declaration then
-    return self:visit_member_field_declaration(field)
+    self:visit_member_field_declaration(field)
   else
-    return self:visit_index_field_declaration(field)
+    self:visit_index_field_declaration(field)
   end
 end
 
 function Transpiler:visit_sequential_field_declaration(field)
-  return self:visit_node(field.value)
+  self:visit_node(field.value)
 end
 
 function Transpiler:visit_member_field_declaration(field)
-  return field.member_identifier.name .. " = " .. self:visit_node(field.value)
+  self:write(field.member_identifier.name)
+  self:write(" = ")
+  self:visit_node(field.value)
 end
 
 function Transpiler:visit_index_field_declaration(field)
-  return "[" .. self:visit_node(field.key) .. "] = " .. self:visit_node(field.value)
+  self:write("[")
+  self:visit_node(field.key)
+  self:write("] = ")
+  self:visit_node(field.value)
 end
 
 function Transpiler:visit_parameter_declaration(param)
-  return self:visit_identifier(param.identifier)
+  self:visit_identifier(param.identifier)
 end
 
 return Transpiler

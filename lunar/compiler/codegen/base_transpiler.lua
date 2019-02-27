@@ -11,7 +11,27 @@ function BaseTranspiler.new()
 end
 
 function BaseTranspiler:write(segment)
+  if segment == nil then segment = "" end
+
   self.source = self.source .. segment
+end
+
+function BaseTranspiler:writeln(segment)
+  if segment == nil then segment = "" end
+
+  self:write(segment .. "\n")
+end
+
+function BaseTranspiler:iwrite(segment)
+  if segment == nil then segment = "" end
+
+  self:write(self:get_indent() .. segment)
+end
+
+function BaseTranspiler:iwriteln(segment)
+  if segment == nil then segment = "" end
+
+  self:writeln(self:get_indent() .. segment)
 end
 
 function BaseTranspiler:get_indent()
@@ -24,12 +44,10 @@ end
 
 function BaseTranspiler:indent()
   self.indent_count = self.indent_count + 1
-  return "" -- messy workaround for all the concatenated indent calls
 end
 
 function BaseTranspiler:dedent()
   self.indent_count = self.indent_count - 1
-  return self:get_indent()
 end
 
 return BaseTranspiler
