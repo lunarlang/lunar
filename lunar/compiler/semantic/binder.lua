@@ -101,9 +101,8 @@ function Binder.__index:bind_value_assignment(identifier, declaring_node)
   if self.scope:has_value(identifier.name) then
     symbol = self:bind_local_value_symbol(identifier, identifier.name)
   else
-    -- else it is a first global assignment; todo: add warning to diagnostic chain if in strict mode
+    -- else it is a first global assignment
     symbol = self:bind_global_value_symbol(identifier, identifier.name)
-    symbol.declaration = declaring_node
   end
   symbol.is_assigned = true
 end
@@ -168,8 +167,8 @@ function Binder.__index:bind_type_reference(identifier)
     local symbol = self:bind_local_type_symbol(identifier, identifier.name)
     symbol.is_referenced = true
   else
-    -- else it is unbound
-    -- todo: add warning to diagnostic chain
+    local symbol = self:bind_global_type_symbol(identifier, identifier.name)
+    symbol.is_referenced = true
   end
 end
 

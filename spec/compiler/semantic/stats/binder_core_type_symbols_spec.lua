@@ -32,7 +32,7 @@ describe("Bindings of core symbols", function()
     end
   end)
 
-  it("should not bind non-existent core symbols", function()
+  it("should bind non-existent core symbols as undeclared globals", function()
     local type_map = {
       ["frobulator"] = CoreGlobals:get_type("frobulator") or false,
     }
@@ -46,6 +46,7 @@ describe("Bindings of core symbols", function()
       local identifier = assignment.identlist[1]
       
       assert.truthy(identifier.type_annotation)
+      assert.falsy(identifier.type_annotation.symbol.declaration)
       assert.is_not.equal(symbol, identifier.type_annotation.symbol)
     end
   end)
