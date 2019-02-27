@@ -16,6 +16,20 @@ describe("ClassStatement transpilation", function()
     assert.same({}, C.new())
   end)
 
+  it("should support field members in a class", function()
+    local input = "class C static x = 'hello' x = 'world' end; return C"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+    local C = program.result[1]
+
+    assert.equal("hello", C.x)
+    assert.equal("world", C.new().x)
+  end)
+
   it("should support parameterized constructor", function()
     local input = "class C\n" ..
       "constructor(message) self.message = message end\n" ..
@@ -84,5 +98,36 @@ describe("ClassStatement transpilation", function()
     local C = program.result[1]
 
     assert.same("bob", C.new().name)
+  end)
+
+  it("should inherit fields and methods from the super class for static and instance members #prob", function()
+    local input = [[
+class S
+  static f = 'sf';
+  f = 'if';
+
+  static function m() return 'sm' end;
+  function m() return 'im' end;
+end
+
+class C << S
+  constructor()
+    super()
+  end
+end
+
+return C]]
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+    local C = program.result[1]
+
+    assert.equal("sf", C.f)
+    assert.equal("sm", C.m())
+    assert.equal("if", C.new().f)
+    assert.equal("im", C.new():m())
   end)
 end)
