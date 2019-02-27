@@ -11,7 +11,7 @@ BaseBinder.__index = {}
 function BaseBinder.constructor(self, environment)
   self.scope = nil
   self.level = 0
-	self.last_vararg = nil
+  self.last_vararg = nil
   self.global_scope = self:push_scope(true)
 
   -- Copy environment into global scope
