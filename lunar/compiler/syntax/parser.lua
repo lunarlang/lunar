@@ -380,6 +380,25 @@ function Parser:statement()
       return AST.VariableStatement.new(identlist, exprlist)
     end
   end
+
+  -- 'declare' identifier
+  if self:match(TokenType.declare_keyword) then
+    local context = self:expect(TokenType.identifier, "Expected declaration context after 'declare'").value
+
+    local identifier
+    if self:assert(TokenType.identifier) then
+      local name = self:consume().value
+      local type_annotation
+      if self:match(TokenType.colon) then
+        type_annotation = self:type_expression()
+      end
+      identifier = AST.Identifier.new(name, type_annotation)
+    else
+      error("Expected identifier after 'declare " .. context .. "'")
+    end
+
+    return AST.DeclarationStatement.new(context, identifier, false)
+  end
 end
 
 function Parser:last_statement()

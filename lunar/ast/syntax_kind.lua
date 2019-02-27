@@ -1,5 +1,4 @@
 return {
-  chunk = 0,
   break_statement = 1,
   nil_literal_expression = 2,
   boolean_literal_expression = 3,
@@ -37,4 +36,5 @@ return {
   sequential_field_declaration = 36,
   type_assertion_expression = 37,
   class_field_declaration = 38,
+  declaration_statement = 39,
 }

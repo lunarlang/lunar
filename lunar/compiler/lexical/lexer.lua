@@ -6,14 +6,13 @@ local TokenType = require "lunar.compiler.lexical.token_type"
 local Lexer = setmetatable({}, BaseLexer)
 Lexer.__index = Lexer
 
-function Lexer.new(source, file_name)
-  if file_name == nil then file_name = "src" end
+function Lexer.new(source)
 
   local function pair(type, value)
     return { type = type, value = value }
   end
 
-  local super = BaseLexer.new(source, file_name)
+  local super = BaseLexer.new(source)
   local self = setmetatable(super, Lexer)
 
   -- we need to guarantee the order (pitfalls of lua hashmaps, yay...)
@@ -50,7 +49,8 @@ function Lexer.new(source, file_name)
     ["true"] = TokenType.true_keyword,
     ["until"] = TokenType.until_keyword,
     ["while"] = TokenType.while_keyword,
-    ["as"] = TokenType.as_keyword
+    ["as"] = TokenType.as_keyword,
+    ["declare"] = TokenType.declare_keyword,
   }
 
   self.operators = {
@@ -224,7 +224,11 @@ function Lexer:next_number()
       end
     end
 
-    while not self:is_finished() and (StringUtils.is_digit(self:peek()) or StringUtils.is_letter(self:peek()) or self:match("_")) do
+    while not self:is_finished() and (
+        StringUtils.is_digit(self:peek())
+        or StringUtils.is_letter(self:peek())
+        or self:match("_")
+      ) do
       buffer = buffer .. self:consume()
     end
 
