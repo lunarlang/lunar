@@ -38,5 +38,6 @@ return {
   SequentialFieldDeclaration = require "lunar.ast.decls.sequential_field_declaration",
   ParameterDeclaration = require "lunar.ast.decls.parameter_declaration",
   ConstructorDeclaration = require "lunar.ast.decls.constructor_declaration",
+  ClassFieldDeclaration = require "lunar.ast.decls.class_field_declaration",
   ClassFunctionDeclaration = require "lunar.ast.decls.class_function_declaration",
 }

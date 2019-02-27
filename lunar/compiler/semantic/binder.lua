@@ -46,7 +46,7 @@ function Binder.constructor(self, ast, environment, file_path)
     [SyntaxKind.identifier] = self.bind_identifier,
     [SyntaxKind.index_expression] = self.bind_index_expression,
     [SyntaxKind.type_assertion_expression] = self.bind_type_assertion_expression,
-    
+
     -- Declarations
     [SyntaxKind.index_field_declaration] = self.bind_index_field_declaration,
     [SyntaxKind.member_field_declaration] = self.bind_member_field_declaration,
@@ -113,7 +113,7 @@ function Binder.__index:bind_value_assignment_declaration(identifier, declaring_
   if self.scope:has_level_value(identifier.name) then
     self:push_scope(false)
   end
-  
+
   local symbol = Symbol.new(identifier.name)
   identifier.symbol = symbol
   symbol.is_assigned = true
@@ -151,7 +151,7 @@ function Binder.__index:bind_value_declaration(identifier, declaring_node)
   if self.scope:has_level_value(identifier.name) then
     self:push_scope(false)
   end
-  
+
   local symbol = Symbol.new(identifier.name)
   identifier.symbol = symbol
   symbol.declaration = declaring_node
@@ -282,6 +282,17 @@ function Binder.__index:bind_class_statement(stat)
       end
 
       self:bind_function_like_expression(member.params, member.block, member.return_type_annotation)
+    elseif member.syntax_kind == SyntaxKind.class_field_declaration then
+      local member_symbol = Symbol.new(member.identifier.name)
+      member.identifier.symbol = member_symbol
+      member_symbol.is_assigned = true
+      member_symbol.declaration = member.identifier
+
+      if not member.is_static then
+        type_symbol.members:add_value(member_symbol)
+      end
+
+      self:bind_node(member.value)
     elseif member.syntax_kind == SyntaxKind.constructor_declaration then
       self:bind_function_like_expression(member.params, member.block)
     else
@@ -395,7 +406,7 @@ function Binder.__index:bind_lambda_expression(stat)
   if stat.expr then
     self:bind_node(stat.expr)
   end
-  
+
   self:push_scope(true, true)
   self:bind_node_list(stat.parameters)
   if stat.implicit_return then
@@ -519,13 +530,13 @@ function Binder.__index:bind_parameter_declaration(expr)
 
     if self.scope:has_value(expr.identifier.name) then
       -- Todo: show diagnostics for shadowing definitions
-  
+
       -- Todo: in strict mode, we should guard against repeated parameters
       if self.scope:has_level_value(expr.identifier.name) then
         self:push_scope(true)
       end
     end
-  
+
     self:bind_value_assignment_declaration(expr.identifier, expr)
   end
 end

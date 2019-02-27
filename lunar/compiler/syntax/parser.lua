@@ -97,10 +97,9 @@ function Parser:class_member()
 
   -- possibly a static member?
   local old_position = self.position
-  local is_static = false
-  if self:peek().value == "static" then
+  local is_static = self:peek().value == "static"
+  if is_static then
     self:move(1)
-    is_static = true
   end
 
   if self:match(TokenType.function_keyword) then
@@ -119,6 +118,20 @@ function Parser:class_member()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'function " .. name .. "'")
 
     return AST.ClassFunctionDeclaration.new(is_static, AST.Identifier.new(name), params, block, return_type_annotation)
+  elseif self:assert(TokenType.identifier) then
+    local name = AST.Identifier.new(self:consume().value)
+
+    local type_annotation = nil
+    if self:match(TokenType.colon) then
+      type_annotation = self:type_expression()
+    end
+
+    local value = nil
+    if self:match(TokenType.equal) then
+      value = self:expression()
+    end
+
+    return AST.ClassFieldDeclaration.new(is_static, name, type_annotation, value)
   end
 
   -- nothing was returned and we did something with the 'static' token so we need to move the position back
@@ -140,6 +153,7 @@ function Parser:statement()
     local members = {}
     repeat
       local member = self:class_member()
+      self:match(TokenType.semi_colon)
 
       if member ~= nil then
         table.insert(members, member)
@@ -751,7 +765,7 @@ function Parser:field_list()
 
   repeat
     lastfield = self:field_declaration()
- 
+
     if lastfield ~= nil then
       table.insert(fieldlist, lastfield)
       self:match(TokenType.comma, TokenType.semi_colon)

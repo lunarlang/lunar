@@ -35,5 +35,6 @@ return {
   member_field_declaration = 35,
   sequential_field_declaration = 36,
   type_assertion_expression = 37,
-  declaration_statement = 38,
+  class_field_declaration = 38,
+  declaration_statement = 39,
 }

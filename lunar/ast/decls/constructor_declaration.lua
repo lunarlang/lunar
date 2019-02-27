@@ -40,7 +40,9 @@ function ConstructorDeclaration:lower(class_identifier, class_base_identifier)
         local super_call_expr = FunctionCallExpression.new(super_member_expr, {
           ArgumentExpression.new(Identifier.new("self")), unpack(super.arguments)
         })
-        self.block[index] = ExpressionStatement.new(super_call_expr)
+
+        table.remove(self.block, index)
+        table.insert(self.block, 1, ExpressionStatement.new(super_call_expr))
 
         break
       end
