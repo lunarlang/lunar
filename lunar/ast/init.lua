@@ -32,6 +32,7 @@ return {
   LambdaExpression = require "lunar.ast.exprs.lambda_expression",
   PrefixExpression = require "lunar.ast.exprs.prefix_expression",
   Identifier = require "lunar.ast.exprs.identifier",
+  TypeAssertionExpression = require "lunar.ast.exprs.type_assertion_expression",
   IndexFieldDeclaration = require "lunar.ast.decls.index_field_declaration",
   MemberFieldDeclaration = require "lunar.ast.decls.member_field_declaration",
   SequentialFieldDeclaration = require "lunar.ast.decls.sequential_field_declaration",

@@ -46,6 +46,7 @@ function Transpiler.new(ast)
     [SyntaxKind.variable_argument_expression] = self.visit_variable_argument_expression,
     [SyntaxKind.identifier] = self.visit_identifier,
     [SyntaxKind.index_expression] = self.visit_index_expression,
+    [SyntaxKind.type_assertion_expression] = self.visit_type_assertion_expression,
 
     -- decls
     [SyntaxKind.index_field_declaration] = self.visit_index_field_declaration,
@@ -367,6 +368,10 @@ end
 
 function Transpiler:visit_variable_argument_expression(expr)
   return "..."
+end
+
+function Transpiler:visit_type_assertion_expression(expr)
+  return self:visit_node(expr.base)
 end
 
 function Transpiler:visit_field_declaration(field)

@@ -31,6 +31,7 @@ return {
   true_keyword = 218,
   until_keyword = 219,
   while_keyword = 220,
+  as_keyword = 221,
 
   -- operators (4xx)
   plus = 400,

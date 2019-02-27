@@ -5,11 +5,11 @@ local Chunk = setmetatable({}, SyntaxNode)
 Chunk.__index = Chunk
 
 function Chunk.new(block)
-	local super = SyntaxNode.new(SyntaxKind.chunk)
-	local self = setmetatable(super, Chunk)
-	self.block = block
+  local super = SyntaxNode.new(SyntaxKind.chunk)
+  local self = setmetatable(super, Chunk)
+  self.block = block
 
-	return self
+  return self
 end
 
 return Chunk
