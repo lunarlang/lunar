@@ -256,8 +256,11 @@ function Binder.__index:bind_class_statement(stat)
     -- Pass declaration status of the "super" identifier from the extended class
     local super_symbol = Symbol.new("super")
     self.scope:add_value(super_symbol)
-    super_symbol.is_assigned = stat.super_identifier.is_assigned
-    super_symbol.declaration = stat.super_identifier.declaration
+
+    -- TODO: Attach super symbol to class type instead, and handle special cases for "self" and "super" identifier
+    -- instead of creating a new symbol
+    super_symbol.is_assigned = stat.super_identifier.symbol.is_assigned
+    super_symbol.declaration = stat.super_identifier.symbol.declaration
   end
 
   -- Bind "self" and "super" types for this scope
