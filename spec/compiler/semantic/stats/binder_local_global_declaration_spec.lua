@@ -1,12 +1,12 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("AssignmentStatement syntax", function()
+describe("Bindings on regular local and global variable declarations", function()
   require_dev()
 
   it("should bind an global identifier as a declaration", function()
     local tokens = Lexer.new("hello = 1"):tokenize()
     local result = Parser.new(tokens):parse()
-    Binder.new(AST.Chunk.new(result)):bind()
+    Binder.new(result):bind()
 
     local assignment = result[1]
     local identifier = assignment.variables[1]
@@ -18,7 +18,7 @@ describe("AssignmentStatement syntax", function()
   it("should bind a local identifier as a declaration", function()
     local tokens = Lexer.new("local hello"):tokenize()
     local result = Parser.new(tokens):parse()
-    Binder.new(AST.Chunk.new(result)):bind()
+    Binder.new(result):bind()
 
     local variable_statement = result[1]
     local identifier = variable_statement.identlist[1]
@@ -30,7 +30,7 @@ describe("AssignmentStatement syntax", function()
   it("should bind a two variable statements of the same name with separate symbols and declarations", function()
     local tokens = Lexer.new("local hello; local hello"):tokenize()
     local result = Parser.new(tokens):parse()
-    Binder.new(AST.Chunk.new(result)):bind()
+    Binder.new(result):bind()
 
     local variable_statement_1 = result[1]
     local identifier_1 = variable_statement_1.identlist[1]
@@ -50,7 +50,7 @@ describe("AssignmentStatement syntax", function()
   it("should bind initial global assignments as declarations, and any preceding with the same symbol", function()
     local tokens = Lexer.new("hello = 1; hello = 2"):tokenize()
     local result = Parser.new(tokens):parse()
-    Binder.new(AST.Chunk.new(result)):bind()
+    Binder.new(result):bind()
 
     local assignment_1 = result[1]
     local identifier_1 = assignment_1.variables[1]
@@ -65,7 +65,7 @@ describe("AssignmentStatement syntax", function()
   it("should allow re-declaration of globals in a new scope", function()
     local tokens = Lexer.new("hello = 1; local hello = 2"):tokenize()
     local result = Parser.new(tokens):parse()
-    Binder.new(AST.Chunk.new(result)):bind()
+    Binder.new(result):bind()
 
     local assignment_1 = result[1]
     local identifier_1 = assignment_1.variables[1]

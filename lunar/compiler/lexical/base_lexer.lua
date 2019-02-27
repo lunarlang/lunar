@@ -1,12 +1,10 @@
 local BaseLexer = {}
 BaseLexer.__index = BaseLexer
 
-function BaseLexer.new(source, file_name)
-  if file_name == nil then file_name = "src" end
+function BaseLexer.new(source)
 
   local self = setmetatable({}, BaseLexer)
   self.source = source
-  self.file_name = file_name
   self.position = 1
 
   return self

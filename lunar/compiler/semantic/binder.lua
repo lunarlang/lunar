@@ -1,13 +1,4 @@
---[[
-
-  TODO NEXT:
-Refactor builtins and add environment argument (always include primitive types)
-
-]]
-
-
 local BaseBinder = require "lunar.compiler.semantic.base_binder"
-local PrimitiveType = require "lunar.compiler.semantic.primitive_type"
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local DiagnosticUtils = require "lunar.utils.diagnostic_utils"
 local Symbol = require "lunar.compiler.semantic.symbol"
@@ -16,25 +7,11 @@ local SymbolTable = require "lunar.compiler.semantic.symbol_table"
 local Binder = {}
 Binder.__index = setmetatable({}, BaseBinder)
 
-function Binder.constructor(self, chunk, environment)
-  BaseBinder.constructor(self, environment)
-
-  self.chunk = chunk
-
-  self.primitive_type_symbols = {
-    [PrimitiveType.any_type] = Symbol.new("any"),
-    [PrimitiveType.nil_type] = Symbol.new("nil"),
-    [PrimitiveType.string_type] = Symbol.new("string"),
-    [PrimitiveType.boolean_type] = Symbol.new("boolean"),
-    [PrimitiveType.function_type] = Symbol.new("function"),
-    [PrimitiveType.userdata_type] = Symbol.new("userdata"),
-    [PrimitiveType.thread_type] = Symbol.new("thread"),
-    [PrimitiveType.table_type] = Symbol.new("table"),
-  }
+function Binder.constructor(self, ast, environment, file_path)
+  BaseBinder.constructor(self, environment, file_path)
+  self.ast = ast
 
   self.binding_visitors = {
-    [SyntaxKind.chunk] = self.bind_chunk,
-
     -- Statements
     [SyntaxKind.variable_statement] = self.bind_variable_statement,
     [SyntaxKind.do_statement] = self.bind_do_statement,
@@ -49,6 +26,7 @@ function Binder.constructor(self, chunk, environment)
     [SyntaxKind.assignment_statement] = self.bind_assignment_statement,
     [SyntaxKind.generic_for_statement] = self.bind_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.bind_repeat_until_statement,
+    [SyntaxKind.declaration_statement] = self.bind_declaration_statement,
     
     -- Expressions
     [SyntaxKind.prefix_expression] = self.bind_prefix_expression,
@@ -79,7 +57,11 @@ function Binder.constructor(self, chunk, environment)
 end
 
 function Binder.__index:bind()
-    self:bind_chunk(self.chunk)
+    self:push_scope(true)
+    self:bind_node_list(self.ast)
+    self:pop_level_scopes()
+    -- Todo: collate return symbols and return them as a second parameter
+    return self.environment
 end
 
 function Binder.__index:bind_node(node)
@@ -144,6 +126,26 @@ function Binder.__index:bind_value_assignment_declaration(identifier, declaring_
   end
 end
 
+function Binder.__index:bind_global_value_declaration(identifier, declaring_node)
+  local symbol = self.environment.globals:get_value(identifier.name)
+  if symbol then
+    if symbol.declaration then
+      error("Attempt to re-declare global value '" .. identifier.name .. "'")
+    end
+  else
+    symbol = Symbol.new(identifier.name)
+    self.environment.globals:add_value(symbol)
+  end
+
+  identifier.symbol = symbol
+  symbol.declaration = declaring_node
+
+  -- Allow types to be annotated in declarations
+  if identifier.type_annotation then
+    self:bind_type_expression(identifier.type_annotation)
+  end
+end
+
 function Binder.__index:bind_value_declaration(identifier, declaring_node)
   -- In a non-strict mode, we should push the scope for re-declared variable
   if self.scope:has_level_value(identifier.name) then
@@ -180,12 +182,6 @@ function Binder.__index:bind_type_expression(expr)
       .. "'"
     )
   end
-end
-
-function Binder.__index:bind_chunk(node)
-  self:push_scope(true)
-  self:bind_node_list(node.block)
-  self:pop_level_scopes()
 end
 
 function Binder.__index:bind_variable_statement(stat)
@@ -277,7 +273,9 @@ function Binder.__index:bind_class_statement(stat)
     local member = stat.members[i]
     if member.syntax_kind == SyntaxKind.class_function_declaration then
       local member_symbol = Symbol.new(member.identifier.name)
+      member.identifier.symbol = member_symbol
       member_symbol.is_assigned = true
+      member_symbol.declaration = member.identifier
 
       if not member.is_static then
         type_symbol.members:add_value(member_symbol)
@@ -310,7 +308,7 @@ function Binder.__index:bind_break_statement(stat)
 end
 
 function Binder.__index:bind_return_statement(stat)
-  -- Todo: check reachability and returnability of ancestor scope
+  -- Todo: assign returns of this source file
 end
 
 function Binder.__index:bind_function_statement(stat)
@@ -529,6 +527,16 @@ function Binder.__index:bind_parameter_declaration(expr)
     end
   
     self:bind_value_assignment_declaration(expr.identifier, expr)
+  end
+end
+
+function Binder.__index:bind_declaration_statement(stat)
+  if stat.context == "global" then
+    if not stat.is_type_declaration then
+      self:bind_global_value_declaration(stat.identifier)
+    else
+      error("Global type declarations are not yet supported")
+    end
   end
 end
 
