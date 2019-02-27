@@ -100,7 +100,7 @@ describe("ClassStatement transpilation", function()
     assert.same("bob", C.new().name)
   end)
 
-  it("should inherit fields and methods from the super class for static and instance members #prob", function()
+  it("should inherit fields and methods from the super class for static and instance members", function()
     local input = [[
 class S
   static f = 'sf';
