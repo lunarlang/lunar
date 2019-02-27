@@ -1,7 +1,6 @@
 --[[
 
 	TODO NEXT:
-Refactor rest vararg parameter
 Refactor builtins and add environment argument (always include primitive types)
 
 ]]
@@ -17,8 +16,8 @@ local SymbolTable = require "lunar.compiler.semantic.symbol_table"
 local Binder = {}
 Binder.__index = setmetatable({}, BaseBinder)
 
-function Binder.constructor(self, chunk)
-	BaseBinder.constructor(self)
+function Binder.constructor(self, chunk, environment)
+	BaseBinder.constructor(self, environment)
 
 	self.chunk = chunk
 
@@ -67,7 +66,8 @@ function Binder.constructor(self, chunk)
     [SyntaxKind.boolean_literal_expression] = self.bind_boolean_literal_expression,
     [SyntaxKind.variable_argument_expression] = self.bind_variable_argument_expression,
 		[SyntaxKind.identifier] = self.bind_identifier,
-    [SyntaxKind.index_expression] = self.bind_index_expression,
+		[SyntaxKind.index_expression] = self.bind_index_expression,
+		[SyntaxKind.type_assertion_expression] = self.bind_type_assertion_expression,
 		
     -- Declarations
     [SyntaxKind.index_field_declaration] = self.bind_index_field_declaration,
@@ -128,7 +128,7 @@ end
 
 function Binder.__index:bind_value_assignment_declaration(identifier, declaring_node)
 	-- In a non-strict mode, we should push the scope for re-declared variable
-	if self.scope:has_value(identifier.name) then
+	if self.scope:has_level_value(identifier.name) then
 		self:push_scope(false)
 	end
 	
@@ -146,7 +146,7 @@ end
 
 function Binder.__index:bind_value_declaration(identifier, declaring_node)
 	-- In a non-strict mode, we should push the scope for re-declared variable
-	if self.scope:has_value(identifier.name) then
+	if self.scope:has_level_value(identifier.name) then
 		self:push_scope(false)
 	end
 	
@@ -240,7 +240,7 @@ function Binder.__index:bind_class_statement(stat)
 	local identifier = stat.identifier
 	-- Determine if the statics or type were declared
 	-- In a non-strict mode, we should push the scope for re-declared variable
-	if self.scope:has_value(identifier.name) or self.scope:has_type(identifier.name) then
+	if self.scope:has_level_value(identifier.name) or self.scope:has_type(identifier.name) then
 		self:push_scope(false)
 	end
 
@@ -255,13 +255,14 @@ function Binder.__index:bind_class_statement(stat)
 
 	-- Bind superclass identifier
 	if stat.super_identifier then
-		if self.scope:has_value(stat.super_identifier) then
-			local super_symbol = self.scope:add_value("super")
-			super_symbol.is_assigned = stat.super_identifier.is_assigned
-			super_symbol.declaration = stat.super_identifier.declaration
-		end
 		self:bind_type_reference(stat.super_identifier)
 		self:bind_value_reference(stat.super_identifier)
+
+		-- Pass declaration status of the "super" identifier from the extended class
+		local super_symbol = Symbol.new("super")
+		self.scope:add_value(super_symbol)
+		super_symbol.is_assigned = stat.super_identifier.is_assigned
+		super_symbol.declaration = stat.super_identifier.declaration
 	end
 
 	-- Bind "self" and "super" types for this scope
@@ -397,7 +398,7 @@ function Binder.__index:bind_lambda_expression(stat)
 		self:bind_node(stat.expr)
 	end
 	
-	self:push_scope(true)
+	self:push_scope(true, true)
 	self:bind_node_list(stat.parameters)
 	if stat.implicit_return then
 		self:bind_node(stat.body)
@@ -435,7 +436,7 @@ function Binder.__index:bind_argument_expression(expr)
 end
 
 function Binder.__index:bind_function_like_expression(params, block, return_type_annotation)
-	self:push_scope(true)
+	self:push_scope(true, true)
 	self:bind_node_list(params)
 	self:bind_node_list(block)
 	self:pop_level_scopes()
@@ -484,7 +485,16 @@ function Binder.__index:bind_boolean_literal_expression(expr)
 end
 
 function Binder.__index:bind_variable_argument_expression(expr)
-	self:bind_local_value_symbol(expr, "...")
+	local symbol = self:get_last_vararg_symbol()
+	if symbol then
+		expr.symbol = symbol
+		symbol.is_referenced = true
+	else
+		error("Attempt to reference vararg expression '...' in a scope where it was not declared")
+	end
+end
+
+function Binder.__index:bind_type_assertion_expression(expr)
 end
 
 function Binder.__index:bind_index_field_declaration(expr)
@@ -502,16 +512,24 @@ function Binder.__index:bind_sequential_field_declaration(expr)
 end
 
 function Binder.__index:bind_parameter_declaration(expr)
-	if self.scope:has_value(expr.identifier.name) then
-		-- Todo: show diagnostics for shadowing definitions
+	if expr.identifier.name == "..." then
+		-- Special case: varargs
+		local varargs_symbol = Symbol.new("...")
+		self:declare_varargs(varargs_symbol, expr)
+		self.scope:add_value(varargs_symbol)
+	else
 
-		-- Todo: in strict mode, we should guard against repeaeted parameters
-		if self.scope:has_level_value(expr.identifier.name) then
-			self:push_scope(true)
+		if self.scope:has_value(expr.identifier.name) then
+			-- Todo: show diagnostics for shadowing definitions
+	
+			-- Todo: in strict mode, we should guard against repeated parameters
+			if self.scope:has_level_value(expr.identifier.name) then
+				self:push_scope(true)
+			end
 		end
+	
+		self:bind_value_assignment_declaration(expr.identifier, expr)
 	end
-
-	self:bind_value_assignment_declaration(expr.identifier, expr)
 end
 
 function Binder.new(...)

@@ -35,4 +35,5 @@ return {
   index_field_declaration = 34,
   member_field_declaration = 35,
   sequential_field_declaration = 36,
+  type_assertion_expression = 37,
 }

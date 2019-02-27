@@ -431,6 +431,7 @@ function Parser:prefix_expression()
   -- identifier
   if self:assert(TokenType.identifier) then
     local identifier = self:consume()
+
     return AST.Identifier.new(identifier.value)
   end
 end
@@ -553,13 +554,16 @@ end
 
 function Parser:type_expression()
   -- Allow certain keywords to overload as type identifiers
-  if self:match(TokenType.nil_keyword) then
-    return AST.Identifier.new("nil")
+  if self:assert(TokenType.nil_keyword)
+    or self:assert(TokenType.function_keyword)
+    or self:assert(TokenType.true_keyword)
+    or self:assert(TokenType.false_keyword) then
+    return AST.Identifier.new(self:consume().value)
   end
   if self:assert(TokenType.identifier) then
     return AST.Identifier.new(self:consume().value)
   else
-    error("Expected identifier in type annotation")
+    error("Expected identifier in type expression")
   end
 end
 
@@ -638,6 +642,12 @@ function Parser:sub_expression(limit)
 
     -- is there any binary op after this?
     binary_op = self:get_binary_op()
+  end
+
+  -- Type assertions
+  while self:match(TokenType.as_keyword) do
+    -- Parse a type expression
+    expr = AST.TypeAssertionExpression.new(expr, self:type_expression())
   end
 
   return expr

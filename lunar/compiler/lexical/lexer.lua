@@ -49,7 +49,8 @@ function Lexer.new(source, file_name)
     ["then"] = TokenType.then_keyword,
     ["true"] = TokenType.true_keyword,
     ["until"] = TokenType.until_keyword,
-    ["while"] = TokenType.while_keyword
+    ["while"] = TokenType.while_keyword,
+    ["as"] = TokenType.as_keyword
   }
 
   self.operators = {

@@ -8,11 +8,21 @@ BaseBinder.__index = {}
     A binder should take in an AST and mutate its nodes by binding symbols
 ]]
 
-function BaseBinder.constructor(self)
+function BaseBinder.constructor(self, environment)
   self.scope = nil
   self.level = 0
+	self.last_vararg = nil
   self.global_scope = self:push_scope(true)
-  self.self_context = nil
+
+  -- Copy environment into global scope
+  if environment then
+    for name, symbol in pairs(environment.values) do
+      self.global_scope.values[name] = symbol
+    end
+    for name, symbol in pairs(environment.types) do
+      self.global_scope.types[name] = symbol
+    end
+  end
 end
 
 function BaseBinder.new(...)
@@ -22,13 +32,28 @@ function BaseBinder.new(...)
 end
 
 --[[ Adds to the linked list of scopes ]]
-function BaseBinder.__index:push_scope(incrementLevel)
+function BaseBinder.__index:push_scope(incrementLevel, reset_varargs)
   if incrementLevel then
     self.level = self.level + 1
   end
   self.scope = Scope.new(self.level, self.scope)
+  if self.reset_varargs then
+    self.last_vararg = nil
+  end
 
   return self.scope
+end
+
+--[[ Registers a vararg parameter declaration ]]
+function BaseBinder.__index:declare_varargs(symbol, declaration)
+  symbol.is_assigned = true
+  symbol.declaration = declaration
+  self.last_vararg = symbol
+end
+
+--[[ Determines whether varargs can be accessed in the current scope ]]
+function BaseBinder.__index:get_last_vararg_symbol()
+  return self.last_vararg
 end
 
 --[[ Removes all scopes at the current level ]]
