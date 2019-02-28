@@ -96,7 +96,6 @@ end
 function Transpiler:visit_block(block)
   for _, stat in pairs(block) do
     self:visit_node(stat)
-    self:writeln()
   end
 end
 
@@ -250,6 +249,8 @@ function Transpiler:visit_variable_statement(stat)
     self:write(" = ")
     self:visit_exprlist(stat.exprlist)
   end
+
+  self:writeln()
 end
 
 function Transpiler:visit_identifier(node)
