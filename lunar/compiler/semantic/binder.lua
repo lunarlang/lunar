@@ -11,6 +11,7 @@ function Binder.constructor(self, ast, environment, file_path)
   BaseBinder.constructor(self, environment, file_path)
   self.ast = ast
   self.contextual_varargs = nil
+  self.is_function_scope = nil
 
   self.binding_visitors = {
     -- Statements
@@ -28,6 +29,8 @@ function Binder.constructor(self, ast, environment, file_path)
     [SyntaxKind.generic_for_statement] = self.bind_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.bind_repeat_until_statement,
     [SyntaxKind.declaration_statement] = self.bind_declaration_statement,
+    [SyntaxKind.import_statement] = self.bind_import_statement,
+    [SyntaxKind.export_statement] = self.bind_export_statement,
     
     -- Expressions
     [SyntaxKind.prefix_expression] = self.bind_prefix_expression,
@@ -383,7 +386,105 @@ end
 
 function Binder.__index:bind_return_statement(stat)
   self:bind_node_list(stat.exprlist)
-  -- Todo: assign returns of this source file
+  
+  if not self.is_function_scope then
+    if self.scope.level ~= self.root_scope.level then
+      error("Conditional returns are not allowed in source files")
+    end
+
+    -- Declare source file return expression
+    local source_returns = self.environment:get_returns_symbol(self.file_path)
+    if not source_returns then
+      source_returns = self.environment:create_returns_symbol(self.file_path)
+    end
+
+    -- Check if we have exported static values
+    if next(source_returns.statics.values) then
+      error("Cannot export and return values in the same scope")
+    else
+      source_returns.declaration = stat
+    end
+  end
+end
+
+function Binder.__index:bind_import_statement(stat)
+  local importing_source_returns = self.environment:get_returns_symbol(stat.path)
+  if not importing_source_returns then
+    importing_source_returns = self.environment:create_returns_symbol(stat.path)
+  end
+
+  importing_source_returns.is_referenced = true
+  for i = 1, #stat.values do
+    self:bind_import_value_declaration(stat.values[i], stat)
+  end
+end
+
+function Binder.__index:bind_import_value_declaration(decl, declaring_node)
+  local local_name = decl.identifier.name
+  if decl.alias_identifier then
+    local_name = decl.alias_identifier.name
+  end
+
+  -- In a non-strict mode, we should push the scope for re-declared variable
+  if self.scope:has_level_value(local_name) then
+    self:push_scope(false)
+  end
+
+  if decl.is_type then
+    local alias_symbol = Symbol.new(local_name)
+    alias_symbol.is_assigned = true
+    alias_symbol.declaration = declaring_node
+    self.scope:add_value(alias_symbol)
+  else
+    if self.root_scope:has_type(local_name) then
+      error("type '" .. local_name .. "' was already declared in this scope")
+    else
+      local alias_symbol = Symbol.new(local_name)
+      alias_symbol.is_assigned = true
+      alias_symbol.declaration = declaring_node
+      self.root_scope:add_type(alias_symbol)
+    end
+  end
+end
+
+function Binder.__index:bind_export_statement(stat)
+  local inner_stat = stat.body
+  local identifier
+  if inner_stat.syntax_kind == SyntaxKind.variable_statement then
+    identifier = inner_stat.identlist[1]
+  elseif inner_stat.syntax_kind == SyntaxKind.function_statement then
+    identifier = inner_stat.base
+  elseif inner_stat.syntax_kind == SyntaxKind.class_statement then
+    identifier = inner_stat.identifier
+  else
+    error("Unbound export statement")
+  end
+
+  -- In a non-strict mode, we should push the scope if the name was previously declared
+  if self.scope:has_level_value(identifier.name) then
+    self:push_scope(false)
+  end
+
+  -- Bind the statement as a normal local statement
+  local type_symbol = nil
+  if inner_stat.syntax_kind == SyntaxKind.variable_statement then
+    self:bind_variable_statement(inner_stat)
+  elseif inner_stat.syntax_kind == SyntaxKind.function_statement then
+    self:bind_function_statement(inner_stat)
+  elseif inner_stat.syntax_kind == SyntaxKind.class_statement then
+    self:bind_class_statement(inner_stat)
+    type_symbol = self.root_scope:get_value(identifier.name)
+  end
+
+  -- Add the value symbol to the source file's exports
+  local value_symbol = identifier.symbol
+  self.environment:add_exports_value(self.file_path, value_symbol)
+
+  -- Add the type symbol to the source file's exports if it exists
+  if type_symbol then
+    self.environment:add_exports_type(self.file_path, type_symbol)
+  end
+  
 end
 
 function Binder.__index:bind_function_statement(stat)
@@ -453,12 +554,12 @@ function Binder.__index:bind_generic_for_statement(stat)
 end
 
 function Binder.__index:bind_repeat_until_statement(stat)
-  -- Condition
-  self:bind_node(stat.expr)
-
   -- Block
   self:push_scope(true)
   self:bind_node_list(stat.block)
+  
+  -- Condition should include locals defined in the block scope
+  self:bind_node(stat.expr)
   self:pop_level_scopes()
 end
 
@@ -473,7 +574,9 @@ function Binder.__index:bind_lambda_expression(stat)
 
   self:push_scope(true)
   local save_contextual_varargs = self.contextual_varargs
+  local save_is_function_scope = self.is_function_scope
   self.contextual_varargs = nil
+  self.is_function_scope = true
 
   self:bind_node_list(stat.parameters)
   if stat.implicit_return then
@@ -483,6 +586,7 @@ function Binder.__index:bind_lambda_expression(stat)
   end
   
   self:pop_level_scopes()
+  self.is_function_scope = save_is_function_scope
   self.contextual_varargs = save_contextual_varargs
 end
 
@@ -516,12 +620,15 @@ end
 function Binder.__index:bind_function_like_expression(params, block, return_type_annotation)
   self:push_scope(true)
   local save_contextual_varargs = self.contextual_varargs
+  local save_is_function_scope = self.is_function_scope
   self.contextual_varargs = nil
+  self.is_function_scope = true
 
   self:bind_node_list(params)
   self:bind_node_list(block)
   self:pop_level_scopes()
   self.contextual_varargs = save_contextual_varargs
+  self.is_function_scope = save_is_function_scope
 
   if return_type_annotation then
     self:bind_type_expression(return_type_annotation)

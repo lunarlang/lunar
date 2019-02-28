@@ -9,6 +9,7 @@ function Transpiler.new(ast)
   local super = BaseTranspiler.new()
   local self = setmetatable(super, Transpiler)
   self.ast = ast
+  self.footer_exports = nil
 
   self.visitors = {
     -- stats
@@ -26,6 +27,8 @@ function Transpiler.new(ast)
     [SyntaxKind.generic_for_statement] = self.visit_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
     [SyntaxKind.declaration_statement] = self.visit_declaration_statement,
+    [SyntaxKind.import_statement] = self.visit_import_statement,
+    [SyntaxKind.export_statement] = self.visit_export_statement,
 
     -- exprs
     [SyntaxKind.prefix_expression] = self.visit_prefix_expression,
@@ -81,6 +84,7 @@ end
 
 function Transpiler:transpile()
   self:visit_block(self.ast)
+  self:visit_footer_exports()
   return self.source
 end
 
@@ -316,7 +320,35 @@ function Transpiler:visit_repeat_until_statement(stat)
 end
 
 function Transpiler:visit_declaration_statement(stat)
-  return nil
+  -- Pass
+end
+
+function Transpiler:visit_import_statement(stat)
+  self:visit_block(stat:lower())
+end
+
+function Transpiler:visit_export_statement(stat)
+  local assignment, identifier = stat:lower()
+  if not self.footer_exports then
+    self.footer_exports = {}
+  end
+  table.insert(self.footer_exports, identifier)
+
+  self:visit_node(assignment)
+end
+
+function Transpiler:visit_footer_exports(stat)
+  if self.footer_exports then
+    self:iwriteln("return {")
+    self:indent()
+    for i = 1, #self.footer_exports do
+      self:iwrite()
+      self:visit_identifier(self.footer_exports[i])
+      self:writeln(",")
+    end
+    self:dedent()
+    self:iwriteln("}")
+  end
 end
 
 function Transpiler:visit_prefix_expression(expr)

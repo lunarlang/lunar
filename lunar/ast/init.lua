@@ -14,6 +14,8 @@ return {
   BreakStatement = require "lunar.ast.stats.break_statement",
   ReturnStatement = require "lunar.ast.stats.return_statement",
   DeclarationStatement = require "lunar.ast.stats.declaration_statement",
+  ImportStatement = require "lunar.ast.stats.import_statement",
+  ExportStatement = require "lunar.ast.stats.export_statement",
   BinaryOpExpression = require "lunar.ast.exprs.binary_op_expression",
   BinaryOpKind = require "lunar.ast.exprs.binary_op_kind",
   UnaryOpExpression = require "lunar.ast.exprs.unary_op_expression",
@@ -40,4 +42,5 @@ return {
   ConstructorDeclaration = require "lunar.ast.decls.constructor_declaration",
   ClassFieldDeclaration = require "lunar.ast.decls.class_field_declaration",
   ClassFunctionDeclaration = require "lunar.ast.decls.class_function_declaration",
+  ImportValueDeclaration = require "lunar.ast.decls.import_value_declaration",
 }

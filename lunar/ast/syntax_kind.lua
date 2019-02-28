@@ -37,4 +37,7 @@ return {
   type_assertion_expression = 37,
   class_field_declaration = 38,
   declaration_statement = 39,
+  import_statement = 40,
+  export_statement = 41,
+  import_value_declaration = 42,
 }

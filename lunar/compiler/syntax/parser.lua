@@ -144,6 +144,21 @@ function Parser:class_member()
 end
 
 function Parser:statement()
+  return self:class_statement()
+    or self:import_statement()
+    or self:export_statement()
+    or self:expression_statement()
+    or self:do_statement()
+    or self:while_statement()
+    or self:repeat_until_statement()
+    or self:if_statement()
+    or self:for_statement()
+    or self:function_statement()
+    or self:variable_statement()
+    or self:declare_statement()
+end
+
+function Parser:class_statement()
   -- 'class' identifier ['<<' identifier] {class_member} 'end'
   -- 'class' is a contextual keyword that depends on the next token being an identifier
   if self:peek().value == "class" and self:peek(1).token_type == TokenType.identifier then
@@ -168,7 +183,109 @@ function Parser:statement()
 
     return AST.ClassStatement.new(AST.Identifier.new(name), super_identifier, members)
   end
+end
 
+function Parser:import_statement()
+  -- 'from' string 'import' {['type'] (identifier ['as' identifier] | * 'as' identifier)}
+  if self:peek().value == "from"
+    and self:peek(1).token_type == TokenType.string
+    and self:peek(2).token_type == TokenType.import_keyword then
+    self:move(1)
+
+    local path = self:parse_string_contents(self:consume())
+
+    self:move(1)
+
+    local values = {}
+    repeat
+      -- type
+      local is_type = false
+      if self:peek().value == "type" then
+        self:move(1)
+        is_type = true
+      end
+
+      -- identifier
+      local value
+      if self:assert(TokenType.identifier, TokenType.asterisk) then
+        value = self:consume().value
+      else
+        error(TokenType.identifier, "expected identifier after '"
+        .. (#values == 0 and 'import' or ',')
+        .. "'")
+      end
+
+      -- alias
+      local alias
+      if self:match(TokenType.as_keyword) then
+        alias = AST.Identifier.new(self:expect(TokenType.identifier, "expected identifier after 'as'").value)
+      elseif value == '*' then
+        error("expected 'as' after '*'")
+      end
+
+      table.insert(values, AST.ImportValueDeclaration.new(AST.Identifier.new(value), is_type, alias))
+    until not self:match(TokenType.comma)
+
+    return AST.ImportStatement.new(path, values)
+  end
+
+  -- 'import' string
+  if self:match(TokenType.import_keyword) then
+    local path = self:parse_string_contents(self:expect(TokenType.string_token).value)
+    return AST.ImportStatement.new(path, {}, true)
+  end
+end
+
+function Parser:export_statement()
+  -- 'export'
+  if self:match(TokenType.export_keyword) then
+    -- 'export' 'function' identifier '(' [paramlist] ')'
+    if self:match(TokenType.function_keyword) then
+      local first_identifier = self:expect(TokenType.identifier, "Expected identifier after 'function'")
+      local base = AST.Identifier.new(first_identifier.value)
+
+      self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
+      local paramlist = self:parameter_list()
+      self:expect(TokenType.right_paren, "Expected ')' to close '('")
+
+      local return_type_annotation = nil
+      if self:match(TokenType.colon) then
+        return_type_annotation = self:type_expression()
+      end
+
+      local block = self:block()
+      self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
+
+      return AST.ExportStatement.new(AST.FunctionStatement.new(base, paramlist, block, return_type_annotation, true))
+    end
+
+    -- 'export' class_statement
+    local stat = self:class_statement()
+    if stat then
+      return AST.ExportStatement.new(stat)
+    end
+    
+    -- 'export' identifier = expression
+    if self:peek().token_type == TokenType.identifier then
+      local name = self:consume().value
+      local type_annotation
+      if self:match(TokenType.colon) then
+        type_annotation = self:type_expression()
+      end
+      self:expect(TokenType.equal, "Declaration or statement expected")
+      local expr = self:expression()
+
+      return AST.ExportStatement.new(AST.VariableStatement.new(
+        {AST.Identifier.new(name, type_annotation)},
+        {expr}
+      ))
+    end
+
+    error("Expected function, class, or variable statement to follow 'export'")
+  end
+end
+
+function Parser:expression_statement()
   local primaryexpr = self:primary_expression()
   if primaryexpr ~= nil then
     -- immediately return this if it is a FunctionCallExpression as an ExpressionStatement
@@ -214,7 +331,9 @@ function Parser:statement()
       return nil
     end
   end
+end
 
+function Parser:do_statement()
   -- 'do' block 'end'
   if self:match(TokenType.do_keyword) then
     local block = self:block()
@@ -222,7 +341,9 @@ function Parser:statement()
 
     return AST.DoStatement.new(block)
   end
+end
 
+function Parser:while_statement()
   -- 'while' expr 'do' block 'end'
   if self:match(TokenType.while_keyword) then
     local expr = self:expression()
@@ -232,7 +353,9 @@ function Parser:statement()
 
     return AST.WhileStatement.new(expr, block)
   end
+end
 
+function Parser:repeat_until_statement()
   -- 'repeat' block 'until' expr
   if self:match(TokenType.repeat_keyword) then
     local block = self:block()
@@ -241,7 +364,9 @@ function Parser:statement()
 
     return AST.RepeatUntilStatement.new(block, expr)
   end
+end
 
+function Parser:if_statement()
   -- 'if' expr 'then' block {'elseif' expr 'then' block} ['else' block] 'end'
   if self:match(TokenType.if_keyword) then
     local expr = self:expression()
@@ -265,7 +390,9 @@ function Parser:statement()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'if'")
     return if_statement
   end
+end
 
+function Parser:for_statement()
   -- 'for' identifier
   if self:match(TokenType.for_keyword) and self:assert(TokenType.identifier) then
     local first_identifier = self:consume()
@@ -311,7 +438,9 @@ function Parser:statement()
       return AST.GenericForStatement.new(identifiers, exprlist, block)
     end
   end
+end
 
+function Parser:function_statement()
   -- 'function' identifier {'.' identifier} [':' identifier] '(' [paramlist] ')' block 'end'
   if self:match(TokenType.function_keyword) then
     local first_identifier = self:expect(TokenType.identifier, "Expected identifier after 'function'")
@@ -341,7 +470,9 @@ function Parser:statement()
 
     return AST.FunctionStatement.new(base, paramlist, block, return_type_annotation)
   end
+end
 
+function Parser:variable_statement()
   -- 'local'
   if self:match(TokenType.local_keyword) then
     -- 'function' identifier '(' [paramlist] ')' block 'end'
@@ -385,7 +516,9 @@ function Parser:statement()
       return AST.VariableStatement.new(identlist, exprlist)
     end
   end
+end
 
+function Parser:declare_statement()
   -- 'declare' identifier
   if self:match(TokenType.declare_keyword) then
     local context = self:expect(TokenType.identifier, "Expected declaration context after 'declare'").value
@@ -403,6 +536,15 @@ function Parser:statement()
     end
 
     return AST.DeclarationStatement.new(context, identifier, false)
+  end
+end
+
+function Parser:parse_string_contents(string_token)
+  if string_token.value:sub(1, 1) == "'" or string_token.value:sub(1, 1) == '"' then
+    return string_token.value:sub(2, -2)
+  else
+    local length = #string_token.value:match("%[=*%[")
+    return string_token.value:sub(length + 1, -length - 1)
   end
 end
 

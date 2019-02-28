@@ -1,14 +1,24 @@
 local SymbolTable = require "lunar.compiler.semantic.symbol_table"
-local SourceFileReturns = require "lunar.compiler.semantic.source_file_returns"
+local Symbol = require "lunar.compiler.semantic.symbol"
 local CoreGlobals = require "lunar.compiler.semantic.core_globals"
 
 local ProjectEnvironment = {}
 ProjectEnvironment.__index = {}
+--[[
+interface ReturnsMap {
+  symbol?: Symbol -- The symbol for all of the module's returns
+    & statics: {
+      values?: Map<string, Symbol> -- A map of exported symbols for the module's returns
+      types: Map<string, Symbol>
+    }
+}
+]]
 
 function ProjectEnvironment.constructor(self)
   self.globals = SymbolTable.new()
   self:inject_globals(CoreGlobals)
-  self.returns_map = {}
+  self.returns_map = {} -- public returns_map: ReturnsMap
+  
 end
 
 function ProjectEnvironment.new(...)
@@ -26,59 +36,56 @@ function ProjectEnvironment.__index:inject_globals(globals)
   end
 end
 
-function ProjectEnvironment.__index:add_returns_value(source_path, symbol)
+function ProjectEnvironment.__index:add_exports_value(source_path, symbol)
   local existing = self.returns_map[source_path]
   if existing then
-    if existing.is_ast then
+    if existing.declaration then
       error("Cannot export and return values at the same time")
     end
-    if not existing.values then
-      existing.values = {}
-    end
-    existing.values[symbol.name] = symbol
+    existing.statics:add_value(symbol)
   else
-    local returns = SourceFileReturns.new()
-    returns.values = {[symbol.name] = symbol}
+    local returns = Symbol.new()
+    returns.statics = SymbolTable.new()
+    returns.statics:add_value(symbol)
     self.returns_map[source_path] = returns
   end
 end
 
-function ProjectEnvironment.__index:add_returns_type(source_path, symbol)
-  local returns = self.returns_map[source_path]
-  if not returns then
-    returns = SourceFileReturns.new()
-    self.returns_map[source_path] = returns
-  end
-
-  returns.types[symbol.name] = symbol
-end
-
-function ProjectEnvironment.__index:set_returns_expression(source_path, ast)
+function ProjectEnvironment.__index:add_exports_type(source_path, symbol)
   local existing = self.returns_map[source_path]
   if existing then
-    if existing.ast then
-      error("Cannot re-declare return values")
-    elseif existing.values then
-      error("Cannot export and return values at the same time")
-    end
-    existing.ast = ast
+    existing.statics:add_type(symbol)
   else
-    local returns = SourceFileReturns.new()
-    returns.ast = ast
+    local returns = Symbol.new()
+    returns.statics = SymbolTable.new()
+    returns.statics:add_value(symbol)
     self.returns_map[source_path] = returns
   end
 end
 
-function ProjectEnvironment.__index:get_returns_expression(source_path)
-  return self.returns_map[source_path] and self.returns_map[source_path].ast
+function ProjectEnvironment.__index:create_returns_symbol(source_path)
+  local existing = self.returns_map[source_path]
+  if existing then
+    error("Cannot re-declare source file returns")
+  else
+    local returns = Symbol.new()
+    returns.statics = SymbolTable.new()
+    self.returns_map[source_path] = returns
+
+    return returns
+  end
 end
 
-function ProjectEnvironment.__index:get_returns_value(source_path, value_name)
-  return self.returns_map[source_path] and self.returns_map[source_path].values and self.returns_map[source_path][value_name]
+function ProjectEnvironment.__index:get_returns_symbol(source_path)
+  return self.returns_map[source_path] and self.returns_map[source_path]
 end
 
-function ProjectEnvironment.__index:get_returns_type(source_path, type_name)
-  return self.returns_map[source_path] and self.returns_map[source_path].types[type_name]
+function ProjectEnvironment.__index:get_exports_value(source_path, value_name)
+  return self.returns_map[source_path] and self.returns_map[source_path]:get_value(value_name)
+end
+
+function ProjectEnvironment.__index:get_exports_type(source_path, type_name)
+  return self.returns_map[source_path] and self.returns_map[source_path]:get_type(type_name)
 end
 
 return ProjectEnvironment

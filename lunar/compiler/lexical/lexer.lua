@@ -51,6 +51,8 @@ function Lexer.new(source)
     ["while"] = TokenType.while_keyword,
     ["as"] = TokenType.as_keyword,
     ["declare"] = TokenType.declare_keyword,
+    ["import"] = TokenType.import_keyword,
+    ["export"] = TokenType.export_keyword,
   }
 
   self.operators = {
