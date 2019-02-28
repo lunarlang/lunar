@@ -25,7 +25,7 @@ function ClassFieldDeclaration:lower(class_member_expr)
     return nil
   end
 
-  local lhs = nil
+  local lhs
   if self.is_static then
     lhs = class_member_expr
   else

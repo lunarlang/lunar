@@ -1,0 +1,84 @@
+local require_dev = require "spec.helpers.require_dev"
+
+describe("Bindings of literal expressions", function()
+  require_dev()
+
+  it("should bind global identifier references nested leftmost in member expressions", function()
+    local tokens = Lexer.new("return y.z"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local return_expr = result[1]
+    
+    local expr_left_1 = return_expr.exprlist[1].base
+    local left_ident_symbol = expr_left_1.symbol
+
+    assert.truthy(left_ident_symbol)
+    assert.False(left_ident_symbol.is_assigned)
+    assert.falsy(left_ident_symbol.declaration)
+    assert.True(left_ident_symbol.is_referenced)
+    assert.equal(env.globals:get_value('y'), left_ident_symbol)
+  end)
+
+  it("should bind global identifier references nested leftmost in member expressions recursively", function()
+    local tokens = Lexer.new("return y.z.w"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local return_expr = result[1]
+    
+    local expr_left_1 = return_expr.exprlist[1].base
+    local expr_left_2 = expr_left_1.base
+    local left_ident_symbol_2 = expr_left_2.symbol
+
+    assert.truthy(left_ident_symbol_2)
+    assert.False(left_ident_symbol_2.is_assigned)
+    assert.falsy(left_ident_symbol_2.declaration)
+    assert.True(left_ident_symbol_2.is_referenced)
+    assert.equal(env.globals:get_value('y'), left_ident_symbol_2)
+  end)
+
+  it("should not bind rightmore identifiers in member expressions", function()
+    -- This behavior could change.
+    local tokens = Lexer.new("return y.z.w"):tokenize()
+    local result = Parser.new(tokens):parse()
+    Binder.new(result):bind()
+
+    local return_expr = result[1]
+    
+    local expr_left_1 = return_expr.exprlist[1].base
+    local expr_right_1 = return_expr.exprlist[1].member_identifier
+    local expr_right_2 = expr_left_1.member_identifier
+
+    assert.falsy(expr_right_1.symbol)
+    assert.falsy(expr_right_2.symbol)
+  end)
+
+  it("should bind nested identifier references in index expressions", function()
+    local tokens = Lexer.new("return y.z[w]"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local return_expr = result[1]
+    
+    local index_expr = return_expr.exprlist[1]
+    local index_right = index_expr.index
+    local expr_left_1 = index_expr.base
+    local expr_left_2 = expr_left_1.base
+    local left_ident_symbol_2 = expr_left_2.symbol
+    local index_right_ident_symbol = index_right.symbol
+
+    assert.truthy(left_ident_symbol_2)
+    assert.False(left_ident_symbol_2.is_assigned)
+    assert.falsy(left_ident_symbol_2.declaration)
+    assert.True(left_ident_symbol_2.is_referenced)
+    assert.equal(env.globals:get_value('y'), left_ident_symbol_2)
+
+    assert.truthy(index_right_ident_symbol)
+    assert.False(index_right_ident_symbol.is_assigned)
+    assert.falsy(index_right_ident_symbol.declaration)
+    assert.True(index_right_ident_symbol.is_referenced)
+    assert.equal(env.globals:get_value('w'), index_right_ident_symbol)
+  end)
+  
+end)

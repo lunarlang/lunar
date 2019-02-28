@@ -10,6 +10,7 @@ Binder.__index = setmetatable({}, BaseBinder)
 function Binder.constructor(self, ast, environment, file_path)
   BaseBinder.constructor(self, environment, file_path)
   self.ast = ast
+  self.contextual_varargs = nil
 
   self.binding_visitors = {
     -- Statements
@@ -48,18 +49,24 @@ function Binder.constructor(self, ast, environment, file_path)
     [SyntaxKind.type_assertion_expression] = self.bind_type_assertion_expression,
 
     -- Declarations
-    [SyntaxKind.index_field_declaration] = self.bind_index_field_declaration,
-    [SyntaxKind.member_field_declaration] = self.bind_member_field_declaration,
-    [SyntaxKind.sequential_field_declaration] = self.bind_sequential_field_declaration,
     [SyntaxKind.parameter_declaration] = self.bind_parameter_declaration,
-
   }
 end
 
 function Binder.__index:bind()
-    self:push_scope(true)
+    self.root_scope = self:push_scope(true)
     self:bind_node_list(self.ast)
     self:pop_level_scopes()
+
+    -- Move undeclared type references into globals
+    for name, symbol in pairs(self.root_scope.symbol_table.types) do
+      if symbol.declaration == nil then
+        self.root_scope.symbol_table.types[name] = nil
+        self.environment.globals:add_type(symbol)
+      end
+    end
+    -- NOTE: The checker should be responsible for guarding against re-declared global types
+
     -- Todo: collate return symbols and return them as a second parameter
     return self.environment
 end
@@ -91,8 +98,8 @@ function Binder.__index:bind_value_reference(identifier)
     local symbol = self:bind_local_value_symbol(identifier, identifier.name)
     symbol.is_referenced = true
   else
-    -- else it is unbound
-    -- todo: add warning to diagnostic chain
+    local symbol = self:bind_global_value_symbol(identifier, identifier.name)
+    symbol.is_referenced = true
   end
 end
 
@@ -101,7 +108,7 @@ function Binder.__index:bind_value_assignment(identifier, declaring_node)
   if self.scope:has_value(identifier.name) then
     symbol = self:bind_local_value_symbol(identifier, identifier.name)
   else
-    -- else it is a first global assignment
+    -- We have re-assigned a global; should error in strict mode
     symbol = self:bind_global_value_symbol(identifier, identifier.name)
   end
   symbol.is_assigned = true
@@ -163,11 +170,11 @@ function Binder.__index:bind_value_declaration(identifier, declaring_node)
 end
 
 function Binder.__index:bind_type_reference(identifier)
-  if self.scope:has_type(identifier.name) then
-    local symbol = self:bind_local_type_symbol(identifier, identifier.name)
+  if self.environment.globals:has_type(identifier) then
+    local symbol = self:bind_global_type_symbol(identifier, identifier.name)
     symbol.is_referenced = true
   else
-    local symbol = self:bind_global_type_symbol(identifier, identifier.name)
+    local symbol = self:bind_local_type_symbol(identifier, identifier.name)
     symbol.is_referenced = true
   end
 end
@@ -239,64 +246,52 @@ function Binder.__index:bind_class_statement(stat)
     self:push_scope(false)
   end
 
-  self:push_scope()
-
-  -- Add static and type symbols
+  -- Add value symbol
   self:bind_value_assignment_declaration(identifier, stat)
-  local type_symbol = Symbol.new(identifier.name)
-  self.scope:add_type(type_symbol)
+  local value_symbol = identifier.symbol
+  value_symbol.members = SymbolTable.new()
+  value_symbol.statics = SymbolTable.new()
+
+  -- Declare and assign type symbol
+  local type_symbol = self.root_scope:get_type(identifier.name)
+  if type_symbol then
+    if type_symbol.declaration then
+      error("Attempt to re-declare type '" .. identifier.name .. "'")
+    end
+  else
+    type_symbol = Symbol.new(identifier.name)
+    self.root_scope:add_type(type_symbol)
+  end
   type_symbol.is_assigned = true
   type_symbol.declaration = stat
 
-  -- Bind superclass identifier
+  self:push_scope(true)
+
+  -- Bind contextual self and super symbols
+  local contextual_self = Symbol.new("self")
+  self.scope:add_value(contextual_self)
+  contextual_self.is_assigned = true
+  contextual_self.declaration = stat
+  local contextual_super = Symbol.new("super")
+  self.scope:add_value(contextual_super)
+  contextual_super.is_assigned = stat.super_identifier ~= nil
+  contextual_super.declaration = stat.super_identifier ~= nil and stat or nil
+
+  -- Bind superclass identifier and contextual super
   if stat.super_identifier then
-    self:bind_type_reference(stat.super_identifier)
     self:bind_value_reference(stat.super_identifier)
-
-    -- Pass declaration status of the "super" identifier from the extended class
-    local super_symbol = Symbol.new("super")
-    self.scope:add_value(super_symbol)
-
-    -- TODO: Attach super symbol to class type instead, and handle special cases for "self" and "super" identifier
-    -- instead of creating a new symbol
-    super_symbol.is_assigned = stat.super_identifier.symbol.is_assigned
-    super_symbol.declaration = stat.super_identifier.symbol.declaration
   end
-
-  -- Bind "self" and "super" types for this scope
-  local self_symbol = Symbol.new("self")
-  self.scope:add_value(self_symbol)
-  self_symbol.is_assigned = true
-  self_symbol.declaration = stat
 
   -- Bind class member declarations in a new SymbolTable
   type_symbol.members = SymbolTable.new()
   for i = 1, #stat.members do
     local member = stat.members[i]
     if member.syntax_kind == SyntaxKind.class_function_declaration then
-      local member_symbol = Symbol.new(member.identifier.name)
-      member.identifier.symbol = member_symbol
-      member_symbol.is_assigned = true
-      member_symbol.declaration = member.identifier
-
-      if not member.is_static then
-        type_symbol.members:add_value(member_symbol)
-      end
-
-      self:bind_function_like_expression(member.params, member.block, member.return_type_annotation)
+      self:bind_class_function_declaration(member, value_symbol)
     elseif member.syntax_kind == SyntaxKind.class_field_declaration then
-      local member_symbol = Symbol.new(member.identifier.name)
-      member.identifier.symbol = member_symbol
-      member_symbol.is_assigned = true
-      member_symbol.declaration = member.identifier
-
-      if not member.is_static then
-        type_symbol.members:add_value(member_symbol)
-      end
-
-      self:bind_node(member.value)
+      self:bind_class_field_declaration(member, value_symbol)
     elseif member.syntax_kind == SyntaxKind.constructor_declaration then
-      self:bind_function_like_expression(member.params, member.block)
+      self:bind_class_constructor_declaration(member, value_symbol)
     else
       error("Unbound class declaration of syntax kind '"
         .. tostring(DiagnosticUtils.index_of(SyntaxKind, member.syntax_kind))
@@ -304,6 +299,72 @@ function Binder.__index:bind_class_statement(stat)
       )
     end
   end
+
+  self:pop_level_scopes()
+end
+
+function Binder.__index:bind_class_field_declaration(decl, class_symbol)
+  if decl.is_static then
+    if class_symbol.statics:has_value(decl.identifier.name) then
+      error("Attempt to re-declare static class field '" .. decl.identifier.name .. "'")
+    end
+  else
+    if class_symbol.members:has_value(decl.identifier.name) then
+      error("Attempt to re-declare class field '" .. decl.identifier.name .. "'")
+    end
+  end
+  local member_symbol = Symbol.new(decl.identifier.name)
+  decl.identifier.symbol = member_symbol
+  member_symbol.is_assigned = true
+  member_symbol.declaration = decl.identifier
+
+  if decl.is_static then
+    class_symbol.statics:add_value(member_symbol)
+  else
+    class_symbol.members:add_value(member_symbol)
+  end
+
+  if decl.value then
+    self:bind_node(decl.value)
+  end
+end
+
+function Binder.__index:bind_class_function_declaration(decl, class_symbol)
+  if decl.is_static then
+    if class_symbol.statics:has_value(decl.identifier.name) then
+      error("Attempt to re-declare static class field '" .. decl.identifier.name .. "'")
+    end
+  else
+    if class_symbol.members:has_value(decl.identifier.name) then
+      error("Attempt to re-declare class field '" .. decl.identifier.name .. "'")
+    end
+  end
+  local member_symbol = Symbol.new(decl.identifier.name)
+  decl.identifier.symbol = member_symbol
+  member_symbol.is_assigned = true
+  member_symbol.declaration = decl.identifier
+
+  if decl.is_static then
+    class_symbol.statics:add_value(member_symbol)
+  else
+    class_symbol.members:add_value(member_symbol)
+  end
+
+  self:bind_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
+end
+
+function Binder.__index:bind_class_constructor_declaration(decl, class_symbol)
+  if class_symbol.statics:has_value('constructor') then
+    error("Attempt to re-declare class constructor")
+  end
+  local member_symbol = Symbol.new('constructor')
+  decl.symbol = member_symbol
+  member_symbol.is_assigned = true
+  member_symbol.declaration = decl.identifier
+
+  class_symbol.statics:add_value(member_symbol)
+
+  self:bind_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
 end
 
 function Binder.__index:bind_while_statement(stat)
@@ -321,6 +382,7 @@ function Binder.__index:bind_break_statement(stat)
 end
 
 function Binder.__index:bind_return_statement(stat)
+  self:bind_node_list(stat.exprlist)
   -- Todo: assign returns of this source file
 end
 
@@ -409,14 +471,19 @@ function Binder.__index:bind_lambda_expression(stat)
     self:bind_node(stat.expr)
   end
 
-  self:push_scope(true, true)
+  self:push_scope(true)
+  local save_contextual_varargs = self.contextual_varargs
+  self.contextual_varargs = nil
+
   self:bind_node_list(stat.parameters)
   if stat.implicit_return then
     self:bind_node(stat.body)
   else
     self:bind_node_list(stat.body)
   end
+  
   self:pop_level_scopes()
+  self.contextual_varargs = save_contextual_varargs
 end
 
 -- Should return the symbol of the rightmost member if it is a member of an identifier on the left
@@ -447,10 +514,14 @@ function Binder.__index:bind_argument_expression(expr)
 end
 
 function Binder.__index:bind_function_like_expression(params, block, return_type_annotation)
-  self:push_scope(true, true)
+  self:push_scope(true)
+  local save_contextual_varargs = self.contextual_varargs
+  self.contextual_varargs = nil
+
   self:bind_node_list(params)
   self:bind_node_list(block)
   self:pop_level_scopes()
+  self.contextual_varargs = save_contextual_varargs
 
   if return_type_annotation then
     self:bind_type_expression(return_type_annotation)
@@ -480,7 +551,28 @@ function Binder.__index:bind_function_call_expression(expr)
 end
 
 function Binder.__index:bind_table_literal_expression(expr)
-  self:bind_node_list(expr.fields)
+  if expr.syntax_kind == SyntaxKind.index_field_declaration then
+    self:bind_index_field_declaration(expr)
+  elseif expr.syntax_kind == SyntaxKind.member_field_declaration then
+    self:bind_member_field_declaration(expr)
+  elseif expr.syntax_kind == SyntaxKind.sequential_field_declaration then
+    self:bind_sequential_field_declaration(expr)
+  end
+end
+
+function Binder.__index:bind_index_field_declaration(expr, table_literal_symbol)
+  self:bind_node(expr.key)
+  self:bind_node(expr.value)
+end
+
+function Binder.__index:bind_member_field_declaration(expr)
+  self:bind_node(expr.value)
+
+  -- In the future, members of table literals could be bound.
+end
+
+function Binder.__index:bind_sequential_field_declaration(expr)
+  self:bind_node(expr.value)
 end
 
 function Binder.__index:bind_number_literal_expression(expr)
@@ -496,7 +588,7 @@ function Binder.__index:bind_boolean_literal_expression(expr)
 end
 
 function Binder.__index:bind_variable_argument_expression(expr)
-  local symbol = self:get_last_vararg_symbol()
+  local symbol = self.contextual_varargs
   if symbol then
     expr.symbol = symbol
     symbol.is_referenced = true
@@ -506,28 +598,18 @@ function Binder.__index:bind_variable_argument_expression(expr)
 end
 
 function Binder.__index:bind_type_assertion_expression(expr)
-end
-
-function Binder.__index:bind_index_field_declaration(expr)
-  self:bind_node(expr.key)
-  self:bind_node(expr.value)
-end
-
-function Binder.__index:bind_member_field_declaration(expr)
-  -- Do not bind identifier
-  self:bind_node(expr.value)
-end
-
-function Binder.__index:bind_sequential_field_declaration(expr)
-  self:bind_node(expr.value)
+  self:bind_node(expr.base)
+  self:bind_type_expression(expr.type)
 end
 
 function Binder.__index:bind_parameter_declaration(expr)
   if expr.identifier.name == "..." then
     -- Special case: varargs
     local varargs_symbol = Symbol.new("...")
-    self:declare_varargs(varargs_symbol, expr)
-    self.scope:add_value(varargs_symbol)
+    expr.identifier.symbol = varargs_symbol
+    varargs_symbol.declaration = expr
+    varargs_symbol.is_assigned = true
+    self.contextual_varargs = varargs_symbol
   else
 
     if self.scope:has_value(expr.identifier.name) then
@@ -535,7 +617,7 @@ function Binder.__index:bind_parameter_declaration(expr)
 
       -- Todo: in strict mode, we should guard against repeated parameters
       if self.scope:has_level_value(expr.identifier.name) then
-        self:push_scope(true)
+        self:push_scope(false)
       end
     end
 
@@ -546,7 +628,7 @@ end
 function Binder.__index:bind_declaration_statement(stat)
   if stat.context == "global" then
     if not stat.is_type_declaration then
-      self:bind_global_value_declaration(stat.identifier)
+      self:bind_global_value_declaration(stat.identifier, stat)
     else
       error("Global type declarations are not yet supported")
     end

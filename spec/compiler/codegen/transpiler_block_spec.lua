@@ -28,7 +28,7 @@ describe("Block transpilation", function()
 
     local test = spy.new(function() end)
 
-    local program = Program.new(result, { test = test }):run()
+    Program.new(result, { test = test }):run()
 
     assert.spy(test).was.called(1)
   end)

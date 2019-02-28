@@ -1,0 +1,324 @@
+local require_dev = require "spec.helpers.require_dev"
+
+local function test_scoped_idents(dec1, dec_ident1, ref_ident1, dec2, dec_ident2, ref_ident2, env)
+  assert.truthy(dec_ident1.symbol)
+  assert.truthy(ref_ident1.symbol)
+  assert.truthy(dec_ident2.symbol)
+  assert.truthy(ref_ident2.symbol)
+  
+  assert.equal(dec_ident1.symbol, ref_ident1.symbol)
+  assert.equal(dec_ident2.symbol, ref_ident2.symbol)
+  assert.is_not.equal(dec_ident1.symbol, dec_ident2.symbol)
+  
+  assert.equal(dec1, dec_ident1.symbol.declaration)
+  assert.True(dec_ident1.symbol.is_referenced)
+
+  assert.equal(dec2, dec_ident2.symbol.declaration)
+  assert.True(dec_ident2.symbol.is_referenced)
+
+  assert.False(env.globals:has_value('x'))
+end
+
+describe("Bindings of scoped identifiers", function()
+  require_dev()
+
+  it("should re-declare local symbols in the scope of a 'do' block", function()
+    local tokens = Lexer.new("local x do local x = 2 print(x) end print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].block[1]
+    local dec_ident2 = dec2.identlist[1]
+    local ref_ident2 = result[2].block[2].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+  it("should re-declare local symbols in the scope of an 'if' block", function()
+    local tokens = Lexer.new("local x if true then local x = 2 print(x) end print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].block[1]
+    local dec_ident2 = dec2.identlist[1]
+    local ref_ident2 = result[2].block[2].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+  it("should re-declare local symbols in the scope of a 'function' block", function()
+    local tokens = Lexer.new("local x function y() local x = 2 print(x) end print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].block[1]
+    local dec_ident2 = dec2.identlist[1]
+    local ref_ident2 = result[2].block[2].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+
+  it("Should locally scope function parameters with assignment", function()
+    local tokens = Lexer.new("local x function y(x) print(x) end print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].parameters[1]
+    local dec_ident2 = dec2.identifier
+    local ref_ident2 = result[2].block[1].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+
+  it("Should locally scope function varargs with assignment", function()
+    local tokens = Lexer.new("local function y(...) function y(...) print(...) end print(...) end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1].parameters[1]
+    local dec_ident1 = dec1.identifier
+    local ref_ident1 = result[1].block[2].expr.arguments[1].value
+
+    local dec2 = result[1].block[1].parameters[1]
+    local dec_ident2 = dec2.identifier
+    local ref_ident2 = result[1].block[1].block[1].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.True(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+
+  it("Should guard against use of varargs within a scope that does not define them", function()
+    local tokens = Lexer.new("local function y(...) function y() print(...) end print(...) end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local bind_step = function()
+      Binder.new(result):bind()
+    end
+    assert.has_errors(bind_step)
+  end)
+
+  it("Should locally scope lambda parameters with assignment", function()
+    local tokens = Lexer.new("local x; y = |x| print(x); print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].exprs[1].parameters[1]
+    local dec_ident2 = dec2.identifier
+    local ref_ident2 = result[2].exprs[1].body.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+
+  it("Should locally scope lambda varargs with assignment", function()
+    local tokens = Lexer.new("local y = |...| do y = |...| print(...); print(...) end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1].exprlist[1].parameters[1]
+    local dec_ident1 = dec1.identifier
+    local ref_ident1 = result[1].exprlist[1].body[2].expr.arguments[1].value
+
+    local dec2 = result[1].exprlist[1].body[1].exprs[1].parameters[1]
+    local dec_ident2 = dec2.identifier
+    local ref_ident2 = result[1].exprlist[1].body[1].exprs[1].body.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.True(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+
+  it("Should guard against use of varargs within a scope that does not define them", function()
+    local tokens = Lexer.new("local y = |...| do y = || print(...) print(...) end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local bind_step = function()
+      Binder.new(result):bind()
+    end
+    assert.has_errors(bind_step)
+  end)
+
+  it("should re-declare local symbols in the scope of a 'while' block", function()
+    local tokens = Lexer.new("local x while true do local x = 2 print(x) end print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].block[1]
+    local dec_ident2 = dec2.identlist[1]
+    local ref_ident2 = result[2].block[2].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+  it("should re-declare local symbols in the scope of a 'repeat until' block", function()
+    local tokens = Lexer.new("local x repeat local x = 2 print(x) until false print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].block[1]
+    local dec_ident2 = dec2.identlist[1]
+    local ref_ident2 = result[2].block[2].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+  it("should re-declare local symbols in the scope of a 'generic for' block", function()
+    local tokens = Lexer.new("local x for _ in pairs() do local x = 2 print(x) end print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].block[1]
+    local dec_ident2 = dec2.identlist[1]
+    local ref_ident2 = result[2].block[2].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+  it("should re-declare local symbols in the scope of a 'range for' block", function()
+    local tokens = Lexer.new("local x for _ = 1, 2, 3 do local x = 2 print(x) end print(x)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2].block[1]
+    local dec_ident2 = dec2.identlist[1]
+    local ref_ident2 = result[2].block[2].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+
+  it("Should locally scope generic for loop parameters with assignment in the for loop", function()
+    local tokens = Lexer.new("local k; for k in pairs() do print(k) end print(k)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2]
+    local dec_ident2 = dec2.identifiers[1]
+    local ref_ident2 = result[2].block[1].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+
+  it("Should locally scope range for loop parameters with assignment in the for loop", function()
+    local tokens = Lexer.new("local k; for k = 1, 2, 3 do print(k) end print(k)"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local dec1 = result[1]
+    local dec_ident1 = dec1.identlist[1]
+    local ref_ident1 = result[3].expr.arguments[1].value
+
+    local dec2 = result[2]
+    local dec_ident2 = dec2.identifier
+    local ref_ident2 = result[2].block[1].expr.arguments[1].value
+
+    test_scoped_idents(
+      dec1, dec_ident1, ref_ident1,
+      dec2, dec_ident2, ref_ident2,
+      env
+    )
+    assert.False(dec_ident1.symbol.is_assigned)
+    assert.True(dec_ident2.symbol.is_assigned)
+  end)
+  
+end)
