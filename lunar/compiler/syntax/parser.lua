@@ -104,6 +104,11 @@ function Parser:class_member()
 
   if self:match(TokenType.function_keyword) then
     local name = self:expect(TokenType.identifier, "Expected identifier after 'function'").value
+
+    if name == "constructor" then
+      error("Unexpected 'constructor' keyword near 'function'")
+    end
+
     self:expect(TokenType.left_paren, "Expected '(' after " .. name)
     local params = self:parameter_list()
     self:expect(TokenType.right_paren, "Expected ')' to close '(' after 'function " .. name .. "'")

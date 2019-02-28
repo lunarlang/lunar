@@ -14,4 +14,9 @@ CoreGlobals:add_type(Symbol.new("userdata"))
 CoreGlobals:add_type(Symbol.new("thread"))
 CoreGlobals:add_type(Symbol.new("table"))
 
+for _, symbol in pairs(CoreGlobals.types) do
+  symbol.is_assigned = true
+  symbol.is_referenced = true
+end
+
 return CoreGlobals

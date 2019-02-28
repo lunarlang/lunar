@@ -7,11 +7,12 @@ function Symbol.constructor(self, name)
   self.is_assigned = false
   self.declaration = nil -- Node or nil
 
-  self.members = nil -- SymbolTable or nil
+  self.members = nil -- SymbolTable or nil; should include class and interface instance members
+  self.statics = nil -- SymbolTable or nil; should include class statics
 end
 
 Symbol.__tostring = function(self)
-  return "Symbol (" .. tostring(self.name) .. ")"
+  return "Symbol ('" .. tostring(self.name) .. "')"
 end
 
 function Symbol.new(...)

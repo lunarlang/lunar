@@ -11,8 +11,8 @@ BaseBinder.__index = {}
 
 function BaseBinder.constructor(self, environment, file_path)
   self.scope = nil
+  self.root_scope = nil
   self.level = 0
-  self.default_env_cache = nil
   self.environment = environment or ProjectEnvironment.new()
   self.file_path = self.file_path or "src"
 end
@@ -94,7 +94,7 @@ end
 --[[ Creates a new symbol in the global scope if it does not exist, and binds it to a given node.
 Returns the registered symbol ]]
 function BaseBinder.__index:bind_global_type_symbol(node, name)
-  local existing = self.environment.globals:get_type(name)
+  local existing = self.root_scope:get_type(name) -- If it exists in the root scope, we should refer to that one instead
   if existing then
     node.symbol = existing
     return existing
