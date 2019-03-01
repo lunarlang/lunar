@@ -110,7 +110,7 @@ function Lexer:tokenize()
 
   -- if position has not reached the end of source, then we failed to tokenize something
   if not self:is_finished() then
-    self:error(("%d:%d: lexical analysis failed '%s'"):format(self.line, self:get_column(), self:peek()))
+    self:error(("lexical analysis failed '%s'"):format(self:peek()))
   end
 
   return tokens
