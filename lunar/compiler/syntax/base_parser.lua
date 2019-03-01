@@ -64,13 +64,14 @@ end
 -- Expects the current token to be the same as the given token_type, otherwise throws reason
 function BaseParser:expect(token_type, reason)
   if not self:is_finished() then
+    local token = self:peek()
+
     if self:assert(token_type) then
-      local token = self:peek()
       self:move(1)
       return token
     end
 
-    error(reason)
+    error(("%d:%d %s"):format(token.line, token.column, reason), 0)
   end
 end
 

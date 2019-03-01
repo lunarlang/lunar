@@ -1,11 +1,12 @@
 local TokenInfo = {}
 TokenInfo.__index = TokenInfo
 
-function TokenInfo.new(token_type, value, position)
+function TokenInfo.new(token_type, value, line, column)
   local self = setmetatable({}, TokenInfo)
   self.token_type = token_type
   self.value = value
-  self.position = position
+  self.line = line
+  self.column = column
 
   return self
 end

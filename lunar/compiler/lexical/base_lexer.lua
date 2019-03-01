@@ -4,6 +4,8 @@ BaseLexer.__index = BaseLexer
 function BaseLexer.new(source)
 
   local self = setmetatable({}, BaseLexer)
+  self.line = 1
+  self.line_begins = 0
   self.source = source
   self.position = 1
 
@@ -14,6 +16,14 @@ function BaseLexer:consume()
   local c = self:peek()
   self:move(1)
   return c
+end
+
+function BaseLexer:error(reason)
+  error(string.format("%d:%d: %s", self.line, self:get_column(), reason), 0)
+end
+
+function BaseLexer:get_column()
+  return self.position - self.line_begins
 end
 
 function BaseLexer:count(c, offset)

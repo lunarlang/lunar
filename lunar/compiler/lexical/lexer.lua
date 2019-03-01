@@ -110,14 +110,14 @@ function Lexer:tokenize()
 
   -- if position has not reached the end of source, then we failed to tokenize something
   if not self:is_finished() then
-    error(("lexical analysis failed at %d %s"):format(self.position, self:peek()))
+    self:error(("%d:%d: lexical analysis failed '%s'"):format(self.line, self:get_column(), self:peek()))
   end
 
   return tokens
 end
 
 function Lexer:next_token()
-  local token = self:next_of(self.trivias)
+  local token = self:next_trivia()
     or self:next_comment()
     or self:next_string()
     or self:next_number()
@@ -131,7 +131,24 @@ end
 function Lexer:next_of(list)
   for _, pair in pairs(list) do
     if self:match(pair.value) then
-      return TokenInfo.new(pair.type, pair.value, self.position)
+      return TokenInfo.new(pair.type, pair.value, self.line, self:get_column())
+    end
+  end
+end
+
+function Lexer:next_trivia()
+  for _, pair in pairs(self.trivias) do
+    if self:match(pair.value) then
+      if pair.type == TokenType.end_of_line_trivia then
+        local lineToken = TokenInfo.new(pair.type, pair.value, self.line, self:get_column())
+
+        self.line = self.line + 1
+        self.line_begins = self.position + #pair.value - 1
+
+        return lineToken
+      end
+
+      return TokenInfo.new(pair.type, pair.value, self.line, self:get_column())
     end
   end
 end
@@ -145,7 +162,7 @@ function Lexer:next_comment()
 
     if block then
       self.position = old_pos
-      return TokenInfo.new(TokenType.comment, buffer .. block.value, self.position)
+      return TokenInfo.new(TokenType.comment, buffer .. block.value, self.line, self:get_column())
     end
 
     while not self:is_finished() do
@@ -159,7 +176,7 @@ function Lexer:next_comment()
     end
 
     self.position = old_pos
-    return TokenInfo.new(TokenType.comment, buffer, self.position)
+    return TokenInfo.new(TokenType.comment, buffer, self.line, self:get_column())
   end
 end
 
@@ -167,7 +184,7 @@ function Lexer:next_string()
   local block = self:next_multiline_block()
 
   if block then
-    return TokenInfo.new(TokenType.string, block.value, self.position)
+    return TokenInfo.new(TokenType.string, block.value, self.line, self:get_column())
   elseif self:match("\"") or self:match("\'") then
     local old_pos = self.position
     local delimit = self:consume()
@@ -177,16 +194,16 @@ function Lexer:next_string()
     -- immediately return in cases of empty strings
     if self:match(delimit) then
       self.position = old_pos
-      return TokenInfo.new(TokenType.string, delimit .. delimit, self.position)
+      return TokenInfo.new(TokenType.string, delimit .. delimit, self.line, self:get_column())
     end
 
     repeat
       local trivia_token = self:next_of(self.trivias)
 
       if self:is_finished() then
-        error("unfinished string near <eof>")
+        self:error("unfinished string near <eof>")
       elseif trivia_token and trivia_token.token_type == TokenType.end_of_line_trivia then
-        error(("unfinished string near '%s'"):format(delimit .. buffer))
+        self:error(("unfinished string near '%s'"):format(delimit .. buffer))
       end
 
       -- we just escaped something last step!
@@ -199,7 +216,7 @@ function Lexer:next_string()
     until not escaping and self:match(delimit)
 
     self.position = old_pos
-    return TokenInfo.new(TokenType.string, delimit .. buffer .. delimit, self.position)
+    return TokenInfo.new(TokenType.string, delimit .. buffer .. delimit, self.line, self:get_column())
   end
 end
 
@@ -234,9 +251,9 @@ function Lexer:next_number()
 
     if tonumber(buffer) then
       self.position = old_pos
-      return TokenInfo.new(TokenType.number, buffer, self.position)
+      return TokenInfo.new(TokenType.number, buffer, self.line, self:get_column())
     else
-      error(("malformed number near '%s'"):format(buffer))
+      self:error(("malformed number near '%s'"):format(buffer))
     end
   end
 end
@@ -245,7 +262,7 @@ function Lexer:next_keyword()
   local id = self:next_identifier()
 
   if id and self.keywords[id.value] then
-    return TokenInfo.new(self.keywords[id.value], id.value, self.position)
+    return TokenInfo.new(self.keywords[id.value], id.value, self.line, self:get_column())
   end
 end
 
@@ -263,7 +280,7 @@ function Lexer:next_identifier()
     until not (StringUtils.is_letter(lookahead) or lookahead == "_" or StringUtils.is_digit(lookahead))
 
     self.position = old_pos
-    return TokenInfo.new(TokenType.identifier, buffer, self.position)
+    return TokenInfo.new(TokenType.identifier, buffer, self.line, self:get_column())
   end
 end
 
@@ -281,7 +298,7 @@ function Lexer:next_multiline_block()
 
     repeat
       if self:is_finished() then
-        error("unfinished string near <eof>")
+        self:error("unfinished string near <eof>")
       end
 
       buffer = buffer .. self:consume()
@@ -289,7 +306,7 @@ function Lexer:next_multiline_block()
 
     self.position = old_pos
     buffer = buffer .. "]" .. ("="):rep(level) .. "]"
-    return TokenInfo.new(TokenType.block, buffer, self.position)
+    return TokenInfo.new(TokenType.block, buffer, self.line, self:get_column())
   end
 end
 

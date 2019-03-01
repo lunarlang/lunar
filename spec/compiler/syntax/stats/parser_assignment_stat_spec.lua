@@ -123,6 +123,6 @@ describe("AssignmentStatement syntax", function()
       Parser.new(tokens):parse()
     end
 
-    assert.errors(parse, "Unexpected token '=' at 6")
+    assert.errors(parse, "1:6: unexpected token '='")
   end)
 end)
