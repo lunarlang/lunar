@@ -8,7 +8,7 @@ describe("Lexer:next_number", function()
       local tokens = Lexer.new(input):tokenize()
 
       assert.same({
-        TokenInfo.new(TokenType.number, input, 1)
+        TokenInfo.new(TokenType.number, input, 1, 1)
       }, tokens)
     end
   end
@@ -17,9 +17,9 @@ describe("Lexer:next_number", function()
     local tokens = Lexer.new("12 34"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.number, "12", 1),
-      TokenInfo.new(TokenType.whitespace_trivia, " ", 3),
-      TokenInfo.new(TokenType.number, "34", 4)
+      TokenInfo.new(TokenType.number, "12", 1, 1),
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1, 3),
+      TokenInfo.new(TokenType.number, "34", 1, 4)
     }, tokens)
   end)
 

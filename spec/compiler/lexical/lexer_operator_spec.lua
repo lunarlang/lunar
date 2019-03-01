@@ -10,7 +10,7 @@ describe("Lexer:next_operator", function()
       local tokens = Lexer.new(op):tokenize()
 
       assert.same({
-        TokenInfo.new(token_type, op, 1)
+        TokenInfo.new(token_type, op, 1, 1)
       }, tokens)
     end
   end

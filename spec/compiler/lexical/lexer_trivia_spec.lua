@@ -7,7 +7,7 @@ describe("Lexer:next_trivia", function()
     local tokens = Lexer.new(" "):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.whitespace_trivia, " ", 1)
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1, 1)
     }, tokens)
   end)
 
@@ -15,8 +15,8 @@ describe("Lexer:next_trivia", function()
     local tokens = Lexer.new("  "):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.whitespace_trivia, " ", 1),
-      TokenInfo.new(TokenType.whitespace_trivia, " ", 2)
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1, 1),
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1, 2)
     }, tokens)
   end)
 
@@ -24,10 +24,10 @@ describe("Lexer:next_trivia", function()
     local tokens = Lexer.new(" \t \t"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.whitespace_trivia, " ", 1),
-      TokenInfo.new(TokenType.whitespace_trivia, "\t", 2),
-      TokenInfo.new(TokenType.whitespace_trivia, " ", 3),
-      TokenInfo.new(TokenType.whitespace_trivia, "\t", 4)
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1, 1),
+      TokenInfo.new(TokenType.whitespace_trivia, "\t", 1, 2),
+      TokenInfo.new(TokenType.whitespace_trivia, " ", 1, 3),
+      TokenInfo.new(TokenType.whitespace_trivia, "\t", 1, 4)
     }, tokens)
   end)
 
@@ -35,9 +35,9 @@ describe("Lexer:next_trivia", function()
     local tokens = Lexer.new("\r\r\n\n"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.end_of_line_trivia, "\r", 1),
-      TokenInfo.new(TokenType.end_of_line_trivia, "\r\n", 2),
-      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 4)
+      TokenInfo.new(TokenType.end_of_line_trivia, "\r", 1, 1),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\r\n", 2, 1),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 3, 1)
     }, tokens)
   end)
 end)

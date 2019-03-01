@@ -10,7 +10,7 @@ describe("Lexer:next_keyword", function()
       local tokens = Lexer.new(keyword):tokenize()
 
       assert.same({
-        TokenInfo.new(token_type, keyword, 1)
+        TokenInfo.new(token_type, keyword, 1, 1)
       }, tokens)
     end
   end

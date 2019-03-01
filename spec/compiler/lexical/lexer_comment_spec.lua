@@ -7,7 +7,7 @@ describe("Lexer:next_comment", function()
     local tokens = Lexer.new("-- Hello, world!"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.comment, "-- Hello, world!", 1)
+      TokenInfo.new(TokenType.comment, "-- Hello, world!", 1, 1)
     }, tokens)
   end)
 
@@ -15,7 +15,7 @@ describe("Lexer:next_comment", function()
     local tokens = Lexer.new("---- Hello, world! ----"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.comment, "---- Hello, world! ----", 1)
+      TokenInfo.new(TokenType.comment, "---- Hello, world! ----", 1, 1)
     }, tokens)
   end)
 
@@ -23,7 +23,7 @@ describe("Lexer:next_comment", function()
     local tokens = Lexer.new("--"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.comment, "--", 1)
+      TokenInfo.new(TokenType.comment, "--", 1, 1)
     }, tokens)
   end)
 
@@ -33,9 +33,9 @@ describe("Lexer:next_comment", function()
     local tokens = Lexer.new(code):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.comment, "-- first comment", 1),
-      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 17),
-      TokenInfo.new(TokenType.comment, "-- second comment", 18)
+      TokenInfo.new(TokenType.comment, "-- first comment", 1, 1),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 1, 17),
+      TokenInfo.new(TokenType.comment, "-- second comment", 2, 1)
     }, tokens)
   end)
 
@@ -43,7 +43,7 @@ describe("Lexer:next_comment", function()
     local tokens = Lexer.new("--[[ Hello, world! ]]"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.comment, "--[[ Hello, world! ]]", 1)
+      TokenInfo.new(TokenType.comment, "--[[ Hello, world! ]]", 1, 1)
     }, tokens)
   end)
 
@@ -54,12 +54,12 @@ describe("Lexer:next_comment", function()
     local tokens = Lexer.new(code):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.comment, "-- [[", 1),
-      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 6),
-      TokenInfo.new(TokenType.identifier, "nope", 7),
-      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 11),
-      TokenInfo.new(TokenType.right_bracket, "]", 12),
-      TokenInfo.new(TokenType.right_bracket, "]", 13)
+      TokenInfo.new(TokenType.comment, "-- [[", 1, 1),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 1, 6),
+      TokenInfo.new(TokenType.identifier, "nope", 2, 1),
+      TokenInfo.new(TokenType.end_of_line_trivia, "\n", 2, 5),
+      TokenInfo.new(TokenType.right_bracket, "]", 3, 1),
+      TokenInfo.new(TokenType.right_bracket, "]", 3, 2)
     }, tokens)
   end)
 end)
