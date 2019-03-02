@@ -32,16 +32,26 @@ end
 
 local project_env = ProjectEnvironment.new()
 local parsed_sources = {}
+local error_infos = {}
 
 local function parse_and_bind_source(source, in_path, out_path)
-  local tokens = Lexer.new(source):tokenize()
-  local ast = Parser.new(tokens):parse()
-  Binder.new(ast, project_env, in_path):bind()
-  table.insert(parsed_sources, {
-    ast = ast,
-    in_path = in_path,
-    out_path = out_path,
-  })
+  local success, err = pcall(function()
+    local tokens = Lexer.new(source):tokenize()
+    local ast = Parser.new(tokens):parse()
+    Binder.new(ast, project_env, in_path):bind()
+    table.insert(parsed_sources, {
+      ast = ast,
+      in_path = in_path,
+      out_path = out_path,
+    })
+  end)
+
+  if not success then
+    table.insert(error_infos, {
+      in_path = in_path,
+      error = err
+    })
+  end
 end
 
 local function transpile_source(ast)
@@ -103,4 +113,12 @@ for _, root_dir in pairs(root_dirs) do
       out_file:flush()
     end
   end
+end
+
+if #error_infos > 0 then
+  for _, error_info in pairs(error_infos) do
+    io.stderr:write(error_info.in_path .. ":" .. error_info.error .. "\n")
+  end
+
+  os.exit(1)
 end
