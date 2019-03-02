@@ -21,8 +21,4 @@ Copy-Item -Path $binDir,$lunarDir -Destination $targetDir -Container -Recurse
 $env:PATH += ";" + $targetDir
 [Environment]::SetEnvironmentVariable("Path", $env:PATH, [System.EnvironmentVariableTarget]::User)
 
-$env:LUA_PATH += ";" + ($targetDir + "\?.lua")
-$env:LUA_PATH += ";" + ($targetDir + "\?\init.lua")
-[Environment]::SetEnvironmentVariable("LUA_PATH", $env:LUA_PATH, [System.EnvironmentVariableTarget]::User)
-
 [Console]::WriteLine("Lunar has been installed in $targetDir")
