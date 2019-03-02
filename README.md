@@ -76,15 +76,9 @@ Lunar is written for Lua 5.1, therefore you need the Lua 5.1 runtime. On some in
 Currently, `lunarc` is dependent on your current working directory, so make sure you're in the right directory!
 
 ### Manual source install
-Clone the repository: `git clone https://github.com/lunarlang/lunar`.
-
-#### Linux
-  1. Add full path to the `bin` folder inside to your `PATH`.
-  2. Add full path to the repository folder to your `LUA_PATH`.
-
-#### Windows
-  1. Change directory: `cd ./lunar`
-  2. Run `./bin/install` with PowerShell. If you opened `cmd`, you need to switch to PowerShell.
+  1. `git clone https://github.com/lunarlang/lunar`
+  2. `cd ./lunar`
+  3. Linux: `./install.sh`, Windows: `./install.ps1`, or `powershell` then `./install.ps1`, or double click on `install.ps1`
 
 If you did all of the above correctly, you should be able to compile your projects with `lunarc`.
 
