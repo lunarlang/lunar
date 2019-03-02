@@ -1,4 +1,4 @@
 #!/usr/bin/env lua
 
-package.path = package.path .. ";./?.lua;./?/init.lua;/usr/lib/lunar/?.lua;/usr/lib/lunar/?/init.lua;"
+package.path = package.path .. ";./?.lua;./?/init.lua;/usr/local/lib/lunar/?.lua;/usr/local/lib/lunar/?/init.lua;"
 require("lunar.lunarc")
