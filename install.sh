@@ -24,6 +24,7 @@ if [ -f /usr/local/bin/lunarc ]; then
 fi
 
 cp ./bin/lunarc /usr/local/bin/
-mkdir /usr/lib/lunar
-cp -r . /usr/lib/lunar/lunar
+chmod +x /usr/local/bin/lunarc
+mkdir /usr/local/lib/lunar
+cp -r . /usr/local/lib/lunar/lunar
 echo "Lunar has been installed in /usr/local/bin/lunarc"
