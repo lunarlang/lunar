@@ -26,11 +26,8 @@ setfenv(loadstring(lunarconfig:read("*a")), config)()
 local root_dirs = config.root_dirs or fail("'root_dirs' was not defined in '.lunarconfig'")
 local out_dir = config.out_dir or fail("'out_dir' was not defined in '.lunarconfig'")
 
-local function is_file_lunar(name)
-  return name:sub(-6) == ".lunar"
-end
-local function is_file_lunar_declaration(name)
-  return name:sub(-8) == ".d.lunar"
+local function assert_file_ext(name, ext)
+  return name:sub(-#ext) == ext
 end
 
 local project_env = ProjectEnvironment.new()
@@ -61,18 +58,18 @@ local function parse_sources_in_directory(path)
       if attrs and attrs.mode == "directory" then
         lfs.mkdir(join(out_dir, path, name))
         parse_sources_in_directory(file_path)
-      elseif attrs and attrs.mode == "file" and (is_file_lunar_declaration(name) or is_file_lunar(name)) then
+      elseif attrs and attrs.mode == "file" and (assert_file_ext(name, ".lunar") or assert_file_ext(name, ".d.lunar")) then
         local out_path = join(out_dir, path, name:sub(1, -7) .. ".lua")
         parse_and_bind_source(
           io.open(file_path):read("*a"),
           file_path,
-          (not is_file_lunar_declaration(name)) and out_path or nil
+          (not assert_file_ext(name, ".d.lunar")) and out_path or nil
         )
       elseif attrs and attrs.mode == "file" then
         -- Copy other files normally
-        
+
         local contents = io.open(file_path):read("*a")
-        local out_file, err = io.open(join(out_dir, path, name:sub(1, -5) .. ".lua"), "w")
+        local out_file, err = io.open(join(out_dir, path, name), "w")
 
         if err then
           if out_file then out_file:close() end -- close the file if it exists
