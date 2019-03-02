@@ -1,5 +1,5 @@
 # Contributing to Lunar
-First of all, thanks for your interest in contributing to Lunar! If you have any questions, head on over to our [Discord](https://github.com/CHFC3pS).
+First of all, thanks for your interest in contributing to Lunar! If you have any questions, head on over to our [Discord](https://discord.gg/CHFC3pS).
 
 ## Development
 Lunar is written for Lua 5.1, therefore you need the Lua 5.1 runtime. On some installs of Lua, you might not have `./?.lua` and `./?/init.lua` in your `LUA_PATH`. Configure your system environment variables and append `;./?.lua;./?/init.lua` into `LUA_PATH`.
