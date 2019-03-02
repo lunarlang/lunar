@@ -1,16 +1,19 @@
 #!/bin/bash
 
+CMD_TARGET_DIR="/usr/local/bin"
+LIB_TARGET_DIR="/usr/local/lib/lunar"
+
 if [ $EUID -ne 0 ]; then
   echo "Try again as root"
   exit 1
 fi
 
 remove_lunar() {
-  rm -rf /usr/lib/lunar
-  rm /usr/local/bin/lunarc
+  rm -rf $LIB_TARGET_DIR
+  rm $CMD_TARGET_DIR/lunarc
 }
 
-if [ -f /usr/local/bin/lunarc ]; then
+if [ -f $CMD_TARGET_DIR/lunarc ]; then
   read -r -p "Would you like to reinstall or uninstall? [R/U] " response
 
   if [[ "$response" =~ ^([Uu])+$ ]]; then
@@ -23,7 +26,8 @@ if [ -f /usr/local/bin/lunarc ]; then
   fi
 fi
 
-cp ./bin/lunarc /usr/local/bin/
-mkdir /usr/lib/lunar
-cp -r . /usr/lib/lunar/lunar
-echo "Lunar has been installed in /usr/local/bin/lunarc"
+cp ./bin/lunarc $CMD_TARGET_DIR
+chmod +x $CMD_TARGET_DIR/lunarc
+mkdir -p $LIB_TARGET_DIR/lunar
+cp -r ./lunar $LIB_TARGET_DIR
+echo "Lunar has been installed."
