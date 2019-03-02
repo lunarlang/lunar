@@ -81,13 +81,3 @@ Currently, `lunarc` is dependent on your current working directory, so make sure
   3. Linux: `./install.sh`, Windows: `./install.ps1`, or `powershell` then `./install.ps1`, or double click on `install.ps1`
 
 If you did all of the above correctly, you should be able to compile your projects with `lunarc`.
-
-### Prerequisites for development
-You will need [luarocks](https://luarocks.org/) (lua package manager), and [busted](http://olivinelabs.com/busted/) (unit testing framework).
-```
-$ git clone https://github.com/lunarlang/lunar
-$ luarocks install busted
-$ cd ./lunar # the root folder, not the lunar source code folder.
-```
-
-To run tests and verify everything's in working order, just run `busted` with the root directory of this repository as the current working directory.
