@@ -1,4 +1,5 @@
 @"
-package.path = package.path .. ";./?.lua;./?/init.lua;/usr/lib/lunar/?.lua;/usr/lib/lunar/?/init.lua;"
+package.path = ";./?.lua;./?/init.lua;" .. package.path
+
 require("lunar.lunarc")
 "@ | lua
