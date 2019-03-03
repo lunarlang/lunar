@@ -52,7 +52,7 @@ function Parser:parse()
 
   if not self:is_finished() then
     local weird_token = self:peek()
-    error(("Unexpected token '%s' at %d"):format(weird_token.value, weird_token.position))
+    error(("%d:%d: unexpected token '%s'"):format(weird_token.line, weird_token.column, weird_token.value))
   end
 
   return block

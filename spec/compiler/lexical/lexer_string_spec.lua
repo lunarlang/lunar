@@ -7,7 +7,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("''"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "''", 1)
+      TokenInfo.new(TokenType.string, "''", 1, 1)
     }, tokens)
   end)
 
@@ -15,7 +15,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("'\\\\'"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "'\\\\'", 1)
+      TokenInfo.new(TokenType.string, "'\\\\'", 1, 1)
     }, tokens)
   end)
 
@@ -23,7 +23,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("'\\n'"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "'\\n'", 1)
+      TokenInfo.new(TokenType.string, "'\\n'", 1, 1)
     }, tokens)
   end)
 
@@ -31,7 +31,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("'\\''"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "'\\''", 1)
+      TokenInfo.new(TokenType.string, "'\\''", 1, 1)
     }, tokens)
   end)
 
@@ -39,7 +39,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("'Hello, world!'"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "'Hello, world!'", 1)
+      TokenInfo.new(TokenType.string, "'Hello, world!'", 1, 1)
     }, tokens)
   end)
 
@@ -47,7 +47,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("\"Hello, world!\""):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "\"Hello, world!\"", 1)
+      TokenInfo.new(TokenType.string, "\"Hello, world!\"", 1, 1)
     }, tokens)
   end)
 
@@ -55,7 +55,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("[[ Hello, world! ]]"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "[[ Hello, world! ]]", 1)
+      TokenInfo.new(TokenType.string, "[[ Hello, world! ]]", 1, 1)
     }, tokens)
   end)
 
@@ -63,7 +63,7 @@ describe("Lexer:next_string", function()
     local tokens = Lexer.new("[====[ Hello, world! ]====]"):tokenize()
 
     assert.same({
-      TokenInfo.new(TokenType.string, "[====[ Hello, world! ]====]", 1)
+      TokenInfo.new(TokenType.string, "[====[ Hello, world! ]====]", 1, 1)
     }, tokens)
   end)
 

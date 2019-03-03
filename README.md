@@ -72,12 +72,12 @@ end
 ## Getting Started
 Lunar is written for Lua 5.1, therefore you need the Lua 5.1 runtime. On some installs of Lua, you might not have `./?.lua` and `./?/init.lua` in your `LUA_PATH`. Configure your system environment variables and append `;./?.lua;./?/init.lua` into `LUA_PATH`.
 
-### Prerequisites for development
-You will need [luarocks](https://luarocks.org/) (lua package manager), and [busted](http://olivinelabs.com/busted/) (unit testing framework).
-```
-$ git clone https://github.com/lunarlang/lunar
-$ luarocks install busted
-$ cd ./lunar # the root folder, not the lunar source code folder.
-```
+### `lunarc` usage
+Currently, `lunarc` is dependent on your current working directory, so make sure you're in the right directory!
 
-To run tests and verify everything's in working order, just run `busted` with the root directory of this repository as the current working directory.
+### Manual source install
+  1. `git clone https://github.com/lunarlang/lunar`
+  2. `cd ./lunar`
+  3. Linux: `./install.sh`, Windows: `./install.ps1`, or `powershell` then `./install.ps1`, or double click on `install.ps1`
+
+If you did all of the above correctly, you should be able to compile your projects with `lunarc`.

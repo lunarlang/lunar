@@ -26,25 +26,32 @@ setfenv(loadstring(lunarconfig:read("*a")), config)()
 local root_dirs = config.root_dirs or fail("'root_dirs' was not defined in '.lunarconfig'")
 local out_dir = config.out_dir or fail("'out_dir' was not defined in '.lunarconfig'")
 
-local function is_file_lunar(name)
-  return name:sub(-6) == ".lunar"
-end
-local function is_file_lunar_declaration(name)
-  return name:sub(-8) == ".d.lunar"
+local function assert_file_ext(name, ext)
+  return name:sub(-#ext) == ext
 end
 
 local project_env = ProjectEnvironment.new()
 local parsed_sources = {}
+local error_infos = {}
 
 local function parse_and_bind_source(source, in_path, out_path)
-  local tokens = Lexer.new(source):tokenize()
-  local ast = Parser.new(tokens):parse()
-  Binder.new(ast, project_env, in_path):bind()
-  table.insert(parsed_sources, {
-    ast = ast,
-    in_path = in_path,
-    out_path = out_path,
-  })
+  local success, err = pcall(function()
+    local tokens = Lexer.new(source):tokenize()
+    local ast = Parser.new(tokens):parse()
+    Binder.new(ast, project_env, in_path):bind()
+    table.insert(parsed_sources, {
+      ast = ast,
+      in_path = in_path,
+      out_path = out_path,
+    })
+  end)
+
+  if not success then
+    table.insert(error_infos, {
+      in_path = in_path,
+      error = err
+    })
+  end
 end
 
 local function transpile_source(ast)
@@ -61,18 +68,18 @@ local function parse_sources_in_directory(path)
       if attrs and attrs.mode == "directory" then
         lfs.mkdir(join(out_dir, path, name))
         parse_sources_in_directory(file_path)
-      elseif attrs and attrs.mode == "file" and (is_file_lunar_declaration(name) or is_file_lunar(name)) then
+      elseif attrs and attrs.mode == "file" and (assert_file_ext(name, ".lunar") or assert_file_ext(name, ".d.lunar")) then
         local out_path = join(out_dir, path, name:sub(1, -7) .. ".lua")
         parse_and_bind_source(
           io.open(file_path):read("*a"),
           file_path,
-          (not is_file_lunar_declaration(name)) and out_path or nil
+          (not assert_file_ext(name, ".d.lunar")) and out_path or nil
         )
       elseif attrs and attrs.mode == "file" then
         -- Copy other files normally
-        
+
         local contents = io.open(file_path):read("*a")
-        local out_file, err = io.open(join(out_dir, path, name:sub(1, -5) .. ".lua"), "w")
+        local out_file, err = io.open(join(out_dir, path, name), "w")
 
         if err then
           if out_file then out_file:close() end -- close the file if it exists
@@ -106,4 +113,12 @@ for _, root_dir in pairs(root_dirs) do
       out_file:flush()
     end
   end
+end
+
+if #error_infos > 0 then
+  for _, error_info in pairs(error_infos) do
+    io.stderr:write(error_info.in_path .. ":" .. error_info.error .. "\n")
+  end
+
+  os.exit(1)
 end
