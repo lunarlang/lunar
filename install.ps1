@@ -19,6 +19,6 @@ if (Test-Path $targetDir) {
 Copy-Item -Path $binDir,$lunarDir -Destination $targetDir -Container -Recurse
 
 $env:PATH += ";" + $targetDir
-[Environment]::SetEnvironmentVariable("Path", $env:PATH, [System.EnvironmentVariableTarget]::User)
+[Environment]::SetEnvironmentVariable("Path", $env:PATH, [System.EnvironmentVariableTarget]::Machine)
 
 [Console]::WriteLine("Lunar has been installed in $targetDir")
