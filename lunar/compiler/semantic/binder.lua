@@ -385,7 +385,9 @@ function Binder.__index:bind_break_statement(stat)
 end
 
 function Binder.__index:bind_return_statement(stat)
-  self:bind_node_list(stat.exprlist)
+  if stat.exprlist then
+    self:bind_node_list(stat.exprlist)
+  end
   
   if not self.is_function_scope then
     if self.scope.level ~= self.root_scope.level then
