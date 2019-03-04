@@ -28,7 +28,7 @@ function Binder.constructor(self, ast, environment, file_path)
     [SyntaxKind.generic_for_statement] = self.bind_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.bind_repeat_until_statement,
     [SyntaxKind.declaration_statement] = self.bind_declaration_statement,
-    
+
     -- Expressions
     [SyntaxKind.prefix_expression] = self.bind_prefix_expression,
     [SyntaxKind.lambda_expression] = self.bind_lambda_expression,
@@ -382,7 +382,9 @@ function Binder.__index:bind_break_statement(stat)
 end
 
 function Binder.__index:bind_return_statement(stat)
-  self:bind_node_list(stat.exprlist)
+  if stat.exprlist then
+    self:bind_node_list(stat.exprlist)
+  end
   -- Todo: assign returns of this source file
 end
 
@@ -481,7 +483,7 @@ function Binder.__index:bind_lambda_expression(stat)
   else
     self:bind_node_list(stat.body)
   end
-  
+
   self:pop_level_scopes()
   self.contextual_varargs = save_contextual_varargs
 end
