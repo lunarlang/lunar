@@ -124,9 +124,10 @@ function Transpiler:visit_fields(fields)
 
   self:indent()
   for _, field in pairs(fields) do
+    self:writeln()
     self:iwrite()
     self:visit_field_declaration(field)
-    self:writeln(",")
+    self:write(",")
   end
   self:dedent()
 end
@@ -302,7 +303,7 @@ function Transpiler:visit_generic_for_statement(stat)
   self:indent()
   self:visit_block(stat.block)
   self:dedent()
-  self:writeln("end")
+  self:iwriteln("end")
 end
 
 function Transpiler:visit_repeat_until_statement(stat)
@@ -392,7 +393,13 @@ end
 function Transpiler:visit_table_literal_expression(expr)
   self:write("{")
   self:visit_fields(expr.fields)
-  self:iwrite("}")
+
+  if #expr.fields > 0 then
+    self:writeln()
+    self:iwrite("}")
+  else
+    self:write("}")
+  end
 end
 
 function Transpiler:visit_number_literal_expression(expr)
