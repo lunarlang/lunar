@@ -1,4 +1,4 @@
-<div align="center"><img src="https://i.imgur.com/xVujd8N.png"/></div>
+<div align="center"><img src="https://i.imgur.com/8fH3GcD.png"/></div>
 
 # Lunar
 [![Build Status](https://travis-ci.org/lunarlang/lunar.svg?branch=master)](https://travis-ci.org/lunarlang/lunar)
