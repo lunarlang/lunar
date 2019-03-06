@@ -439,11 +439,6 @@ function Binder.__index:bind_import_value_declaration(decl, declaring_node)
   end
 
   if decl.is_type then
-    local alias_symbol = Symbol.new(local_name)
-    alias_symbol.is_assigned = true
-    alias_symbol.declaration = declaring_node
-    self.scope:add_value(alias_symbol)
-  else
     if self.root_scope:has_type(local_name) then
       error("type '" .. local_name .. "' was already declared in this scope")
     else
@@ -451,6 +446,22 @@ function Binder.__index:bind_import_value_declaration(decl, declaring_node)
       alias_symbol.is_assigned = true
       alias_symbol.declaration = declaring_node
       self.root_scope:add_type(alias_symbol)
+
+      local referenced_symbol = self.environment:get_exports_type(declaring_node.path, decl.identifier.name)
+      referenced_symbol.is_referenced = true
+    end
+  else
+    local alias_symbol = Symbol.new(local_name)
+    alias_symbol.is_assigned = true
+    alias_symbol.declaration = declaring_node
+    self.scope:add_value(alias_symbol)
+
+    if decl.identifier.name == "*" then
+      local referenced_symbol = self.environment:get_returns_symbol(declaring_node.path)
+      referenced_symbol.is_referenced = true
+    else
+      local referenced_symbol = self.environment:get_exports_value(declaring_node.path, decl.identifier.name)
+      referenced_symbol.is_referenced = true
     end
   end
 end

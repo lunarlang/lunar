@@ -209,6 +209,10 @@ function Parser:import_statement()
       local value
       if self:assert(TokenType.identifier, TokenType.asterisk) then
         value = self:consume().value
+
+        if value and is_type then
+          error("Unexpected symbol '*' after 'type'")
+        end
       else
         error(TokenType.identifier, "expected identifier after '"
         .. (#values == 0 and 'import' or ',')
