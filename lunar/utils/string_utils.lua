@@ -32,4 +32,30 @@ function StringUtils.is_digit(t)
   return StringUtils.is_in_range(t, "0", "9")
 end
 
+function StringUtils.unprefix(str, prefix)
+  if str:sub(1, #prefix) == prefix then
+     return str:sub(#prefix + 1)
+  else
+     return str
+  end
+end
+
+function StringUtils.split(str, sep)
+  local parts = {}
+  local pattern
+
+  if sep then
+     pattern = sep .. "([^" .. sep .. "]*)"
+     str = sep .. str
+  else
+     pattern = "%S+"
+  end
+
+  for part in str:gmatch(pattern) do
+     table.insert(parts, part)
+  end
+
+  return parts
+end
+
 return StringUtils

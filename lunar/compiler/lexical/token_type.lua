@@ -33,6 +33,8 @@ return {
   while_keyword = 220,
   as_keyword = 221,
   declare_keyword = 222,
+  import_keyword = 223,
+  export_keyword = 224,
 
   -- operators (4xx)
   plus = 400,

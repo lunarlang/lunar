@@ -13,6 +13,7 @@ return function()
     spec_env.Binder = require "lunar.compiler.semantic.binder"
     spec_env.Program = require "spec.helpers.program"
     spec_env.CoreGlobals = require "lunar.compiler.semantic.core_globals"
+    spec_env.ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
   end)
 
   spec_env.teardown(function()
@@ -27,5 +28,6 @@ return function()
     spec_env.Binder = nil
     spec_env.Program = nil
     spec_env.CoreGlobals = nil
+    spec_env.ProjectEnvironment = nil
   end)
 end
