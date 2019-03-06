@@ -8,7 +8,7 @@ function Symbol.constructor(self, name)
   self.declaration = nil -- Node or nil
 
   self.members = nil -- SymbolTable or nil; should include class and interface instance members
-  self.statics = nil -- SymbolTable or nil; should include class statics, as well as module returns
+  self.exports = nil -- SymbolTable or nil; should include class statics, as well as module exports
 end
 
 Symbol.__tostring = function(self)

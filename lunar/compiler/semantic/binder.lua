@@ -7,8 +7,8 @@ local SymbolTable = require "lunar.compiler.semantic.symbol_table"
 local Binder = {}
 Binder.__index = setmetatable({}, BaseBinder)
 
-function Binder.constructor(self, ast, environment, file_path)
-  BaseBinder.constructor(self, environment, file_path)
+function Binder.constructor(self, ast, environment, file_path_dot)
+  BaseBinder.constructor(self, environment, file_path_dot)
   self.ast = ast
   self.contextual_varargs = nil
   self.is_function_scope = nil
@@ -28,7 +28,9 @@ function Binder.constructor(self, ast, environment, file_path)
     [SyntaxKind.assignment_statement] = self.bind_assignment_statement,
     [SyntaxKind.generic_for_statement] = self.bind_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.bind_repeat_until_statement,
-    [SyntaxKind.declaration_statement] = self.bind_declaration_statement,
+    [SyntaxKind.declare_global_statement] = self.bind_declare_global_statement,
+    [SyntaxKind.declare_package_statement] = self.bind_declare_package_statement,
+    [SyntaxKind.declare_returns_statement] = self.bind_declare_returns_statement,
     [SyntaxKind.import_statement] = self.bind_import_statement,
     [SyntaxKind.export_statement] = self.bind_export_statement,
     
@@ -57,21 +59,23 @@ function Binder.constructor(self, ast, environment, file_path)
 end
 
 function Binder.__index:bind()
-    self.root_scope = self:push_scope(true)
-    self:bind_node_list(self.ast)
-    self:pop_level_scopes()
+  self.environment:declare_visited_source(self.file_path)
 
-    -- Move undeclared type references into globals
-    for name, symbol in pairs(self.root_scope.symbol_table.types) do
-      if symbol.declaration == nil then
-        self.root_scope.symbol_table.types[name] = nil
-        self.environment.globals:add_type(symbol)
-      end
+  self.root_scope = self:push_scope(true)
+  self:bind_node_list(self.ast)
+  self:pop_level_scopes()
+
+  -- Move undeclared type references into globals
+  for name, symbol in pairs(self.root_scope.symbol_table.types) do
+    if symbol.declaration == nil then
+      self.root_scope.symbol_table.types[name] = nil
+      self.environment.globals:add_type(symbol)
     end
-    -- NOTE: The checker should be responsible for guarding against re-declared global types
+  end
+  -- NOTE: The checker should be responsible for guarding against re-declared global types
 
-    -- Todo: collate return symbols and return them as a second parameter
-    return self.environment
+  -- Todo: collate return symbols and return them as a second parameter
+  return self.environment
 end
 
 function Binder.__index:bind_node(node)
@@ -253,7 +257,7 @@ function Binder.__index:bind_class_statement(stat)
   self:bind_value_assignment_declaration(identifier, stat)
   local value_symbol = identifier.symbol
   value_symbol.members = SymbolTable.new()
-  value_symbol.statics = SymbolTable.new()
+  value_symbol.exports = SymbolTable.new()
 
   -- Declare and assign type symbol
   local type_symbol = self.root_scope:get_type(identifier.name)
@@ -308,7 +312,7 @@ end
 
 function Binder.__index:bind_class_field_declaration(decl, class_symbol)
   if decl.is_static then
-    if class_symbol.statics:has_value(decl.identifier.name) then
+    if class_symbol.exports:has_value(decl.identifier.name) then
       error("Attempt to re-declare static class field '" .. decl.identifier.name .. "'")
     end
   else
@@ -322,7 +326,7 @@ function Binder.__index:bind_class_field_declaration(decl, class_symbol)
   member_symbol.declaration = decl.identifier
 
   if decl.is_static then
-    class_symbol.statics:add_value(member_symbol)
+    class_symbol.exports:add_value(member_symbol)
   else
     class_symbol.members:add_value(member_symbol)
   end
@@ -334,7 +338,7 @@ end
 
 function Binder.__index:bind_class_function_declaration(decl, class_symbol)
   if decl.is_static then
-    if class_symbol.statics:has_value(decl.identifier.name) then
+    if class_symbol.exports:has_value(decl.identifier.name) then
       error("Attempt to re-declare static class field '" .. decl.identifier.name .. "'")
     end
   else
@@ -348,7 +352,7 @@ function Binder.__index:bind_class_function_declaration(decl, class_symbol)
   member_symbol.declaration = decl.identifier
 
   if decl.is_static then
-    class_symbol.statics:add_value(member_symbol)
+    class_symbol.exports:add_value(member_symbol)
   else
     class_symbol.members:add_value(member_symbol)
   end
@@ -357,7 +361,7 @@ function Binder.__index:bind_class_function_declaration(decl, class_symbol)
 end
 
 function Binder.__index:bind_class_constructor_declaration(decl, class_symbol)
-  if class_symbol.statics:has_value('constructor') then
+  if class_symbol.exports:has_value('constructor') then
     error("Attempt to re-declare class constructor")
   end
   local member_symbol = Symbol.new('constructor')
@@ -365,7 +369,7 @@ function Binder.__index:bind_class_constructor_declaration(decl, class_symbol)
   member_symbol.is_assigned = true
   member_symbol.declaration = decl.identifier
 
-  class_symbol.statics:add_value(member_symbol)
+  class_symbol.exports:add_value(member_symbol)
 
   self:bind_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
 end
@@ -396,12 +400,14 @@ function Binder.__index:bind_return_statement(stat)
 
     -- Declare source file return expression
     local source_returns = self.environment:get_returns_symbol(self.file_path)
-    if not source_returns then
+    if source_returns then
+      error("Cannot re-declare source returns")
+    else
       source_returns = self.environment:create_returns_symbol(self.file_path)
     end
 
     -- Check if we have exported static values
-    if next(source_returns.statics.values) then
+    if next(source_returns.exports.values) then
       error("Cannot export and return values in the same scope")
     else
       source_returns.declaration = stat
@@ -734,13 +740,49 @@ function Binder.__index:bind_parameter_declaration(expr)
   end
 end
 
-function Binder.__index:bind_declaration_statement(stat)
-  if stat.context == "global" then
-    if not stat.is_type_declaration then
-      self:bind_global_value_declaration(stat.identifier, stat)
-    else
-      error("Global type declarations are not yet supported")
-    end
+function Binder.__index:bind_declare_global_statement(stat)
+  if not stat.is_type_declaration then
+    self:bind_global_value_declaration(stat.identifier, stat)
+  else
+    error("Global type declarations are not yet supported")
+  end
+end
+
+function Binder.__index:bind_declare_package_statement(stat)
+  self:bind_type_expression(stat.type_expr)
+
+  -- Declare source file return expression
+  local source_returns = self.environment:get_returns_symbol(stat.path)
+  if source_returns then
+    error("Attempt to re-declare package returns")
+  else
+    source_returns = self.environment:create_returns_symbol(stat.path)
+  end
+
+  -- Check if we have exported static values
+  if next(source_returns.exports.values) then
+    error("Cannot export and return values in the same scope")
+  else
+    source_returns.declaration = stat
+  end
+end
+
+function Binder.__index:bind_declare_returns_statement(stat)
+  self:bind_type_expression(stat.type_expr)
+
+  -- Declare source file return expression
+  local source_returns = self.environment:get_returns_symbol(self.file_path)
+  if source_returns then
+    error("Attempt to re-declare source file returns")
+  else
+    source_returns = self.environment:create_returns_symbol(self.file_path)
+  end
+
+  -- Check if we have exported static values
+  if next(source_returns.exports.values) then
+    error("Cannot export and return values in the same scope")
+  else
+    source_returns.declaration = stat
   end
 end
 

@@ -36,8 +36,11 @@ return {
   sequential_field_declaration = 36,
   type_assertion_expression = 37,
   class_field_declaration = 38,
-  declaration_statement = 39,
   import_statement = 40,
   export_statement = 41,
   import_value_declaration = 42,
+
+  declare_global_statement = 50,
+  declare_package_statement = 51,
+  declare_returns_statement = 52,
 }

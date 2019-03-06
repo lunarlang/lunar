@@ -26,7 +26,9 @@ function Transpiler.new(ast)
     [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
     [SyntaxKind.generic_for_statement] = self.visit_generic_for_statement,
     [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
-    [SyntaxKind.declaration_statement] = self.visit_declaration_statement,
+    [SyntaxKind.declare_global_statement] = self.visit_declare_global_statement,
+    [SyntaxKind.declare_package_statement] = self.visit_declare_package_statement,
+    [SyntaxKind.declare_returns_statement] = self.visit_declare_returns_statement,
     [SyntaxKind.import_statement] = self.visit_import_statement,
     [SyntaxKind.export_statement] = self.visit_export_statement,
 
@@ -319,7 +321,15 @@ function Transpiler:visit_repeat_until_statement(stat)
   self:writeln()
 end
 
-function Transpiler:visit_declaration_statement(stat)
+function Transpiler:visit_declare_global_statement(stat)
+  -- Pass
+end
+
+function Transpiler:visit_declare_package_statement(stat)
+  -- Pass
+end
+
+function Transpiler:visit_declare_returns_statement(stat)
   -- Pass
 end
 

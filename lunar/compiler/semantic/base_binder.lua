@@ -9,12 +9,12 @@ BaseBinder.__index = {}
     A binder should take in an AST and mutate its nodes by binding symbols
 ]]
 
-function BaseBinder.constructor(self, environment, file_path)
+function BaseBinder.constructor(self, environment, file_path_dot)
   self.scope = nil
   self.root_scope = nil
   self.level = 0
   self.environment = environment or ProjectEnvironment.new()
-  self.file_path = self.file_path or "src"
+  self.file_path = file_path_dot or "src"
 end
 
 function BaseBinder.new(...)

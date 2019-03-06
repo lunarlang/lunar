@@ -519,23 +519,40 @@ function Parser:variable_statement()
 end
 
 function Parser:declare_statement()
-  -- 'declare' identifier
+  -- 'declare' context
   if self:match(TokenType.declare_keyword) then
     local context = self:expect(TokenType.identifier, "Expected declaration context after 'declare'").value
 
-    local identifier
-    if self:assert(TokenType.identifier) then
-      local name = self:consume().value
-      local type_annotation
-      if self:match(TokenType.colon) then
-        type_annotation = self:type_expression()
+    if context == "global" then
+      -- 'declare' 'global' identifier
+      local identifier
+      if self:assert(TokenType.identifier) then
+        local name = self:consume().value
+        local type_annotation
+        if self:match(TokenType.colon) then
+          type_annotation = self:type_expression()
+        end
+        identifier = AST.Identifier.new(name, type_annotation)
+      else
+        -- Todo: handle interfaces, classes, functions, etc.
+        error("Expected identifier after 'declare " .. context .. "'")
       end
-      identifier = AST.Identifier.new(name, type_annotation)
-    else
-      error("Expected identifier after 'declare " .. context .. "'")
-    end
 
-    return AST.DeclarationStatement.new(context, identifier, false)
+      return AST.DeclareGlobalStatement.new(identifier, false)
+    elseif context == "package" then
+      -- 'declare' 'package' string_literal_expression type_expression
+      local path = self:parse_string_contents(self:expect(TokenType.string, "Expected string after 'declare package'"))
+
+      local type = self:type_expression()
+      return AST.DeclarePackageStatement.new(path, type)
+    elseif context == "returns" then
+      -- 'declare' 'returns' type_expression
+
+      local type = self:type_expression()
+      return AST.DeclareReturnsStatement.new(type)
+    else
+      error("Expected 'global' 'package' or 'returns' after 'declare' keyword")
+    end
   end
 end
 
