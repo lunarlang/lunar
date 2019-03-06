@@ -448,6 +448,10 @@ function Binder.__index:bind_import_value_declaration(decl, declaring_node)
       self.root_scope:add_type(alias_symbol)
 
       local referenced_symbol = self.environment:get_exports_type(declaring_node.path, decl.identifier.name)
+      if not referenced_symbol then
+        referenced_symbol = Symbol.new(decl.identifier.name)
+        self.environment:add_exports_type(declaring_node.path, referenced_symbol)
+      end
       referenced_symbol.is_referenced = true
     end
   else
@@ -461,6 +465,10 @@ function Binder.__index:bind_import_value_declaration(decl, declaring_node)
       referenced_symbol.is_referenced = true
     else
       local referenced_symbol = self.environment:get_exports_value(declaring_node.path, decl.identifier.name)
+      if not referenced_symbol then
+        referenced_symbol = Symbol.new(decl.identifier.name)
+        self.environment:add_exports_value(declaring_node.path, referenced_symbol)
+      end
       referenced_symbol.is_referenced = true
     end
   end
