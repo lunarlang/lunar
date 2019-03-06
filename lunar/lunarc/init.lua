@@ -4,9 +4,10 @@ local Parser = require "lunar.compiler.syntax.parser"
 local Binder = require "lunar.compiler.semantic.binder"
 local Transpiler = require "lunar.compiler.codegen.transpiler"
 local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
+local PathUtils = require "lunar.utils.path_utils"
 
 local function fail(reason, exit_code)
-  io.stderr:write("lunarc: " .. reason .. "\n")
+  io.stderr:write("lunarc: " .. reason .. "\n" .. debug.traceback())
   os.exit(exit_code or 1)
 end
 
@@ -114,7 +115,30 @@ lfs.mkdir(out_dir)
 
 -- Parse and bind included files
 for _, include_path in pairs(include) do
-  parse_subpath('.', '', include_path)
+  local include_path_dot = PathUtils.to_dot_form(include_path)
+  if not include_path_dot then
+    error("Invalid include path '" .. include_path .. "': include paths must be in the root directory")
+  end
+  local root_path_end
+  for i = #include_path_dot, 1, -1 do
+    if include_path_dot:sub(i, i) == "." then
+      root_path_end = i - 1
+      break
+    end
+  end
+
+  if root_path_end >= 1 then
+    local root_path_dot = include_path_dot:sub(1, root_path_end)
+    local accumulated_dirs = out_dir
+    for root_subpath in root_path_dot:gmatch("([^%.]+)%.?") do
+      accumulated_dirs = PathUtils.join(accumulated_dirs, root_subpath)
+      lfs.mkdir(accumulated_dirs)
+    end
+
+    parse_subpath(PathUtils.normalize(join(include_path, "..")), root_path_dot, include_path_dot:sub(root_path_end + 2))
+  else
+    parse_subpath('.', '', include_path)
+  end
 end
 
 -- Parse and bind referenced files that were not included
@@ -124,7 +148,8 @@ repeat
     local source_path_dot = unvisited_sources[i]
 
     local absolute_path = project_env:get_absolute_source_path(source_path_dot)
-    if absolute_path and lfs.attributes(absolute_path, "mode") == "file" then
+    local attrs = absolute_path and lfs.attributes(absolute_path, "mode")
+    if absolute_path and attrs and attrs == "file" then
       parse_and_bind_source(
         io.open(absolute_path):read("*a"),
         absolute_path,

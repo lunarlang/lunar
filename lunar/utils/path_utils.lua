@@ -239,4 +239,16 @@ function PathUtils.get_extensionless_name(path)
    end
 end
 
+function PathUtils.to_dot_form(path)
+   path = PathUtils.get_extensionless_name(path)
+   while path:sub(1, dir_sep:len() + 1) == "." .. dir_sep do
+      path = path:sub(dir_sep:len() + 2)
+   end
+   if path:find("%.", nil, true) then
+      return nil
+   end
+
+   return table.concat(StringUtils.split(path, dir_sep), ".")
+end
+
 return PathUtils
