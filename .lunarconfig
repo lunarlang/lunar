@@ -1,2 +1,2 @@
-include = { "lunar", "spec" }
+root_dirs = { "lunar", "spec" }
 out_dir = "dist"
