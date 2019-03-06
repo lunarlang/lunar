@@ -1,8 +1,6 @@
 local SymbolTable = require "lunar.compiler.semantic.symbol_table"
 local Symbol = require "lunar.compiler.semantic.symbol"
 local CoreGlobals = require "lunar.compiler.semantic.core_globals"
-local PathUtils = require "lunar.utils.path_utils"
-local StringUtils = require "lunar.utils.string_utils"
 
 local ProjectEnvironment = {}
 ProjectEnvironment.__index = {}
@@ -22,62 +20,12 @@ function ProjectEnvironment.constructor(self)
                                 -- environment was visited to the binding stage
   self.globals = SymbolTable.new()
   self:inject_globals(CoreGlobals)
-
-
-  -- Cache LUA_PATH and LUA_CPATH, and map lunar/d.lunar files in the same path
-  local paths = StringUtils.split(package.path, ";")
-  local cpaths = StringUtils.split(package.cpath, ";")
-
-  self.lua_paths = {}
-  for _, path in pairs(paths) do
-    table.insert(self.lua_paths, path)
-  end
-  for _, cpath in pairs(cpaths) do
-    table.insert(self.lua_paths, cpath)
-  end
-
-  self.source_paths = {}
-  for _, path in pairs(paths) do
-    table.insert(self.source_paths, PathUtils.get_extensionless_name(path) .. ".lunar")
-    table.insert(self.source_paths, PathUtils.get_extensionless_name(path) .. ".d.lunar")
-  end
-  for _, cpath in pairs(cpaths) do
-    table.insert(self.source_paths, PathUtils.get_extensionless_name(cpath) .. ".lunar")
-    table.insert(self.source_paths, PathUtils.get_extensionless_name(cpath) .. ".d.lunar")
-  end
-
 end
 
 function ProjectEnvironment.new(...)
   local self = setmetatable({}, ProjectEnvironment)
   ProjectEnvironment.constructor(self, ...)
   return self
-end
-
-function ProjectEnvironment.__index:get_absolute_source_path(source_path_dot)
-  local slashed_path = source_path_dot:gsub("%.", "/")
-
-  -- Check .lua paths to mask with an ad-hoc .d.lunar declaration
-  for _, path in pairs(self.lua_paths) do
-    local tentative_location = path:gsub("%?", slashed_path)
-    local abs_path = PathUtils.find_file(".", tentative_location)
-
-    if abs_path then
-      return PathUtils.get_extensionless_name(abs_path) .. ".d.lunar"
-    end
-  end
-
-  -- Check existing source paths
-  for _, path in pairs(self.source_paths) do
-    local tentative_location = path:gsub("%?", slashed_path)
-    local abs_path = PathUtils.find_file(".", tentative_location)
-
-    if abs_path then
-      return abs_path
-    end
-  end
-
-  return nil
 end
 
 function ProjectEnvironment.__index:declare_visited_source(source_path_dot)

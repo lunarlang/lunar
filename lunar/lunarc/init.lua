@@ -62,6 +62,8 @@ end
 
 local used_paths = {}
 local function parse_subpath(path, dot_path, name)
+  if path == out_dir or path == PathUtils.join(".", out_dir) then return end
+
   local file_path = join(path, name)
   local file_path_dot = dot_path .. (dot_path == "" and "" or ".") .. name:match("[^%.]*")
   local attrs = lfs.attributes(file_path) -- nilable
@@ -127,7 +129,7 @@ for _, include_path in pairs(include) do
     end
   end
 
-  if root_path_end >= 1 then
+  if root_path_end and root_path_end >= 1 then
     local root_path_dot = include_path_dot:sub(1, root_path_end)
     local accumulated_dirs = out_dir
     for root_subpath in root_path_dot:gmatch("([^%.]+)%.?") do
@@ -147,7 +149,7 @@ repeat
   for i = 1, #unvisited_sources do
     local source_path_dot = unvisited_sources[i]
 
-    local absolute_path = project_env:get_absolute_source_path(source_path_dot)
+    local absolute_path = PathUtils.dot_path_to_absolute(source_path_dot)
     local attrs = absolute_path and lfs.attributes(absolute_path, "mode")
     if absolute_path and attrs and attrs == "file" then
       parse_and_bind_source(
@@ -158,6 +160,7 @@ repeat
       )
     else
       project_env:declare_visited_source(source_path_dot)
+      -- Mark as visited (with return types ultimately undeclared, unless declared elsewhere)
     end
   end
 until #unvisited_sources == 0
