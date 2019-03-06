@@ -39,6 +39,51 @@ describe("Bindings of declared identifiers", function()
     assert.False(package_env_symbol.is_referenced)
   end)
 
+  it("should create symbols for referenced non-alias values when importing", function()
+    local tokens = Lexer.new("from 'nonexistent' import X"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local env = ProjectEnvironment.new()
+    Binder.new(result, env):bind()
+
+    local package_env_symbol = env:get_returns_symbol('nonexistent')
+
+    assert.truthy(package_env_symbol)
+    assert.falsy(package_env_symbol.declaration)
+    assert.False(package_env_symbol.is_assigned)
+    assert.True(package_env_symbol.is_referenced)
+
+    local export_symbol = package_env_symbol.exports:get_value('X')
+
+    assert.truthy(export_symbol)
+    assert.falsy(export_symbol.declaration)
+    assert.False(export_symbol.is_assigned)
+    assert.True(export_symbol.is_referenced)
+  end)
+
+  it("should create symbols for referenced non-alias types when importing", function()
+    local tokens = Lexer.new("from 'nonexistent' import type X"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local env = ProjectEnvironment.new()
+    Binder.new(result, env):bind()
+
+    local package_env_symbol = env:get_returns_symbol('nonexistent')
+
+    assert.truthy(package_env_symbol)
+    assert.falsy(package_env_symbol.declaration)
+    assert.False(package_env_symbol.is_assigned)
+    assert.True(package_env_symbol.is_referenced)
+
+    local export_symbol = package_env_symbol.exports:get_type('X')
+
+    assert.truthy(export_symbol)
+    assert.falsy(export_symbol.declaration)
+    assert.False(export_symbol.is_assigned)
+    assert.True(export_symbol.is_referenced)
+  end)
+  
+
   it("should bind import aliases to declared external packages", function()
     local tokens = Lexer.new("declare package 'x' string; from 'x' import * as x; print(x)"):tokenize()
     local result = Parser.new(tokens):parse()
@@ -309,5 +354,4 @@ describe("Bindings of declared identifiers", function()
       Binder.new(result_x, env, 'x'):bind()
     end))
   end)
-  
 end)
