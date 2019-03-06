@@ -1,4 +1,4 @@
-<div align="center"><img src="https://i.imgur.com/xVujd8N.png"/></div>
+<div align="center"><img src="https://i.imgur.com/8fH3GcD.png"/></div>
 
 # Lunar
 [![Build Status](https://travis-ci.org/lunarlang/lunar.svg?branch=master)](https://travis-ci.org/lunarlang/lunar)
@@ -78,6 +78,10 @@ Currently, `lunarc` is dependent on your current working directory, so make sure
 ### Manual source install
   1. `git clone https://github.com/lunarlang/lunar`
   2. `cd ./lunar`
-  3. Linux: `./install.sh`, Windows: `./install.ps1`, or `powershell` then `./install.ps1`, or double click on `install.ps1`
+  3. Installation instructions for your OS is below.
+      - Linux
+        - Run `sudo ./install.sh`
+      - Windows
+        - Find the `install.ps1` file, right click on it, and click `Run with PowerShell`.
 
 If you did all of the above correctly, you should be able to compile your projects with `lunarc`.

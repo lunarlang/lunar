@@ -592,7 +592,7 @@ function Binder.__index:bind_lambda_expression(stat)
   else
     self:bind_node_list(stat.body)
   end
-  
+
   self:pop_level_scopes()
   self.is_function_scope = save_is_function_scope
   self.contextual_varargs = save_contextual_varargs
