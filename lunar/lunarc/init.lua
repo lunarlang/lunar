@@ -7,7 +7,7 @@ local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
 local PathUtils = require "lunar.utils.path_utils"
 
 local function fail(reason, exit_code)
-  io.stderr:write("lunarc: " .. reason .. "\n" .. debug.traceback())
+  io.stderr:write("lunarc: " .. reason .. "\n" .. debug.traceback() .. "\n")
   os.exit(exit_code or 1)
 end
 
