@@ -210,7 +210,7 @@ function Parser:import_statement()
       if self:assert(TokenType.identifier, TokenType.asterisk) then
         value = self:consume().value
 
-        if value and is_type then
+        if value == '*' and is_type then
           error("Unexpected symbol '*' after 'type'")
         end
       else

@@ -175,6 +175,70 @@ describe("Bindings of declared identifiers", function()
     assert.True(export_symbol.is_referenced)
   end)
 
+  it("should allow imports of standalone class type symbols", function()
+    local env = ProjectEnvironment.new()
+
+    -- file 'x'
+    local tokens_x = Lexer.new("export class MyClass end"):tokenize()
+    local result_x = Parser.new(tokens_x):parse()
+    Binder.new(result_x, env, 'x'):bind()
+
+    local export_stat = result_x[1]
+    local export_inner_stat = export_stat.body
+
+    -- file 'y'
+    local tokens_y = Lexer.new("from 'x' import type MyClass; print(MyClass); local y: MyClass"):tokenize()
+    local result_y = Parser.new(tokens_y):parse()
+    Binder.new(result_y, env, 'y'):bind()
+    local import_stat = result_y[1]
+    local expr_stat = result_y[2]
+    local var_stat = result_y[3]
+
+    local package_alias_value_ident = expr_stat.expr.arguments[1].value
+    local package_alias_type_ident = var_stat.identlist[1].type_annotation
+    local package_env_symbol = env:get_returns_symbol('x')
+    local global_env_symbol = env.globals:get_value('MyClass')
+
+    assert.truthy(package_env_symbol)
+
+    -- Value symbol for 'MyClass' should bind as global, since it is not imported
+    assert.truthy(package_alias_value_ident.symbol)
+    assert.is_not.equal(package_env_symbol, package_alias_value_ident.symbol)
+    assert.truthy(global_env_symbol)
+    assert.equal(global_env_symbol, package_alias_value_ident.symbol)
+
+    local export_type_symbol = package_env_symbol.exports:get_type('MyClass')
+    local export_value_symbol = package_env_symbol.exports:get_value('MyClass')
+    assert.is_not_equal(export_type_symbol, export_value_symbol)
+
+    -- Type symbol for 'MyClass' should bind as an alias to the package export type
+    assert.truthy(package_alias_type_ident.symbol)
+    assert.equal(import_stat, package_alias_type_ident.symbol.declaration)
+    assert.True(package_alias_type_ident.symbol.is_assigned)
+    assert.True(package_alias_type_ident.symbol.is_referenced)
+
+    assert.truthy(export_type_symbol)
+    assert.truthy(export_value_symbol)
+    assert.is_not.equal(export_type_symbol, package_alias_value_ident.symbol)
+    assert.is_not.equal(export_value_symbol, package_alias_value_ident.symbol)
+
+    assert.falsy(package_alias_value_ident.symbol.declaration)
+    assert.False(package_alias_value_ident.symbol.is_assigned)
+    assert.True(package_alias_value_ident.symbol.is_referenced)
+
+    assert.falsy(package_env_symbol.declaration)
+    assert.False(package_env_symbol.is_assigned)
+    assert.True(package_env_symbol.is_referenced)
+
+    assert.equal(export_inner_stat, export_type_symbol.declaration)
+    assert.True(export_type_symbol.is_assigned)
+    assert.True(export_type_symbol.is_referenced)
+
+    assert.equal(export_inner_stat, export_value_symbol.declaration)
+    assert.True(export_value_symbol.is_assigned)
+    assert.False(export_value_symbol.is_referenced)
+  end)
+
   it("should guard against re-declaration of the same export", function()
     local env = ProjectEnvironment.new()
 

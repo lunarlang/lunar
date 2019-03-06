@@ -492,7 +492,7 @@ function Binder.__index:bind_export_statement(stat)
     self:bind_function_statement(inner_stat)
   elseif inner_stat.syntax_kind == SyntaxKind.class_statement then
     self:bind_class_statement(inner_stat)
-    type_symbol = self.root_scope:get_value(identifier.name)
+    type_symbol = self.root_scope:get_type(identifier.name)
   end
 
   -- Add the value symbol to the source file's exports
