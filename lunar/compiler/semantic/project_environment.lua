@@ -57,16 +57,6 @@ end
 function ProjectEnvironment.__index:get_absolute_source_path(source_path_dot)
   local slashed_path = source_path_dot:gsub("%.", "/")
 
-  -- Check existing source paths
-  for _, path in pairs(self.source_paths) do
-    local tentative_location = path:gsub("%?", slashed_path)
-    local abs_path = PathUtils.find_file(".", tentative_location)
-
-    if abs_path then
-      return abs_path
-    end
-  end
-
   -- Check .lua paths to mask with an ad-hoc .d.lunar declaration
   for _, path in pairs(self.lua_paths) do
     local tentative_location = path:gsub("%?", slashed_path)
@@ -74,6 +64,16 @@ function ProjectEnvironment.__index:get_absolute_source_path(source_path_dot)
 
     if abs_path then
       return PathUtils.get_extensionless_name(abs_path) .. ".d.lunar"
+    end
+  end
+
+  -- Check existing source paths
+  for _, path in pairs(self.source_paths) do
+    local tentative_location = path:gsub("%?", slashed_path)
+    local abs_path = PathUtils.find_file(".", tentative_location)
+
+    if abs_path then
+      return abs_path
     end
   end
 
