@@ -1,0 +1,143 @@
+---
+--
+-- This is lowlevel module which implement 
+-- system dependent operation.
+-- <br/> Can use LuaFileSystem or alien/ffi on Windows
+-- @module path.fs
+
+local fs = {}
+
+--- The character used by the operating system to separate pathname components.
+--
+fs.DIR_SEP = DIR_SEP
+
+--- Mask used to search all files in some dir by `fs.each`.
+--
+fs.ANY_MASK = ANY_MASK
+
+--- Return current work directory path.
+--
+function fs.currentdir() end
+
+--- Returns a table with the file attributes.
+-- 
+-- @tparam string P
+-- @tparam[opt=nil] string name attribute name
+-- @treturn[1] table {attr1=value1, ...}
+-- @return[2] value attribute value if attribute name was specify
+function fs.attributes(P, name)end
+
+--- Return file attributes.
+--
+-- On Windows it is result of GetFileAttributesEx
+function fs.flags(P) end
+
+--- Return creation file time.
+-- On *nix this is the time of the last metadata change.
+--
+function fs.ctime(P)end
+
+--- Return last modification file time.
+--
+function fs.mtime(P)end
+
+--- Return last access file time.
+--
+function fs.atime(P)end
+
+--- Return size in bytes for file.
+--
+function fs.size(P) end
+
+--- Return path if path existing in file system.
+--
+function fs.exists(P) end
+
+--- Return path if path refers to an existing directory.
+--
+function fs.isdir(P)end
+
+--- Return path if path refers to an existing file.
+--
+function fs.isfile(P)end
+
+--- Return path if path refers to an existing symbolic link.
+--
+function fs.islink(P)end
+
+--- Create new directory.
+--
+-- This function can not create nested sub directories.
+--
+function fs.mkdir(P) end
+
+--- Remove empty directory.
+--
+function fs.rmdir(P) end
+
+--- Change current work directory path.
+--
+function fs.chdir(P) end
+
+--- Copy one existed file.
+--
+function fs.copy(src, dst, force) end
+
+--- Rename (move) existed file.
+--
+function fs.move(src, dst, flags) end
+
+--- Remove file.
+--
+function fs.remove(P) end
+
+--- Return path to system temp directory.
+--
+function fs.tmpdir() end
+
+--- Set access and modification times of a file.
+--
+function fs.touch(P, atime, ctime) end
+
+--- Implimentation of lfs.dir
+--
+function fs.dir() end
+
+--- Simple non recursive iterator
+-- @local
+function fs.foreach(base, callback, option) end
+
+--- Implimentation of afx.findfile
+-- @tparam each_options option
+function fs.each(option) end
+
+--- ???
+--
+-- opt.file="./temp" -- match only this path
+-- <br/> opt.file="./temp/" -- match all files in this path
+-- <br/> This function do not expand filepath. So if we use "./*" mask and 'f' selector we get './some.file'.
+--
+-- @table each_options
+-- @tfield[opt=fs.currentdir() .. fs.DIR_SEP .. fs.ANY_MASK] string file path and mask
+-- @tfield[opt="f"] string param
+--      - f fullpath and name
+--      - p path
+--      - n name
+--      - m mode
+--      - a attributes 
+--      - z size
+--      - t atime
+--      - c ctime
+--      - l mtime
+-- @tfield[opt=false] boolean recurse include subdirs
+-- @tfield[opt=nil] boolean reverse direction of recursion
+--      - true subdirs at first
+--      - false subdirs at last
+--      - nil order undefined
+-- @tfield[opt=false] boolean delay if true then iterate over snapshot of directory
+-- @tfield[opt=false] boolean skipdirs
+-- @tfield[opt=false] boolean skipfiles
+-- @tfield[opt=true] boolean skipdots
+-- @tfield[opt=nil] function filter
+-- 
+
