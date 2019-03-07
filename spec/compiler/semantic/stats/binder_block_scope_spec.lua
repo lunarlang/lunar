@@ -10,13 +10,13 @@ local function test_scoped_idents(dec1, dec_ident1, ref_ident1, dec2, dec_ident2
   assert.equal(dec_ident2.symbol, ref_ident2.symbol)
   assert.is_not.equal(dec_ident1.symbol, dec_ident2.symbol)
   
-  assert.equal(dec1, dec_ident1.symbol.declaration)
-  assert.True(dec_ident1.symbol.is_referenced)
+  assert.equal(dec1, dec_ident1.symbol:get_canonical_declaration())
+  assert.True(dec_ident1.symbol:is_referenced())
 
-  assert.equal(dec2, dec_ident2.symbol.declaration)
-  assert.True(dec_ident2.symbol.is_referenced)
+  assert.equal(dec2, dec_ident2.symbol:get_canonical_declaration())
+  assert.True(dec_ident2.symbol:is_referenced())
 
-  assert.False(env.globals:has_value('x'))
+  assert.False(env:has_global_value('src', 'x'))
 end
 
 describe("Bindings of scoped identifiers", function()
@@ -40,8 +40,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
   it("should re-declare local symbols in the scope of an 'if' block", function()
     local tokens = Lexer.new("local x if true then local x = 2 print(x) end print(x)"):tokenize()
@@ -61,8 +61,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
   it("should re-declare local symbols in the scope of a 'function' block", function()
     local tokens = Lexer.new("local x function y() local x = 2 print(x) end print(x)"):tokenize()
@@ -82,8 +82,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
 
   it("Should locally scope function parameters with assignment", function()
@@ -104,8 +104,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
 
   it("Should locally scope function varargs with assignment", function()
@@ -126,8 +126,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.True(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.True(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
 
   it("Should guard against use of varargs within a scope that does not define them", function()
@@ -157,8 +157,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
 
   it("Should locally scope lambda varargs with assignment", function()
@@ -179,8 +179,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.True(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.True(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
 
   it("Should guard against use of varargs within a scope that does not define them", function()
@@ -210,8 +210,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
   it("should re-declare local symbols in the scope of a 'repeat until' block", function()
     local tokens = Lexer.new("local x repeat local x = 2 print(x) until false print(x)"):tokenize()
@@ -231,8 +231,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
   it("should re-declare local symbols in the scope of a 'generic for' block", function()
     local tokens = Lexer.new("local x for _ in pairs() do local x = 2 print(x) end print(x)"):tokenize()
@@ -252,8 +252,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
   it("should re-declare local symbols in the scope of a 'range for' block", function()
     local tokens = Lexer.new("local x for _ = 1, 2, 3 do local x = 2 print(x) end print(x)"):tokenize()
@@ -273,8 +273,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
 
   it("Should locally scope generic for loop parameters with assignment in the for loop", function()
@@ -295,8 +295,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
 
   it("Should locally scope range for loop parameters with assignment in the for loop", function()
@@ -317,8 +317,8 @@ describe("Bindings of scoped identifiers", function()
       dec2, dec_ident2, ref_ident2,
       env
     )
-    assert.False(dec_ident1.symbol.is_assigned)
-    assert.True(dec_ident2.symbol.is_assigned)
+    assert.False(dec_ident1.symbol:is_assigned())
+    assert.True(dec_ident2.symbol:is_assigned())
   end)
   
 end)

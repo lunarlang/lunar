@@ -5,9 +5,6 @@ function SyntaxNode.new(syntax_kind)
   local self = setmetatable({}, SyntaxNode)
   self.syntax_kind = syntax_kind
 
-  -- Binding-initialized fields (should be of optional type)
-  self.symbol = nil -- Symbol | nil
-
   return self
 end
 

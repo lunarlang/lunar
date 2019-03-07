@@ -2,6 +2,7 @@ local lfs = require "lfs"
 local Lexer = require "lunar.compiler.lexical.lexer"
 local Parser = require "lunar.compiler.syntax.parser"
 local Binder = require "lunar.compiler.semantic.binder"
+local Checker = require "lunar.compiler.checking.checker"
 local Transpiler = require "lunar.compiler.codegen.transpiler"
 local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
 local PathUtils = require "lunar.utils.path_utils"
@@ -63,7 +64,7 @@ end
 local used_paths = {}
 local function parse_subpath(path, dot_path, name)
   if path == out_dir or path == PathUtils.join(".", out_dir) then return end
-
+  
   local file_path = join(path, name)
   local file_path_dot = dot_path .. (dot_path == "" and "" or ".") .. name:match("[^%.]*")
   local attrs = lfs.attributes(file_path) -- nilable
@@ -159,11 +160,21 @@ repeat
         nil
       )
     else
-      project_env:declare_visited_source(source_path_dot)
+      project_env:declare_visited_source(source_path_dot, false)
       -- Mark as visited (with return types ultimately undeclared, unless declared elsewhere)
     end
   end
 until #unvisited_sources == 0
+
+-- Link symbols among files
+project_env:link_external_references()
+
+-- Run the checker on all sources
+for i = 1, #parsed_sources do
+  local source_info = parsed_sources[i]
+  Checker.new(source_info.ast, project_env, assert_file_ext(source_info.in_path, ".d.lunar")):check()
+end
+
 
 -- Transpile sources
 for i = 1, #parsed_sources do
