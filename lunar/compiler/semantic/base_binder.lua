@@ -1,5 +1,4 @@
 local Scope = require "lunar.compiler.semantic.scope"
-local Symbol = require "lunar.compiler.semantic.symbol"
 local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
 
 local BaseBinder = {}
@@ -28,7 +27,7 @@ function BaseBinder.__index:push_scope(incrementLevel)
   if incrementLevel then
     self.level = self.level + 1
   end
-  self.scope = Scope.new(self.level, self.scope, self.environment)
+  self.scope = Scope.new(self.level, self.scope, self.environment, self.file_path)
 
   return self.scope
 end
@@ -43,68 +42,6 @@ function BaseBinder.__index:pop_level_scopes()
   self.level = self.level - 1
 
   return removed_scopes
-end
-
---[[ Creates a new symbol in the current scope if it does not exist, and binds it to a given node ]]
-function BaseBinder.__index:bind_local_value_symbol(node, name)
-  local existing = self.scope:get_value(name)
-  if existing then
-    node.symbol = existing
-    return existing
-  else
-    local symbol = Symbol.new(name)
-    node.symbol = symbol
-    self.scope:add_value(symbol)
-  
-    return symbol
-  end
-end
-
---[[ Creates a new symbol in the global scope if it does not exist, and binds it to a given node ]]
-function BaseBinder.__index:bind_global_value_symbol(node, name)
-  local existing = self.environment.globals:get_value(name)
-  if existing then
-    node.symbol = existing
-    return existing
-  else
-    local symbol = Symbol.new(name)
-    node.symbol = symbol
-    self.environment.globals:add_value(symbol)
-  
-    return symbol
-  end
-end
-
---[[ Creates a new symbol in the current scope if it does not exist, and binds it to a given node.
-Returns the registered symbol ]]
-function BaseBinder.__index:bind_local_type_symbol(node, name)
-  local existing = self.scope:get_type(name)
-  if existing then
-    node.symbol = existing
-    return existing
-  else
-    local symbol = Symbol.new(name)
-    node.symbol = symbol
-    self.scope:add_type(symbol)
-  
-    return symbol
-  end
-end
-
---[[ Creates a new symbol in the global scope if it does not exist, and binds it to a given node.
-Returns the registered symbol ]]
-function BaseBinder.__index:bind_global_type_symbol(node, name)
-  local existing = self.root_scope:get_type(name) -- If it exists in the root scope, we should refer to that one instead
-  if existing then
-    node.symbol = existing
-    return existing
-  else
-    local symbol = Symbol.new(name)
-    node.symbol = symbol
-    self.environment.globals:add_type(symbol)
-  
-    return symbol
-  end
 end
 
 return BaseBinder

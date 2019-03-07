@@ -10,6 +10,8 @@ function Identifier.new(name, type_annotation)
   self.name = name
   self.type_annotation = type_annotation
 
+  self.symbol = nil -- Symbol | nil - The symbol corresponding to this identifier, initialized in binding
+
   return self
 end
 

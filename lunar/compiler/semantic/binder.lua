@@ -59,22 +59,12 @@ function Binder.constructor(self, ast, environment, file_path_dot)
 end
 
 function Binder.__index:bind()
-  self.environment:declare_visited_source(self.file_path)
+  self.environment:declare_visited_source(self.file_path, true)
 
   self.root_scope = self:push_scope(true)
   self:bind_node_list(self.ast)
   self:pop_level_scopes()
 
-  -- Move undeclared type references into globals
-  for name, symbol in pairs(self.root_scope.symbol_table.types) do
-    if symbol.declaration == nil then
-      self.root_scope.symbol_table.types[name] = nil
-      self.environment.globals:add_type(symbol)
-    end
-  end
-  -- NOTE: The checker should be responsible for guarding against re-declared global types
-
-  -- Todo: collate return symbols and return them as a second parameter
   return self.environment
 end
 
@@ -101,24 +91,35 @@ function Binder.__index:bind_identifier(identifier)
 end
 
 function Binder.__index:bind_value_reference(identifier)
-  if self.scope:has_value(identifier.name) then
-    local symbol = self:bind_local_value_symbol(identifier, identifier.name)
-    symbol.is_referenced = true
-  else
-    local symbol = self:bind_global_value_symbol(identifier, identifier.name)
-    symbol.is_referenced = true
-  end
-end
-
-function Binder.__index:bind_value_assignment(identifier, declaring_node)
   local symbol
   if self.scope:has_value(identifier.name) then
-    symbol = self:bind_local_value_symbol(identifier, identifier.name)
+    symbol = self.scope:get_value(identifier.name)
+    if not symbol then
+      symbol = Symbol.new(identifier.name)
+      self.scope:add_value(symbol)
+    end
   else
-    -- We have re-assigned a global; should error in strict mode
-    symbol = self:bind_global_value_symbol(identifier, identifier.name)
+    symbol = self.environment:get_global_value(self.file_path, identifier.name)
+    if not symbol then
+      symbol = Symbol.new(identifier.name)
+      self.environment:add_global_value(self.file_path, symbol)
+    end
   end
-  symbol.is_assigned = true
+  symbol:bind_reference(identifier)
+end
+
+function Binder.__index:bind_value_assignment(identifier)
+  local symbol
+  if self.scope:has_value(identifier.name) then
+    symbol = self.scope:get_value(identifier.name)
+  else
+    symbol = self.environment:get_global_value(self.file_path, identifier.name)
+    if not symbol then
+      symbol = Symbol.new(identifier.name)
+      self.environment:add_global_value(self.file_path, symbol)
+    end
+  end
+  symbol:bind_assignment_reference(identifier)
 end
 
 function Binder.__index:bind_value_assignment_declaration(identifier, declaring_node)
@@ -128,30 +129,9 @@ function Binder.__index:bind_value_assignment_declaration(identifier, declaring_
   end
 
   local symbol = Symbol.new(identifier.name)
-  identifier.symbol = symbol
-  symbol.is_assigned = true
-  symbol.declaration = declaring_node
+  symbol:bind_assignment_reference(identifier)
+  symbol:bind_declaration_reference(identifier, declaring_node)
   self.scope:add_value(symbol)
-
-  -- Allow types to be annotated in declarations
-  if identifier.type_annotation then
-    self:bind_type_expression(identifier.type_annotation)
-  end
-end
-
-function Binder.__index:bind_global_value_declaration(identifier, declaring_node)
-  local symbol = self.environment.globals:get_value(identifier.name)
-  if symbol then
-    if symbol.declaration then
-      error("Attempt to re-declare global value '" .. identifier.name .. "'")
-    end
-  else
-    symbol = Symbol.new(identifier.name)
-    self.environment.globals:add_value(symbol)
-  end
-
-  identifier.symbol = symbol
-  symbol.declaration = declaring_node
 
   -- Allow types to be annotated in declarations
   if identifier.type_annotation then
@@ -166,8 +146,7 @@ function Binder.__index:bind_value_declaration(identifier, declaring_node)
   end
 
   local symbol = Symbol.new(identifier.name)
-  identifier.symbol = symbol
-  symbol.declaration = declaring_node
+  symbol:bind_declaration_reference(identifier, declaring_node)
   self.scope:add_value(symbol)
 
   -- Allow types to be annotated in declarations
@@ -177,13 +156,12 @@ function Binder.__index:bind_value_declaration(identifier, declaring_node)
 end
 
 function Binder.__index:bind_type_reference(identifier)
-  if self.environment.globals:has_type(identifier) then
-    local symbol = self:bind_global_type_symbol(identifier, identifier.name)
-    symbol.is_referenced = true
-  else
-    local symbol = self:bind_local_type_symbol(identifier, identifier.name)
-    symbol.is_referenced = true
+  local symbol = self.environment:get_global_type(self.file_path, identifier.name)
+  if not symbol then
+    symbol = Symbol.new(identifier.name)
+    self.environment:add_global_type(self.file_path, symbol)
   end
+  symbol:bind_reference(identifier)
 end
 
 function Binder.__index:bind_type_expression(expr)
@@ -253,36 +231,37 @@ function Binder.__index:bind_class_statement(stat)
     self:push_scope(false)
   end
 
-  -- Add value symbol
-  self:bind_value_assignment_declaration(identifier, stat)
-  local value_symbol = identifier.symbol
-  value_symbol.members = SymbolTable.new()
-  value_symbol.exports = SymbolTable.new()
-
   -- Declare and assign type symbol
-  local type_symbol = self.root_scope:get_type(identifier.name)
+  local type_symbol = self.environment:get_global_type(self.file_path, identifier.name)
   if type_symbol then
-    if type_symbol.declaration then
+    if type_symbol:is_declared() then
       error("Attempt to re-declare type '" .. identifier.name .. "'")
     end
   else
     type_symbol = Symbol.new(identifier.name)
-    self.root_scope:add_type(type_symbol)
+    self.environment:add_global_type(self.file_path, type_symbol)
   end
-  type_symbol.is_assigned = true
-  type_symbol.declaration = stat
+  type_symbol:bind_assignment_reference(identifier)
+  type_symbol:bind_declaration_reference(identifier, stat)
+
+  -- Add value symbol
+  self:bind_value_assignment_declaration(identifier, stat)
+  local value_symbol = self.scope:get_value(identifier.name)
+  value_symbol.members = SymbolTable.new()
+  value_symbol.exports = SymbolTable.new()
 
   self:push_scope(true)
 
   -- Bind contextual self and super symbols
   local contextual_self = Symbol.new("self")
   self.scope:add_value(contextual_self)
-  contextual_self.is_assigned = true
-  contextual_self.declaration = stat
+  contextual_self:bind_declaration(stat)
+
   local contextual_super = Symbol.new("super")
   self.scope:add_value(contextual_super)
-  contextual_super.is_assigned = stat.super_identifier ~= nil
-  contextual_super.declaration = stat.super_identifier ~= nil and stat or nil
+  if stat.super_identifier ~= nil then
+    contextual_self:bind_declaration(stat)
+  end
 
   -- Bind superclass identifier and contextual super
   if stat.super_identifier then
@@ -290,7 +269,6 @@ function Binder.__index:bind_class_statement(stat)
   end
 
   -- Bind class member declarations in a new SymbolTable
-  type_symbol.members = SymbolTable.new()
   for i = 1, #stat.members do
     local member = stat.members[i]
     if member.syntax_kind == SyntaxKind.class_function_declaration then
@@ -321,9 +299,8 @@ function Binder.__index:bind_class_field_declaration(decl, class_symbol)
     end
   end
   local member_symbol = Symbol.new(decl.identifier.name)
-  decl.identifier.symbol = member_symbol
-  member_symbol.is_assigned = true
-  member_symbol.declaration = decl.identifier
+  member_symbol:bind_assignment_reference(decl.identifier)
+  member_symbol:bind_declaration_reference(decl.identifier, decl)
 
   if decl.is_static then
     class_symbol.exports:add_value(member_symbol)
@@ -347,9 +324,8 @@ function Binder.__index:bind_class_function_declaration(decl, class_symbol)
     end
   end
   local member_symbol = Symbol.new(decl.identifier.name)
-  decl.identifier.symbol = member_symbol
-  member_symbol.is_assigned = true
-  member_symbol.declaration = decl.identifier
+  member_symbol:bind_assignment_reference(decl.identifier)
+  member_symbol:bind_declaration_reference(decl.identifier, decl)
 
   if decl.is_static then
     class_symbol.exports:add_value(member_symbol)
@@ -365,9 +341,7 @@ function Binder.__index:bind_class_constructor_declaration(decl, class_symbol)
     error("Attempt to re-declare class constructor")
   end
   local member_symbol = Symbol.new('constructor')
-  decl.symbol = member_symbol
-  member_symbol.is_assigned = true
-  member_symbol.declaration = decl.identifier
+  member_symbol:bind_declaration(decl)
 
   class_symbol.exports:add_value(member_symbol)
 
@@ -410,68 +384,13 @@ function Binder.__index:bind_return_statement(stat)
     if next(source_returns.exports.values) then
       error("Cannot export and return values in the same scope")
     else
-      source_returns.declaration = stat
+      source_returns:bind_declaration(stat)
     end
   end
 end
 
 function Binder.__index:bind_import_statement(stat)
-  local importing_source_returns = self.environment:get_returns_symbol(stat.path)
-  if not importing_source_returns then
-    importing_source_returns = self.environment:create_returns_symbol(stat.path)
-  end
-
-  importing_source_returns.is_referenced = true
-  for i = 1, #stat.values do
-    self:bind_import_value_declaration(stat.values[i], stat)
-  end
-end
-
-function Binder.__index:bind_import_value_declaration(decl, declaring_node)
-  local local_name = decl.identifier.name
-  if decl.alias_identifier then
-    local_name = decl.alias_identifier.name
-  end
-
-  -- In a non-strict mode, we should push the scope for re-declared variable
-  if self.scope:has_level_value(local_name) then
-    self:push_scope(false)
-  end
-
-  if decl.is_type then
-    if self.root_scope:has_type(local_name) then
-      error("type '" .. local_name .. "' was already declared in this scope")
-    else
-      local alias_symbol = Symbol.new(local_name)
-      alias_symbol.is_assigned = true
-      alias_symbol.declaration = declaring_node
-      self.root_scope:add_type(alias_symbol)
-
-      local referenced_symbol = self.environment:get_exports_type(declaring_node.path, decl.identifier.name)
-      if not referenced_symbol then
-        referenced_symbol = Symbol.new(decl.identifier.name)
-        self.environment:add_exports_type(declaring_node.path, referenced_symbol)
-      end
-      referenced_symbol.is_referenced = true
-    end
-  else
-    local alias_symbol = Symbol.new(local_name)
-    alias_symbol.is_assigned = true
-    alias_symbol.declaration = declaring_node
-    self.scope:add_value(alias_symbol)
-
-    if decl.identifier.name == "*" then
-      local referenced_symbol = self.environment:get_returns_symbol(declaring_node.path)
-      referenced_symbol.is_referenced = true
-    else
-      local referenced_symbol = self.environment:get_exports_value(declaring_node.path, decl.identifier.name)
-      if not referenced_symbol then
-        referenced_symbol = Symbol.new(decl.identifier.name)
-        self.environment:add_exports_value(declaring_node.path, referenced_symbol)
-      end
-      referenced_symbol.is_referenced = true
-    end
-  end
+  self.environment:declare_import(self.file_path, stat)
 end
 
 function Binder.__index:bind_export_statement(stat)
@@ -500,11 +419,11 @@ function Binder.__index:bind_export_statement(stat)
     self:bind_function_statement(inner_stat)
   elseif inner_stat.syntax_kind == SyntaxKind.class_statement then
     self:bind_class_statement(inner_stat)
-    type_symbol = self.root_scope:get_type(identifier.name)
+    type_symbol = self.environment:get_global_type(self.file_path, identifier.name)
   end
 
   -- Add the value symbol to the source file's exports
-  local value_symbol = identifier.symbol
+  local value_symbol = self.scope:get_value(identifier.name)
   self.environment:add_exports_value(self.file_path, value_symbol)
 
   -- Add the type symbol to the source file's exports if it exists
@@ -724,8 +643,7 @@ end
 function Binder.__index:bind_variable_argument_expression(expr)
   local symbol = self.contextual_varargs
   if symbol then
-    expr.symbol = symbol
-    symbol.is_referenced = true
+    symbol:bind_reference(expr)
   else
     error("Attempt to reference vararg expression '...' in a scope where it was not declared")
   end
@@ -740,9 +658,8 @@ function Binder.__index:bind_parameter_declaration(expr)
   if expr.identifier.name == "..." then
     -- Special case: varargs
     local varargs_symbol = Symbol.new("...")
-    expr.identifier.symbol = varargs_symbol
-    varargs_symbol.declaration = expr
-    varargs_symbol.is_assigned = true
+    varargs_symbol:bind_assignment_reference(expr.identifier)
+    varargs_symbol:bind_declaration_reference(expr.identifier, expr)
     self.contextual_varargs = varargs_symbol
   else
 
@@ -761,7 +678,22 @@ end
 
 function Binder.__index:bind_declare_global_statement(stat)
   if not stat.is_type_declaration then
-    self:bind_global_value_declaration(stat.identifier, stat)
+    -- Search for ambient globals (in the whole environment only)
+    local symbol = self.environment.env_globals:get_value(stat.identifier.name)
+    if symbol then
+      if symbol:is_declared() then
+        error("Attempt to re-declare global value '" .. stat.identifier.name .. "'")
+      end
+    else
+      symbol = Symbol.new(stat.identifier.name)
+      self.environment.env_globals:add_value(symbol) -- Bind as ambient global in the whole environment
+    end
+    symbol:bind_declaration_reference(stat.identifier, stat)
+  
+    -- Allow types to be annotated in declarations
+    if stat.identifier.type_annotation then
+      self:bind_type_expression(stat.identifier.type_annotation)
+    end
   else
     error("Global type declarations are not yet supported")
   end
@@ -776,13 +708,16 @@ function Binder.__index:bind_declare_package_statement(stat)
     error("Attempt to re-declare package returns")
   else
     source_returns = self.environment:create_returns_symbol(stat.path)
+
+    -- Declare that we have visited this source with defined returns
+    self.environment:declare_visited_source(stat.path, true)
   end
 
   -- Check if we have exported static values
   if next(source_returns.exports.values) then
     error("Cannot export and return values in the same scope")
   else
-    source_returns.declaration = stat
+    source_returns:bind_declaration(stat)
   end
 end
 
@@ -801,7 +736,7 @@ function Binder.__index:bind_declare_returns_statement(stat)
   if next(source_returns.exports.values) then
     error("Cannot export and return values in the same scope")
   else
-    source_returns.declaration = stat
+    source_returns:bind_declaration(stat)
   end
 end
 

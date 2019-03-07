@@ -235,7 +235,7 @@ function Parser:import_statement()
 
   -- 'import' string
   if self:match(TokenType.import_keyword) then
-    local path = self:parse_string_contents(self:expect(TokenType.string_token).value)
+    local path = self:parse_string_contents(self:expect(TokenType.string, "expected string after 'import'"))
     return AST.ImportStatement.new(path, {}, true)
   end
 end

@@ -20,7 +20,9 @@ describe("Bindings of core symbols", function()
     for type_name, symbol in pairs(type_map) do
       local tokens = Lexer.new("local hello: " .. type_name):tokenize()
       local result = Parser.new(tokens):parse()
-      Binder.new(result):bind()
+      local env = Binder.new(result):bind()
+
+      env:link_external_references()
   
       local assignment = result[1]
       local identifier = assignment.identlist[1]
@@ -29,6 +31,10 @@ describe("Bindings of core symbols", function()
       assert.truthy(identifier.type_annotation)
       assert.truthy(identifier.type_annotation.symbol, "TypeAnnotation symbol does not exist with name '" .. type_name .. "'")
       assert.equal(symbol, identifier.type_annotation.symbol, "symbols are not equal for '" .. type_name .. "'")
+      assert.False(symbol:is_declared())
+      assert.False(symbol:is_assigned())
+      assert.True(symbol:is_referenced())
+      assert.True(symbol:is_builtin())
     end
   end)
 
@@ -40,13 +46,18 @@ describe("Bindings of core symbols", function()
     for type_name, symbol in pairs(type_map) do
       local tokens = Lexer.new("local hello: " .. type_name):tokenize()
       local result = Parser.new(tokens):parse()
-      Binder.new(result):bind()
+      local env = Binder.new(result):bind()
+      
+      env:link_external_references()
   
       local assignment = result[1]
       local identifier = assignment.identlist[1]
       
       assert.truthy(identifier.type_annotation)
-      assert.falsy(identifier.type_annotation.symbol.declaration)
+      assert.False(identifier.type_annotation.symbol:is_declared())
+      assert.False(identifier.type_annotation.symbol:is_assigned())
+      assert.True(identifier.type_annotation.symbol:is_referenced())
+      assert.False(identifier.type_annotation.symbol:is_builtin())
       assert.is_not.equal(symbol, identifier.type_annotation.symbol)
     end
   end)
