@@ -161,7 +161,7 @@ end
 function Parser:class_statement()
   -- 'class' identifier ['<<' identifier] {class_member} 'end'
   -- 'class' is a contextual keyword that depends on the next token being an identifier
-  if self:peek().value == "class" and self:peek(1).token_type == TokenType.identifier then
+  if self:assert_seq("class", TokenType.identifier) then
     self:move(1)
     local name = self:expect(TokenType.identifier, "Expected identifier after 'class'").value
 
@@ -187,9 +187,7 @@ end
 
 function Parser:import_statement()
   -- 'from' string 'import' {['type'] (identifier ['as' identifier] | * 'as' identifier)}
-  if self:peek().value == "from"
-    and self:peek(1).token_type == TokenType.string
-    and self:peek(2).token_type == TokenType.import_keyword then
+  if self:assert_seq("from", TokenType.string, TokenType.import_keyword) then
     self:move(1)
 
     local path = self:parse_string_contents(self:consume())
@@ -200,7 +198,7 @@ function Parser:import_statement()
     repeat
       -- type
       local is_type = false
-      if self:peek().value == "type" then
+      if self:assert_seq("type") then
         self:move(1)
         is_type = true
       end
@@ -268,7 +266,7 @@ function Parser:export_statement()
     if stat then
       return AST.ExportStatement.new(stat)
     end
-    
+
     -- 'export' identifier = expression
     if self:peek().token_type == TokenType.identifier then
       local name = self:consume().value
