@@ -84,7 +84,7 @@ function Parser:block()
 end
 
 function Parser:class_member()
-  if self:peek().value == "constructor" then
+  if self:assert_seq("constructor") then
     self:move(1)
     self:expect(TokenType.left_paren, "Expected '(' after 'constructor'")
     local params = self:parameter_list()
@@ -97,7 +97,7 @@ function Parser:class_member()
 
   -- possibly a static member?
   local old_position = self.position
-  local is_static = self:peek().value == "static"
+  local is_static = self:assert_seq("static")
   if is_static then
     self:move(1)
   end
@@ -197,10 +197,9 @@ function Parser:import_statement()
     local values = {}
     repeat
       -- type
-      local is_type = false
-      if self:assert_seq("type") then
+      local is_type = self:assert_seq("type")
+      if is_type then
         self:move(1)
-        is_type = true
       end
 
       -- identifier
@@ -268,7 +267,7 @@ function Parser:export_statement()
     end
 
     -- 'export' identifier = expression
-    if self:peek().token_type == TokenType.identifier then
+    if self:assert(TokenType.identifier) then
       local name = self:consume().value
       local type_annotation
       if self:match(TokenType.colon) then
@@ -909,7 +908,7 @@ function Parser:field_declaration()
   end
 
   -- identifier '=' expr
-  if self:peek(1) and self:peek(1).token_type == TokenType.equal then
+  if self:assert_seq(TokenType.identifier, TokenType.equal) then
     local key = self:expect(TokenType.identifier, "Expected identifier to start this field")
     self:consume() -- consumes the equal token, because we asserted it earlier
     local value = self:expression()
