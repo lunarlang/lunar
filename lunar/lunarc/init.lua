@@ -1,4 +1,18 @@
-local lfs = require "lfs"
+local function fail(reason, exit_code, include_traceback)
+  if include_traceback == nil then include_traceback = true end
+
+  io.stderr:write("lunarc: " .. reason .. "\n")
+  if include_traceback then
+    io.stderr:write(debug.traceback() .. "\n")
+  end
+  os.exit(exit_code or 1)
+end
+
+local lfs_ok, lfs = pcall(require, "lfs")
+if not lfs_ok then
+  fail("required dependency 'LuaFileSystem' was not found, install with 'luarocks install luafilesystem'.", false)
+end
+
 local Lexer = require "lunar.compiler.lexical.lexer"
 local Parser = require "lunar.compiler.syntax.parser"
 local Binder = require "lunar.compiler.semantic.binder"
@@ -6,11 +20,6 @@ local Checker = require "lunar.compiler.checking.checker"
 local Transpiler = require "lunar.compiler.codegen.transpiler"
 local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
 local PathUtils = require "lunar.utils.path_utils"
-
-local function fail(reason, exit_code)
-  io.stderr:write("lunarc: " .. reason .. "\n" .. debug.traceback() .. "\n")
-  os.exit(exit_code or 1)
-end
 
 local function join(...)
   return table.concat({ ... }, "/")
@@ -64,7 +73,7 @@ end
 local used_paths = {}
 local function parse_subpath(path, dot_path, name)
   if path == out_dir or path == PathUtils.join(".", out_dir) then return end
-  
+
   local file_path = join(path, name)
   local file_path_dot = dot_path .. (dot_path == "" and "" or ".") .. name:match("[^%.]*")
   local attrs = lfs.attributes(file_path) -- nilable
