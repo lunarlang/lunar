@@ -107,16 +107,19 @@ Alternatively, you can download the source as a zipped file. In the top right of
 #### Reinstalling and Uninstalling
   We've included a way to reinstall and uninstall Lunar. Follow the [Installing](#installing) steps, and then you should be prompted to press R to reinstall, or U to uninstall.
 
+  To update Lunar, you can use `git pull` from the downloaded git repository from when you originally installed Lunar, and then follow the [Installing](#installing) steps, using `R` to reinstall.
+
 #### Setting up your project
   - Open your project in your editor of choice, though we recommend VSCode.
   - Ensure your source code is in a separate folder, typically named `src`
   - In the project folder, create a `.lunarconfig` file.
     - In Windows, the File Explorer will not allow you to create a file without a name. You must do this through an editor such as VSCode.
   - In your `.lunarconfig`, add this:
-  ```lua
+    - Do not use `local` in the configuration file.
+```lua
 include = { "src" }
 out_dir = "out"
-  ```
+```
   - Once completed, save the file, and attempt running `lunarc` from the command line.
   - If you receive an issue that isn't listed in [Common issues](#common-issues), please create an issue and let us know what message you got. Alternatively, you can join our [Discord](https://discord.gg/CHFC3pS) server and ask in the `#help` channel.
 
