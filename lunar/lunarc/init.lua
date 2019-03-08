@@ -10,7 +10,7 @@ end
 
 local lfs_ok, lfs = pcall(require, "lfs")
 if not lfs_ok then
-  fail("required dependency 'LuaFileSystem' was not found, install with 'luarocks install luafilesystem'.", false)
+  fail("required dependency 'LuaFileSystem' was not found, install with 'luarocks install luafilesystem'.", 1, false)
 end
 
 local Lexer = require "lunar.compiler.lexical.lexer"
