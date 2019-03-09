@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("VariableStatement syntax", function()
+describe("VariableStatement syntax", do
   require_dev()
 
-  it("should return one VariableSyntax node with two names and two expressions", function()
+  it("should return one VariableSyntax node with two names and two expressions", do
     local tokens = Lexer.new("local a, b = 1, 2"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -16,7 +16,7 @@ describe("VariableStatement syntax", function()
     assert.same({ AST.VariableStatement.new(names, exprs) }, result)
   end)
 
-  it("should return one VariableSyntax node with two names and one expression", function()
+  it("should return one VariableSyntax node with two names and one expression", do
     local tokens = Lexer.new("local a, b = ..."):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -26,7 +26,7 @@ describe("VariableStatement syntax", function()
     assert.same({ AST.VariableStatement.new(names, exprs) }, result)
   end)
 
-  it("should return one VariableSyntax node with one name and no expression", function()
+  it("should return one VariableSyntax node with one name and no expression", do
     local tokens = Lexer.new("local a"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -35,7 +35,7 @@ describe("VariableStatement syntax", function()
     assert.same({ AST.VariableStatement.new(names, nil) }, result)
   end)
 
-  it("should return two VariableSyntax node with one name and one expression, each", function()
+  it("should return two VariableSyntax node with one name and one expression, each", do
     local tokens = Lexer.new("local a = 1 local b = 2"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -45,7 +45,7 @@ describe("VariableStatement syntax", function()
     }, result)
   end)
 
-  it("should attach type annotations in a number dictionary", function()
+  it("should attach type annotations in a number dictionary", do
     local tokens = Lexer.new("local a: string, b, c: any = 1, 2, 3"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -56,7 +56,7 @@ describe("VariableStatement syntax", function()
     }, result)
   end)
 
-  it("should attach a type annotation in a statement with one name and no expression", function()
+  it("should attach a type annotation in a statement with one name and no expression", do
     local tokens = Lexer.new("local a: string"):tokenize()
     local result = Parser.new(tokens):parse()
 

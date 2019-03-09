@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("GenericForStatement syntax", function()
+describe("GenericForStatement syntax", do
   require_dev()
 
-  it("should return one GenericForStatement node with one identifier and one expression", function()
+  it("should return one GenericForStatement node with one identifier and one expression", do
     local tokens = Lexer.new("for i in pairs() do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -17,7 +17,7 @@ describe("GenericForStatement syntax", function()
     }, result)
   end)
 
-  it("should return one GenericForStatement node with two identifiers and one expressions", function()
+  it("should return one GenericForStatement node with two identifiers and one expressions", do
     local tokens = Lexer.new("for i, v in pairs() do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -31,7 +31,7 @@ describe("GenericForStatement syntax", function()
     }, result)
   end)
 
-  it("should return one GenericForStatement node with two identifiers and two expressions", function()
+  it("should return one GenericForStatement node with two identifiers and two expressions", do
     local tokens = Lexer.new("for i, v in next, t do end"):tokenize()
     local result = Parser.new(tokens):parse()
 

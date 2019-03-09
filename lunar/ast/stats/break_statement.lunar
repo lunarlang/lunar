@@ -1,14 +1,10 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
-local BreakStatement = setmetatable({}, SyntaxNode)
-BreakStatement.__index = BreakStatement
-
-function BreakStatement.new()
-  local super = SyntaxNode.new(SyntaxKind.break_statement)
-  local self = setmetatable(super, BreakStatement)
-
-  return self
+class BreakStatement << SyntaxNode
+  constructor()
+    super(SyntaxKind.break_statement)
+  end
 end
 
 return BreakStatement

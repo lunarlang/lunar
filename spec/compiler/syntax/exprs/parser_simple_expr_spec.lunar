@@ -1,51 +1,51 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("LiteralExpression syntax", function()
+describe("LiteralExpression syntax", do
   require_dev()
 
-  it("should return one NilLiteralExpression node", function()
+  it("should return one NilLiteralExpression node", do
     local tokens = Lexer.new("nil"):tokenize()
     local result = Parser.new(tokens):expression()
 
     assert.same(AST.NilLiteralExpression.new(), result)
   end)
 
-  it("should return one BooleanLiteralExpression node given a value of true", function()
+  it("should return one BooleanLiteralExpression node given a value of true", do
     local tokens = Lexer.new("true"):tokenize()
     local result = Parser.new(tokens):expression()
 
     assert.same(AST.BooleanLiteralExpression.new(true), result)
   end)
 
-  it("should return one BooleanLiteralExpression node given a value of false", function()
+  it("should return one BooleanLiteralExpression node given a value of false", do
     local tokens = Lexer.new("false"):tokenize()
     local result = Parser.new(tokens):expression()
 
     assert.same(AST.BooleanLiteralExpression.new(false), result)
   end)
 
-  it("should return one NumberLiteralExpression node given a value of 100", function()
+  it("should return one NumberLiteralExpression node given a value of 100", do
     local tokens = Lexer.new("100"):tokenize()
     local result = Parser.new(tokens):expression()
 
     assert.same(AST.NumberLiteralExpression.new(100), result)
   end)
 
-  it("should return one StringLiteralExpression node given a string value", function()
+  it("should return one StringLiteralExpression node given a string value", do
     local tokens = Lexer.new("'Hello, world!'"):tokenize()
     local result = Parser.new(tokens):expression()
 
     assert.same(AST.StringLiteralExpression.new("'Hello, world!'"), result)
   end)
 
-  it("should return one VariableArgumentExpression node", function()
+  it("should return one VariableArgumentExpression node", do
     local tokens = Lexer.new("..."):tokenize()
     local result = Parser.new(tokens):expression()
 
     assert.same(AST.VariableArgumentExpression.new(), result)
   end)
 
-  it("should return one FunctionExpression node whose parameters has two ParameterDeclaration nodes and a BreakStatement block", function()
+  it("should return one FunctionExpression node whose parameters has two ParameterDeclaration nodes and a BreakStatement block", do
     local tokens = Lexer.new("function(hello, ...) break end"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -55,7 +55,7 @@ describe("LiteralExpression syntax", function()
     assert.same(AST.FunctionExpression.new(expected_params, expected_block), result)
   end)
 
-  it("should return one TableLiteralExpression node with three FieldDeclaration nodes", function()
+  it("should return one TableLiteralExpression node with three FieldDeclaration nodes", do
     local tokens = Lexer.new("{ ['hello'] = true, world = false; nil; }"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -68,7 +68,7 @@ describe("LiteralExpression syntax", function()
     assert.same(AST.TableLiteralExpression.new(expected_fields), result)
   end)
 
-  it("should return one LambdaExpression node with two arguments and does not implicitly return", function()
+  it("should return one LambdaExpression node with two arguments and does not implicitly return", do
     local tokens = Lexer.new("|a, b| do return a + b end"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -90,7 +90,7 @@ describe("LiteralExpression syntax", function()
     assert.same(AST.LambdaExpression.new(expected_params, expected_block, false), result)
   end)
 
-  it("should return one LambdaExpression with a return type annotation of 'number'", function()
+  it("should return one LambdaExpression with a return type annotation of 'number'", do
     local tokens = Lexer.new("||: number do return 1 end"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -107,7 +107,7 @@ describe("LiteralExpression syntax", function()
     assert.same(AST.LambdaExpression.new(expected_params, expected_block, false, expected_return_annotaiton), result)
   end)
 
-  it("should return one LambdaExpression with a return type annotation of 'number' and an implicit return", function()
+  it("should return one LambdaExpression with a return type annotation of 'number' and an implicit return", do
     local tokens = Lexer.new("||: number 1"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -120,7 +120,7 @@ describe("LiteralExpression syntax", function()
     assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true, expected_return_annotaiton), result)
   end)
 
-  it("should return one LambdaExpression node without any arguments and does not implicitly return", function()
+  it("should return one LambdaExpression node without any arguments and does not implicitly return", do
     local tokens = Lexer.new("do return 1 end"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -131,7 +131,7 @@ describe("LiteralExpression syntax", function()
     assert.same(AST.LambdaExpression.new({}, expected_block, false), result)
   end)
 
-  it("should return one LambdaExpression node with two arguments and does implicitly return", function()
+  it("should return one LambdaExpression node with two arguments and does implicitly return", do
     local tokens = Lexer.new("|a, b| a + b"):tokenize()
     local result = Parser.new(tokens):expression()
 

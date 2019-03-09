@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("FunctionStatement syntax", function()
+describe("FunctionStatement syntax", do
   require_dev()
 
-  it("should return one FunctionStatement node with an Identifier named test and two ParameterDeclaration", function()
+  it("should return one FunctionStatement node with an Identifier named test and two ParameterDeclaration", do
     local tokens = Lexer.new("function test(a, b) end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -18,7 +18,7 @@ describe("FunctionStatement syntax", function()
     }, result)
   end)
 
-  it("should return one FunctionStatement node with a MemberExpression of a.b:c", function()
+  it("should return one FunctionStatement node with a MemberExpression of a.b:c", do
     local tokens = Lexer.new("function a.b:c() end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -31,7 +31,7 @@ describe("FunctionStatement syntax", function()
     }, result)
   end)
 
-  it("should return a FunctionStatement node whose definition was local", function()
+  it("should return a FunctionStatement node whose definition was local", do
     local tokens = Lexer.new("local function test() end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -40,7 +40,7 @@ describe("FunctionStatement syntax", function()
     }, result)
   end)
 
-  it("should attach return type annotation", function()
+  it("should attach return type annotation", do
     local tokens = Lexer.new("local function test(): string end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -49,7 +49,7 @@ describe("FunctionStatement syntax", function()
     }, result)
   end)
 
-  it("should attach type annotation to formal parameters", function()
+  it("should attach type annotation to formal parameters", do
     local tokens = Lexer.new("function test(a: string, b, c: any) end"):tokenize()
     local result = Parser.new(tokens):parse()
 

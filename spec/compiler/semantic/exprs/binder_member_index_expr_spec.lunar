@@ -1,15 +1,15 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Bindings of literal expressions", function()
+describe("Bindings of literal expressions", do
   require_dev()
 
-  it("should bind global identifier references nested leftmost in member expressions", function()
+  it("should bind global identifier references nested leftmost in member expressions", do
     local tokens = Lexer.new("return y.z"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
 
     local return_expr = result[1]
-    
+
     local expr_left_1 = return_expr.exprlist[1].base
     local left_ident_symbol = expr_left_1.symbol
 
@@ -20,13 +20,13 @@ describe("Bindings of literal expressions", function()
     assert.equal(env:get_global_value('src', 'y'), left_ident_symbol)
   end)
 
-  it("should bind global identifier references nested leftmost in member expressions recursively", function()
+  it("should bind global identifier references nested leftmost in member expressions recursively", do
     local tokens = Lexer.new("return y.z.w"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
 
     local return_expr = result[1]
-    
+
     local expr_left_1 = return_expr.exprlist[1].base
     local expr_left_2 = expr_left_1.base
     local left_ident_symbol_2 = expr_left_2.symbol
@@ -38,14 +38,14 @@ describe("Bindings of literal expressions", function()
     assert.equal(env:get_global_value('src', 'y'), left_ident_symbol_2)
   end)
 
-  it("should not bind rightmore identifiers in member expressions", function()
+  it("should not bind rightmore identifiers in member expressions", do
     -- This behavior could change.
     local tokens = Lexer.new("return y.z.w"):tokenize()
     local result = Parser.new(tokens):parse()
     Binder.new(result):bind()
 
     local return_expr = result[1]
-    
+
     local expr_left_1 = return_expr.exprlist[1].base
     local expr_right_1 = return_expr.exprlist[1].member_identifier
     local expr_right_2 = expr_left_1.member_identifier
@@ -54,13 +54,13 @@ describe("Bindings of literal expressions", function()
     assert.falsy(expr_right_2.symbol)
   end)
 
-  it("should bind nested identifier references in index expressions", function()
+  it("should bind nested identifier references in index expressions", do
     local tokens = Lexer.new("return y.z[w]"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
 
     local return_expr = result[1]
-    
+
     local index_expr = return_expr.exprlist[1]
     local index_right = index_expr.index
     local expr_left_1 = index_expr.base
@@ -80,5 +80,4 @@ describe("Bindings of literal expressions", function()
     assert.True(index_right_ident_symbol:is_referenced())
     assert.equal(env:get_global_value('src', 'w'), index_right_ident_symbol)
   end)
-  
 end)

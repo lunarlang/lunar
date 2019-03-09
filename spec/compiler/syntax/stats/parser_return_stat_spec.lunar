@@ -1,16 +1,16 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("ReturnStatement syntax", function()
+describe("ReturnStatement syntax", do
   require_dev()
 
-  it("should only return one ReturnStatement node", function()
+  it("should only return one ReturnStatement node", do
     local tokens = Lexer.new("return"):tokenize()
     local result = Parser.new(tokens):parse()
 
     assert.same({ AST.ReturnStatement.new() }, result)
   end)
 
-  it("should return one ReturnStatement node with one expression", function()
+  it("should return one ReturnStatement node with one expression", do
     local tokens = Lexer.new("return nil"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -19,7 +19,7 @@ describe("ReturnStatement syntax", function()
     assert.same({ AST.ReturnStatement.new(expected_expr_list) }, result)
   end)
 
-  it("should return one ReturnStatement node with two expressions", function()
+  it("should return one ReturnStatement node with two expressions", do
     local tokens = Lexer.new("return nil, nil"):tokenize()
     local result = Parser.new(tokens):parse()
 

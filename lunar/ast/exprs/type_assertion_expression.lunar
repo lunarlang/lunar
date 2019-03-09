@@ -1,16 +1,13 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
-local TypeAssertionExpression = setmetatable({}, SyntaxNode)
-TypeAssertionExpression.__index = TypeAssertionExpression
+class TypeAssertionExpression << SyntaxNode
+  constructor(base, type)
+    super(SyntaxKind.type_assertion_expression)
 
-function TypeAssertionExpression.new(base, type)
-  local super = SyntaxNode.new(SyntaxKind.type_assertion_expression)
-  local self = setmetatable(super, TypeAssertionExpression)
-  self.base = base
-  self.type = type
-
-  return self
+    self.base = base
+    self.type = type
+  end
 end
 
 return TypeAssertionExpression

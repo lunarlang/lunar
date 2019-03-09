@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Lexer:next_comment", function()
+describe("Lexer:next_comment", do
   require_dev()
 
-  it("should return one comment token", function()
+  it("should return one comment token", do
     local tokens = Lexer.new("-- Hello, world!"):tokenize()
 
     assert.same({
@@ -11,7 +11,7 @@ describe("Lexer:next_comment", function()
     }, tokens)
   end)
 
-  it("should return one comment token with many comment signs in a single line", function()
+  it("should return one comment token with many comment signs in a single line", do
     local tokens = Lexer.new("---- Hello, world! ----"):tokenize()
 
     assert.same({
@@ -19,7 +19,7 @@ describe("Lexer:next_comment", function()
     }, tokens)
   end)
 
-  it("should return one comment token with nothing immediately followed", function()
+  it("should return one comment token with nothing immediately followed", do
     local tokens = Lexer.new("--"):tokenize()
 
     assert.same({
@@ -27,7 +27,7 @@ describe("Lexer:next_comment", function()
     }, tokens)
   end)
 
-  it("should return two comment tokens", function()
+  it("should return two comment tokens", do
     local code = "-- first comment\n" ..
       "-- second comment"
     local tokens = Lexer.new(code):tokenize()
@@ -39,7 +39,7 @@ describe("Lexer:next_comment", function()
     }, tokens)
   end)
 
-  it("should return one multiline comment token", function()
+  it("should return one multiline comment token", do
     local tokens = Lexer.new("--[[ Hello, world! ]]"):tokenize()
 
     assert.same({
@@ -47,7 +47,7 @@ describe("Lexer:next_comment", function()
     }, tokens)
   end)
 
-  it("should not span multiple lines if there is anything between -- and the block", function()
+  it("should not span multiple lines if there is anything between -- and the block", do
     local code = "-- [[\n" ..
       "nope\n" ..
       "]]"

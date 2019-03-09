@@ -1,16 +1,13 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
-local MemberFieldDeclaration = setmetatable({}, SyntaxNode)
-MemberFieldDeclaration.__index = MemberFieldDeclaration
+class MemberFieldDeclaration << SyntaxNode
+  constructor(member_identifier, value)
+    super(SyntaxKind.member_field_declaration)
 
-function MemberFieldDeclaration.new(member_identifier, value)
-  local super = SyntaxNode.new(SyntaxKind.member_field_declaration)
-  local self = setmetatable(super, MemberFieldDeclaration)
-  self.member_identifier = member_identifier
-  self.value = value
-
-  return self
+    self.member_identifier = member_identifier
+    self.value = value
+  end
 end
 
 return MemberFieldDeclaration

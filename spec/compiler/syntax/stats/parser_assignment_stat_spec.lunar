@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("AssignmentStatement syntax", function()
+describe("AssignmentStatement syntax", do
   require_dev()
 
-  it("should return one AssignmentStatement with one Identifier and one expression", function()
+  it("should return one AssignmentStatement with one Identifier and one expression", do
     local tokens = Lexer.new("hello = 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -13,7 +13,8 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement with one IndexExpression using bracket notation and one expression", function()
+
+  it("should return one AssignmentStatement with one IndexExpression using bracket notation and one expression", do
     local tokens = Lexer.new("hello['world'] = 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -23,7 +24,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement with one MemberExpression using dot notation and one expression", function()
+  it("should return one AssignmentStatement with one MemberExpression using dot notation and one expression", do
     local tokens = Lexer.new("hello.world = 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -33,7 +34,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement with two Identifiers and one expression", function()
+  it("should return one AssignmentStatement with two Identifiers and one expression", do
     local tokens = Lexer.new("hello, world = ..."):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -43,7 +44,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement whose operator is concatenation_equal_op", function()
+  it("should return one AssignmentStatement whose operator is concatenation_equal_op", do
     local tokens = Lexer.new("hello ..= 'world'"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -53,7 +54,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.concatenation_equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement whose operator is addition_equal_op", function()
+  it("should return one AssignmentStatement whose operator is addition_equal_op", do
     local tokens = Lexer.new("hello += 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -63,7 +64,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.addition_equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement whose operator is subtraction_equal_op", function()
+  it("should return one AssignmentStatement whose operator is subtraction_equal_op", do
     local tokens = Lexer.new("hello -= 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -73,7 +74,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.subtraction_equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement whose operator is multiplication_equal_op", function()
+  it("should return one AssignmentStatement whose operator is multiplication_equal_op", do
     local tokens = Lexer.new("hello *= 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -83,7 +84,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.multiplication_equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement whose operator is division_equal_op", function()
+  it("should return one AssignmentStatement whose operator is division_equal_op", do
     local tokens = Lexer.new("hello /= 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -93,7 +94,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.division_equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement whose operator is power_equal_op", function()
+  it("should return one AssignmentStatement whose operator is power_equal_op", do
     local tokens = Lexer.new("hello ^= 1"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -103,7 +104,7 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.power_equal_op, exprs) }, result)
   end)
 
-  it("should return one AssignmentStatement with one identifier and two expressions with concatenation_equal_op", function()
+  it("should return one AssignmentStatement with one identifier and two expressions with concatenation_equal_op", do
     local tokens = Lexer.new("hello ..= 'world', a()"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -116,13 +117,9 @@ describe("AssignmentStatement syntax", function()
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.concatenation_equal_op, exprs) }, result)
   end)
 
-  it("should throw an error given an invalid left-hand side identifier", function()
+  it("should throw an error given an invalid left-hand side identifier", do
     local tokens = Lexer.new("hi() = 1"):tokenize()
 
-    local parse = function()
-      Parser.new(tokens):parse()
-    end
-
-    assert.errors(parse, "1:6: unexpected token '='")
+    assert.errors(|| Parser.new(tokens):parse(), "1:6: unexpected token '='")
   end)
 end)

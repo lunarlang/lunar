@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("ClassStatement transpilation", function()
+describe("ClassStatement transpilation", do
   require_dev()
 
-  it("should support classes with no members", function()
+  it("should support classes with no members", do
     local input = "class C end; return C"
 
     local tokens = Lexer.new(input):tokenize()
@@ -16,7 +16,7 @@ describe("ClassStatement transpilation", function()
     assert.same({}, C.new())
   end)
 
-  it("should support field members in a class", function()
+  it("should support field members in a class", do
     local input = "class C static x = 'hello' x = 'world' end; return C"
 
     local tokens = Lexer.new(input):tokenize()
@@ -30,7 +30,7 @@ describe("ClassStatement transpilation", function()
     assert.equal("world", C.new().x)
   end)
 
-  it("should support parameterized constructor", function()
+  it("should support parameterized constructor", do
     local input = "class C\n" ..
       "constructor(message) self.message = message end\n" ..
       "end\n" ..
@@ -46,7 +46,7 @@ describe("ClassStatement transpilation", function()
       assert.same({ message = "hello" }, C.new("hello"))
   end)
 
-  it("should support separation of static methods from instance methods", function()
+  it("should support separation of static methods from instance methods", do
     local input = "class C\n" ..
       "static function m() return 'hi' end\n" ..
       "function m() return 'hello' end\n" ..
@@ -64,7 +64,7 @@ describe("ClassStatement transpilation", function()
       assert.same("hello", C.new():m())
   end)
 
-  it("should support instance methods", function()
+  it("should support instance methods", do
     local input = "class C\n" ..
       "constructor(name) self.name = name end\n" ..
       "function get_name() return self.name end\n" ..
@@ -81,7 +81,7 @@ describe("ClassStatement transpilation", function()
       assert.same("test", C.new("test"):get_name())
   end)
 
-  it("should support inheritance with super call", function()
+  it("should support inheritance with super call", do
     local input = "class S\n" ..
       "constructor(name) self.name = name end\n" ..
       "end\n" ..
@@ -100,7 +100,7 @@ describe("ClassStatement transpilation", function()
     assert.same("bob", C.new().name)
   end)
 
-  it("should inherit fields and methods from the super class for static and instance members", function()
+  it("should inherit fields and methods from the super class for static and instance members", do
     local input = [[
 class S
   static f = 'sf';

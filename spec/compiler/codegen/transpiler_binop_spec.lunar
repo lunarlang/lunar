@@ -1,10 +1,10 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("BinaryOp expressions transpilation", function()
+describe("BinaryOp expressions transpilation", do
   require_dev()
 
   local function binary_op_equals(input, expected)
-    return function()
+    return do
       local tokens = Lexer.new("return " .. input):tokenize()
       local ast = Parser.new(tokens):parse()
       local result = Transpiler.new(ast):transpile()

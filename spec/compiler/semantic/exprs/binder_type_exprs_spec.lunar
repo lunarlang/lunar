@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Bindings of type expressions", function()
+describe("Bindings of type expressions", do
   require_dev()
 
-  it("should bind type identifiers as global references in type annotation", function()
+  it("should bind type identifiers as global references in type annotation", do
     local tokens = Lexer.new("local x: undeclared_type"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
@@ -23,7 +23,7 @@ describe("Bindings of type expressions", function()
     assert.equal(env:get_global_type('src', 'undeclared_type'), type_annotation.symbol)
   end)
 
-  it("should bind type identifiers to core types", function()
+  it("should bind type identifiers to core types", do
     local tokens = Lexer.new("local x: string"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
@@ -43,7 +43,7 @@ describe("Bindings of type expressions", function()
     assert.equal(CoreGlobals:get_type('string'), type_annotation.symbol)
   end)
 
-  it("should bind type identifiers as global references in type assertion", function()
+  it("should bind type identifiers as global references in type assertion", do
     local tokens = Lexer.new("local x = '3' as undeclared_type"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
@@ -62,5 +62,4 @@ describe("Bindings of type expressions", function()
 
     assert.equal(env:get_global_type('src', 'undeclared_type'), type_ident.symbol)
   end)
-  
 end)

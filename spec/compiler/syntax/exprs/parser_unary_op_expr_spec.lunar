@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("UnaryOpExpression syntax", function()
+describe("UnaryOpExpression syntax", do
   require_dev()
 
-  it("should return an UnaryOpExpression node whose operand is BooleanLiteralExpression and operator is not_op", function()
+  it("should return an UnaryOpExpression node whose operand is BooleanLiteralExpression and operator is not_op", do
     local tokens = Lexer.new("not false"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -13,7 +13,7 @@ describe("UnaryOpExpression syntax", function()
     assert.same(AST.UnaryOpExpression.new(operator, operand), result)
   end)
 
-  it("should return an UnaryOpExpression node whose operand is NumberLiteralExpression and operator is negative_op", function()
+  it("should return an UnaryOpExpression node whose operand is NumberLiteralExpression and operator is negative_op", do
     local tokens = Lexer.new("-1"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -23,7 +23,7 @@ describe("UnaryOpExpression syntax", function()
     assert.same(AST.UnaryOpExpression.new(operator, operand), result)
   end)
 
-  it("should return an UnaryOpExpression node whose operand is TableLiteralExpression and operator is length_op", function()
+  it("should return an UnaryOpExpression node whose operand is TableLiteralExpression and operator is length_op", do
     local tokens = Lexer.new("#{}"):tokenize()
     local result = Parser.new(tokens):expression()
 

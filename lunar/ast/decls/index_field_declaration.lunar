@@ -1,16 +1,13 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
-local IndexFieldDeclaration = setmetatable({}, SyntaxNode)
-IndexFieldDeclaration.__index = IndexFieldDeclaration
+class IndexFieldDeclaration << SyntaxNode
+  constructor(key, value)
+    super(SyntaxKind.index_field_declaration)
 
-function IndexFieldDeclaration.new(key, value)
-  local super = SyntaxNode.new(SyntaxKind.index_field_declaration)
-  local self = setmetatable(super, IndexFieldDeclaration)
-  self.key = key
-  self.value = value
-
-  return self
+    self.key = key
+    self.value = value
+  end
 end
 
 return IndexFieldDeclaration

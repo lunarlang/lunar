@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Bindings of declared identifiers", function()
+describe("Bindings of declared identifiers", do
   require_dev()
 
-  it("should declare global symbols with a separate assignment", function()
+  it("should declare global symbols with a separate assignment", do
     local tokens = Lexer.new("declare global x; x = 2"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
@@ -24,7 +24,7 @@ describe("Bindings of declared identifiers", function()
     assert.equal(dec_ident.symbol, env:get_global_value('src', 'x'))
   end)
 
-  it("should allow declaration of return type symbols for external packages", function()
+  it("should allow declaration of return type symbols for external packages", do
     local tokens = Lexer.new("declare package 'x' string"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -40,9 +40,9 @@ describe("Bindings of declared identifiers", function()
     assert.False(package_env_symbol:is_assigned())
     assert.False(package_env_symbol:is_referenced())
   end)
-  
 
-  it("should bind import aliases to declared external packages", function()
+
+  it("should bind import aliases to declared external packages", do
     local tokens = Lexer.new("declare package 'x' string; from 'x' import * as x; print(x)"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -72,7 +72,7 @@ describe("Bindings of declared identifiers", function()
     assert.True(package_env_symbol:is_referenced())
   end)
 
-  it("should allow declaration of return type symbols within a local source file", function()
+  it("should allow declaration of return type symbols within a local source file", do
     local env = ProjectEnvironment.new()
 
     -- file 'x'
@@ -108,7 +108,7 @@ describe("Bindings of declared identifiers", function()
     assert.True(package_env_symbol:is_referenced())
   end)
 
-  it("should allow implicit declaration of return type symbols within a local source file", function()
+  it("should allow implicit declaration of return type symbols within a local source file", do
     local env = ProjectEnvironment.new()
 
     -- file 'x'
@@ -144,7 +144,7 @@ describe("Bindings of declared identifiers", function()
     assert.True(package_env_symbol:is_referenced())
   end)
 
-  it("should allow implicit declaration of export symbols within a local source file", function()
+  it("should allow implicit declaration of export symbols within a local source file", do
     local env = ProjectEnvironment.new()
 
     -- file 'x'
@@ -189,7 +189,7 @@ describe("Bindings of declared identifiers", function()
     assert.False(package_env_symbol:is_referenced())
   end)
 
-  it("should allow imports of standalone class type symbols", function()
+  it("should allow imports of standalone class type symbols", do
     local env = ProjectEnvironment.new()
 
     -- file 'x'
@@ -259,7 +259,7 @@ describe("Bindings of declared identifiers", function()
     assert.False(export_value_symbol:is_referenced())
   end)
 
-  it("should allow import class type symbols with class value symbols", function()
+  it("should allow import class type symbols with class value symbols", do
     local env = ProjectEnvironment.new()
 
     -- file 'x'
@@ -321,10 +321,10 @@ describe("Bindings of declared identifiers", function()
     assert.True(export_value_symbol:is_referenced())
   end)
 
-  it("should guard against re-declaration of the same export", function()
+  it("should guard against re-declaration of the same export", do
     local env = ProjectEnvironment.new()
 
-    assert.False(pcall(function()
+    assert.False(pcall(do
       -- file 'x'
       local tokens_x = Lexer.new("export x = 1; export x = 2"):tokenize()
       local result_x = Parser.new(tokens_x):parse()
@@ -332,10 +332,10 @@ describe("Bindings of declared identifiers", function()
     end))
   end)
 
-  it("should guard against declaration of exports with returns", function()
+  it("should guard against declaration of exports with returns", do
     local env = ProjectEnvironment.new()
 
-    assert.False(pcall(function()
+    assert.False(pcall(do
       -- file 'x'
       local tokens_x = Lexer.new("export x = 1; return 2"):tokenize()
       local result_x = Parser.new(tokens_x):parse()
@@ -343,10 +343,10 @@ describe("Bindings of declared identifiers", function()
     end))
   end)
 
-  it("should guard against declaration of exports with returns declaration", function()
+  it("should guard against declaration of exports with returns declaration", do
     local env = ProjectEnvironment.new()
 
-    assert.False(pcall(function()
+    assert.False(pcall(do
       -- file 'x'
       local tokens_x = Lexer.new("export x = 1; declare returns number"):tokenize()
       local result_x = Parser.new(tokens_x):parse()
@@ -354,15 +354,15 @@ describe("Bindings of declared identifiers", function()
     end))
   end)
 
-  it("should guard against re-declaration of returns across files", function()
+  it("should guard against re-declaration of returns across files", do
     local env = ProjectEnvironment.new()
 
-    assert.False(pcall(function()
+    assert.False(pcall(do
       -- file 'x'
       local tokens_x = Lexer.new("return 'Hello, world!'"):tokenize()
       local result_x = Parser.new(tokens_x):parse()
       Binder.new(result_x, env, 'x'):bind()
-  
+
       -- file 'y'
       local tokens_y = Lexer.new("declare package 'x' string"):tokenize()
       local result_y = Parser.new(tokens_y):parse()
@@ -370,10 +370,10 @@ describe("Bindings of declared identifiers", function()
     end))
   end)
 
-  it("should guard against re-declaration of returns within files", function()
+  it("should guard against re-declaration of returns within files", do
     local env = ProjectEnvironment.new()
 
-    assert.False(pcall(function()
+    assert.False(pcall(do
       -- file 'x'
       local tokens_x = Lexer.new("declare package 'x' string; return 'Hello, world!'"):tokenize()
       local result_x = Parser.new(tokens_x):parse()
@@ -381,10 +381,10 @@ describe("Bindings of declared identifiers", function()
     end))
   end)
 
-  it("should guard against re-declaration of returns within files", function()
+  it("should guard against re-declaration of returns within files", do
     local env = ProjectEnvironment.new()
 
-    assert.False(pcall(function()
+    assert.False(pcall(do
       -- file 'x'
       local tokens_x = Lexer.new("declare returns string; return 'Hello, world!'"):tokenize()
       local result_x = Parser.new(tokens_x):parse()

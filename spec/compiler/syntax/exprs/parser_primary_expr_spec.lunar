@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("SecondaryExpression syntax", function()
+describe("SecondaryExpression syntax", do
   require_dev()
 
-  it("should return a FunctionCallExpression with no arguments", function()
+  it("should return a FunctionCallExpression with no arguments", do
     local tokens = Lexer.new("hello()"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -13,7 +13,7 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(base, args), result)
   end)
 
-  it("should return a FunctionCallExpression with three NumberLiteralExpression arguments", function()
+  it("should return a FunctionCallExpression with three NumberLiteralExpression arguments", do
     local tokens = Lexer.new("testing(1, 2, 3)"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -27,7 +27,7 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(base, args), result)
   end)
 
-  it("should return a FunctionCallExpression with a IndexExpression using bracket syntax", function()
+  it("should return a FunctionCallExpression with a IndexExpression using bracket syntax", do
     local tokens = Lexer.new("thank['you'](kanye)"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -38,7 +38,7 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(top_member, args), result)
   end)
 
-  it("should return a FunctionCallExpression with dot syntax", function()
+  it("should return a FunctionCallExpression with dot syntax", do
     local tokens = Lexer.new("very.cool()"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -48,7 +48,7 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(top_member, args), result)
   end)
 
-  it("should return a FunctionCallExpression with colon syntax", function()
+  it("should return a FunctionCallExpression with colon syntax", do
     local tokens = Lexer.new("very:nice()"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -58,7 +58,7 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(top_member, args), result)
   end)
 
-  it("should return a FunctionCallExpression with a string argument", function()
+  it("should return a FunctionCallExpression with a string argument", do
     local tokens = Lexer.new("cool'stuff'"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -68,7 +68,7 @@ describe("SecondaryExpression syntax", function()
     assert.same(AST.FunctionCallExpression.new(base, args), result)
   end)
 
-  it("should return a FunctionCallExpression with a table argument", function()
+  it("should return a FunctionCallExpression with a table argument", do
     local tokens = Lexer.new("help{}"):tokenize()
     local result = Parser.new(tokens):expression()
 

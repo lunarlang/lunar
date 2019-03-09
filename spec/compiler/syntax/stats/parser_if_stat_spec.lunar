@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("IfStatement syntax", function()
+describe("IfStatement syntax", do
   require_dev()
 
-  it("should return one IfStatement node", function()
+  it("should return one IfStatement node", do
     local tokens = Lexer.new("if true then end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -12,7 +12,7 @@ describe("IfStatement syntax", function()
     assert.same({ AST.IfStatement.new(expected_expr, {}) }, result)
   end)
 
-  it("should return one IfStatement node with one elseif branch", function()
+  it("should return one IfStatement node with one elseif branch", do
     local tokens = Lexer.new("if false then elseif false then end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -25,7 +25,7 @@ describe("IfStatement syntax", function()
     }, result)
   end)
 
-  it("should return one IfStatement node with one elseif branch and an else branch", function()
+  it("should return one IfStatement node with one elseif branch and an else branch", do
     local tokens = Lexer.new("if false then elseif false then else end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -38,7 +38,7 @@ describe("IfStatement syntax", function()
     }, result)
   end)
 
-  it("should return nested IfStatement nodes", function()
+  it("should return nested IfStatement nodes", do
     local tokens = Lexer.new("if false then if false then end end"):tokenize()
     local result = Parser.new(tokens):parse()
 

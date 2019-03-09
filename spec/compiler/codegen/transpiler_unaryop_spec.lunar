@@ -1,10 +1,10 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("UnaryOp expressions transpilation", function()
+describe("UnaryOp expressions transpilation", do
   require_dev()
 
   local function unary_op_equals(input, expected)
-    return function()
+    return do
       local tokens = Lexer.new("return " .. input):tokenize()
       local ast = Parser.new(tokens):parse()
       local result = Transpiler.new(ast):transpile()

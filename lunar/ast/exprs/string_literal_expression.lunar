@@ -1,15 +1,12 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
-local StringLiteralExpression = setmetatable({}, SyntaxNode)
-StringLiteralExpression.__index = StringLiteralExpression
+class StringLiteralExpression << SyntaxNode
+  constructor(value)
+    super(SyntaxKind.string_literal_expression)
 
-function StringLiteralExpression.new(value)
-  local super = SyntaxNode.new(SyntaxKind.string_literal_expression)
-  local self = setmetatable(super, StringLiteralExpression)
-  self.value = value
-
-  return self
+    self.value = value
+  end
 end
 
 return StringLiteralExpression

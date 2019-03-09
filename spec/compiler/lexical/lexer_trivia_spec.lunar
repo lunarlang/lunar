@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Lexer:next_trivia", function()
+describe("Lexer:next_trivia", do
   require_dev()
 
-  it("should return one whitespace_trivia", function()
+  it("should return one whitespace_trivia", do
     local tokens = Lexer.new(" "):tokenize()
 
     assert.same({
@@ -11,7 +11,7 @@ describe("Lexer:next_trivia", function()
     }, tokens)
   end)
 
-  it("should return two whitespace_trivia", function()
+  it("should return two whitespace_trivia", do
     local tokens = Lexer.new("  "):tokenize()
 
     assert.same({
@@ -20,7 +20,7 @@ describe("Lexer:next_trivia", function()
     }, tokens)
   end)
 
-  it("should return four whitespace_trivia with mixed spaces and tabs", function()
+  it("should return four whitespace_trivia with mixed spaces and tabs", do
     local tokens = Lexer.new(" \t \t"):tokenize()
 
     assert.same({
@@ -31,7 +31,7 @@ describe("Lexer:next_trivia", function()
     }, tokens)
   end)
 
-  it("should return end_of_line_trivia with any EOL style", function()
+  it("should return end_of_line_trivia with any EOL style", do
     local tokens = Lexer.new("\r\r\n\n"):tokenize()
 
     assert.same({

@@ -1,23 +1,23 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("WhileStatement transpilation", function()
+describe("WhileStatement transpilation", do
   require_dev()
 
-  it("should support calling a function with no arguments", function()
+  it("should support calling a function with no arguments", do
     local input = "hello()"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    local hello = spy.new(function() end)
+    local hello = spy.new(do end)
 
     local program = Program.new(result, { hello = hello }):run()
 
     assert.spy(hello).was.called()
   end)
 
-  it("should support calling a function using dot notation with a string argument", function()
+  it("should support calling a function using dot notation with a string argument", do
     local input = "hello.world('cool stuff')"
 
     local tokens = Lexer.new(input):tokenize()
@@ -25,7 +25,7 @@ describe("WhileStatement transpilation", function()
     local result = Transpiler.new(ast):transpile()
 
     local hello = {}
-    hello.world = spy.new(function() end)
+    hello.world = spy.new(do end)
 
     local program = Program.new(result, { hello = hello }):run()
 
@@ -33,7 +33,7 @@ describe("WhileStatement transpilation", function()
     assert.spy(hello.world).was.called_with("cool stuff")
   end)
 
-  it("should support calling a function using colon notation with self and boolean arguments", function()
+  it("should support calling a function using colon notation with self and boolean arguments", do
     local input = "hello:world(true)"
 
     local tokens = Lexer.new(input):tokenize()
@@ -41,7 +41,7 @@ describe("WhileStatement transpilation", function()
     local result = Transpiler.new(ast):transpile()
 
     local hello = {}
-    hello.world = spy.new(function() end)
+    hello.world = spy.new(do end)
 
     local program = Program.new(result, { hello = hello }):run()
 
@@ -49,7 +49,7 @@ describe("WhileStatement transpilation", function()
     assert.spy(hello.world).was.called_with(hello, true)
   end)
 
-  it("should support calling a function using bracket notation with a number argument", function()
+  it("should support calling a function using bracket notation with a number argument", do
     local input = "hello['world'](1)"
 
     local tokens = Lexer.new(input):tokenize()
@@ -57,7 +57,7 @@ describe("WhileStatement transpilation", function()
     local result = Transpiler.new(ast):transpile()
 
     local hello = {}
-    hello['world'] = spy.new(function() end)
+    hello['world'] = spy.new(do end)
 
     local program = Program.new(result, { hello = hello }):run()
 

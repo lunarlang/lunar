@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Variables transpilation", function()
+describe("Variables transpilation", do
   require_dev()
 
-  it("should support single variable assignment", function()
+  it("should support single variable assignment", do
     local input = "a = true"
 
     local tokens = Lexer.new(input):tokenize()
@@ -15,7 +15,7 @@ describe("Variables transpilation", function()
     assert.equal(true, program.env.a)
   end)
 
-  it("should support multiple variables assignment", function()
+  it("should support multiple variables assignment", do
     local input = "a, b, c = 1, 2, 3"
 
     local tokens = Lexer.new(input):tokenize()
@@ -29,7 +29,7 @@ describe("Variables transpilation", function()
     assert.equal(3, program.env.c)
   end)
 
-  it("should support self-assigning to a and b with concatenation", function()
+  it("should support self-assigning to a and b with concatenation", do
     local input = "local a, b = 'hello', 'hi'; a, b ..= ' world', ' there'; return a, b"
 
     local tokens = Lexer.new(input):tokenize()
@@ -42,7 +42,7 @@ describe("Variables transpilation", function()
     assert.equal("hi there", program.result[2])
   end)
 
-  it("should support self-assigning to a and b with addition", function()
+  it("should support self-assigning to a and b with addition", do
     local input = "local a, b = 1, 2; a, b += 1, 2; return a, b"
 
     local tokens = Lexer.new(input):tokenize()
@@ -55,7 +55,7 @@ describe("Variables transpilation", function()
     assert.equal(4, program.result[2])
   end)
 
-  it("should support self-assigning to a and b with subtraction", function()
+  it("should support self-assigning to a and b with subtraction", do
     local input = "local a, b = 2, 4; a, b -= 1, 2; return a, b"
 
     local tokens = Lexer.new(input):tokenize()
@@ -68,7 +68,7 @@ describe("Variables transpilation", function()
     assert.equal(2, program.result[2])
   end)
 
-  it("should support self-assigning to a and b with multiplication", function()
+  it("should support self-assigning to a and b with multiplication", do
     local input = "local a, b = 1, 2; a, b *= 1, 2; return a, b"
 
     local tokens = Lexer.new(input):tokenize()
@@ -81,7 +81,7 @@ describe("Variables transpilation", function()
     assert.equal(4, program.result[2])
   end)
 
-  it("should support self-assigning to a and b with division", function()
+  it("should support self-assigning to a and b with division", do
     local input = "local a, b = 2, 2; a, b /= 1, 2; return a, b"
 
     local tokens = Lexer.new(input):tokenize()
@@ -94,7 +94,7 @@ describe("Variables transpilation", function()
     assert.equal(1, program.result[2])
   end)
 
-  it("should support self-assigning to a and b with exponentiation", function()
+  it("should support self-assigning to a and b with exponentiation", do
     local input = "local a, b = 1, 2; a, b ^= 1, 2; return a, b"
 
     local tokens = Lexer.new(input):tokenize()
@@ -107,21 +107,21 @@ describe("Variables transpilation", function()
     assert.equal(4, program.result[2])
   end)
 
-  it("should support self-assigning with overflowing expressions", function()
+  it("should support self-assigning with overflowing expressions", do
     local input = "local a = 1; a += 1, b()"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    local b = spy.new(function() end)
+    local b = spy.new(do end)
 
     local program = Program.new(result, { b = b }):run()
 
     assert.spy(b).was.called(1)
   end)
 
-  it("should support self-assigning with overflowing members", function()
+  it("should support self-assigning with overflowing members", do
     local input = "local a, b = 1, 2; a, b += 1"
     -- would return "a, b = a + 1, b + nil" which throws an error at runtime
 
@@ -129,12 +129,12 @@ describe("Variables transpilation", function()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    assert.error(function()
+    assert.error(do
       Program.new(result):run()
     end)
   end)
 
-  it("should support single local variable assignment", function()
+  it("should support single local variable assignment", do
     local input = "local a = 1; return a"
 
     local tokens = Lexer.new(input):tokenize()
@@ -146,7 +146,7 @@ describe("Variables transpilation", function()
     assert.equal(1, program.result[1])
   end)
 
-  it("should support multiple local variables assignment", function()
+  it("should support multiple local variables assignment", do
     local input = "local a, b, c = 1, 2, 3; return a, b, c"
 
     local tokens = Lexer.new(input):tokenize()
@@ -160,7 +160,7 @@ describe("Variables transpilation", function()
     assert.equal(3, program.result[3])
   end)
 
-  it("should support table literals", function()
+  it("should support table literals", do
     local input = "local a = { 1, ['l o l'] = 2, c = 3 }; return a"
 
     local tokens = Lexer.new(input):tokenize()
@@ -174,7 +174,7 @@ describe("Variables transpilation", function()
     assert.equal(3, program.result[1].c)
   end)
 
-  it("should support nil value", function()
+  it("should support nil value", do
     -- we know returning a value works as expected from other cases
     -- but to increase confidence, we'll return 2 as well after the nil value
     local input = "local a = nil; return a, 2"

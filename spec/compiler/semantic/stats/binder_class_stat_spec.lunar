@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Bindings of class statements", function()
+describe("Bindings of class statements", do
   require_dev()
 
-  it("should bind the class value as a local value symbol with no global bindings", function()
+  it("should bind the class value as a local value symbol with no global bindings", do
     local tokens = Lexer.new("class MyClass end"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
@@ -19,7 +19,7 @@ describe("Bindings of class statements", function()
     assert.True(env:has_global_type('src', "MyClass"))
   end)
 
-  it("should bind the class local value and type symbols", function()
+  it("should bind the class local value and type symbols", do
     local tokens = Lexer.new("class MyClass end; local x: MyClass"):tokenize()
     local result = Parser.new(tokens):parse()
     Binder.new(result):bind()
@@ -36,7 +36,7 @@ describe("Bindings of class statements", function()
     assert.equal(class_stat, var_ident.type_annotation.symbol:get_canonical_declaration())
   end)
 
-  it("should bind a variable reference to superclasses, but no type reference", function()
+  it("should bind a variable reference to superclasses, but no type reference", do
     local tokens = Lexer.new("class S end; class C << S end"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
@@ -58,13 +58,13 @@ describe("Bindings of class statements", function()
     assert.True(env:has_global_type('src', "S"))
   end)
 
-  it("should bind member function symbols inside of the class symbol members table", function()
+  it("should bind member function symbols inside of the class symbol members table", do
     local tokens = Lexer.new("class X function Y() end end"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
 
     local class_stat = result[1]
-    
+
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
@@ -78,13 +78,13 @@ describe("Bindings of class statements", function()
     assert.False(env:has_global_value('src', "Y"))
   end)
 
-  it("should bind static function symbols inside of the class symbol statics table", function()
+  it("should bind static function symbols inside of the class symbol statics table", do
     local tokens = Lexer.new("class X static function Y() end end"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
 
     local class_stat = result[1]
-    
+
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
@@ -98,13 +98,13 @@ describe("Bindings of class statements", function()
     assert.False(env:has_global_value('src', "Y"))
   end)
 
-  it("should bind instance fields to class symbol members table", function()
+  it("should bind instance fields to class symbol members table", do
     local tokens = Lexer.new("class X static Y end"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
 
     local class_stat = result[1]
-    
+
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
@@ -118,22 +118,20 @@ describe("Bindings of class statements", function()
     assert.False(env:has_global_value('src', "Y"))
   end)
 
-  it("should error upon redeclaration of of the same field", function()
+  it("should error upon redeclaration of of the same field", do
     local tokens = Lexer.new("class X Y Y end"):tokenize()
     local result = Parser.new(tokens):parse()
-    local bind_step = function()
-      Binder.new(result):bind()
-    end
-    assert.has_errors(bind_step)
+
+    assert.has_errors(|| Binder.new(result):bind())
   end)
 
-  it("should allow declaration of static and instance fields of the same name", function()
+  it("should allow declaration of static and instance fields of the same name", do
     local tokens = Lexer.new("class X Y static Y end"):tokenize()
     local result = Parser.new(tokens):parse()
     Binder.new(result):bind()
 
     local class_stat = result[1]
-    
+
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
@@ -146,13 +144,13 @@ describe("Bindings of class statements", function()
     assert.True(statics:has_value("Y"))
   end)
 
-  it("should bind constructor declaration to class statics", function()
+  it("should bind constructor declaration to class statics", do
     local tokens = Lexer.new("class X constructor() end end"):tokenize()
     local result = Parser.new(tokens):parse()
     Binder.new(result):bind()
 
     local class_stat = result[1]
-    
+
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
@@ -165,16 +163,14 @@ describe("Bindings of class statements", function()
     assert.True(statics:has_value("constructor"))
   end)
 
-  it("should guard against constructor re-declaration", function()
+  it("should guard against constructor re-declaration", do
     local tokens = Lexer.new("class X constructor() end constructor() end end"):tokenize()
     local result = Parser.new(tokens):parse()
-    local bind_step = function()
-      Binder.new(result):bind()
-    end
-    assert.has_errors(bind_step)
+
+    assert.has_errors(|| Binder.new(result):bind())
   end)
 
-  it("should localize class value symbols but spread class type symbols within the source's scope", function()
+  it("should localize class value symbols but spread class type symbols within the source's scope", do
     local tokens = Lexer.new("local obj: X = X.new() class X end"):tokenize()
     local result = Parser.new(tokens):parse()
     local env = Binder.new(result):bind()
@@ -182,7 +178,7 @@ describe("Bindings of class statements", function()
     local ident = result[1].identlist[1]
     local ident_expr_global = result[1].exprlist[1].base.base
     local class_stat = result[2]
-    
+
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
@@ -202,5 +198,4 @@ describe("Bindings of class statements", function()
     assert.True(env:has_global_value('src', "X"))
     assert.True(env:has_global_type('src', "X"))
   end)
-  
 end)

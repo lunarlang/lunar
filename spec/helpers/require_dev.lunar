@@ -1,7 +1,7 @@
-return function()
+return do
   local spec_env = getfenv(2)
 
-  spec_env.setup(function()
+  spec_env.setup(do
     spec_env.AST = require "lunar.ast"
     spec_env.Lexer = require "lunar.compiler.lexical.lexer"
     spec_env.TokenInfo = require "lunar.compiler.lexical.token_info"
@@ -16,7 +16,7 @@ return function()
     spec_env.ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
   end)
 
-  spec_env.teardown(function()
+  spec_env.teardown(do
     spec_env.AST = nil
     spec_env.Lexer = nil
     spec_env.TokenInfo = nil

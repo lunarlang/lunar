@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("RangeForStatement syntax", function()
+describe("RangeForStatement syntax", do
   require_dev()
 
-  it("should return one RangeForStatement node with two expressions", function()
+  it("should return one RangeForStatement node with two expressions", do
     local tokens = Lexer.new("for i = 1, 2 do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
@@ -18,7 +18,7 @@ describe("RangeForStatement syntax", function()
     }, result)
   end)
 
-  it("should return one RangeForStatement node with three expressions", function()
+  it("should return one RangeForStatement node with three expressions", do
     local tokens = Lexer.new("for i = 1, 2, 3 do end"):tokenize()
     local result = Parser.new(tokens):parse()
 

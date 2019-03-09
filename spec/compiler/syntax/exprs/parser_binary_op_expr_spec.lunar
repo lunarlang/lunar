@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("BinaryOpExpression syntax", function()
+describe("BinaryOpExpression syntax", do
   require_dev()
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is addition_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is addition_op", do
     local tokens = Lexer.new("1 + 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -14,7 +14,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is subtraction_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is subtraction_op", do
     local tokens = Lexer.new("1 - 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -25,7 +25,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is multiplication_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is multiplication_op", do
     local tokens = Lexer.new("1 * 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -36,7 +36,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is division_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is division_op", do
     local tokens = Lexer.new("1 / 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -47,7 +47,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is modulus_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is modulus_op", do
     local tokens = Lexer.new("1 % 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -58,7 +58,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is power_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is power_op", do
     local tokens = Lexer.new("1 ^ 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -69,7 +69,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are StringLiteralExpression and operator is concatenation_op", function()
+  it("should return a BinaryOpExpression node whose operands are StringLiteralExpression and operator is concatenation_op", do
     local tokens = Lexer.new("'Hello' .. 'world'"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -80,7 +80,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are StringLiteralExpression and operator is not_equal_op", function()
+  it("should return a BinaryOpExpression node whose operands are StringLiteralExpression and operator is not_equal_op", do
     local tokens = Lexer.new("'Hello' ~= 'world'"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -91,7 +91,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are StringLiteralExpression and operator is equal_op", function()
+  it("should return a BinaryOpExpression node whose operands are StringLiteralExpression and operator is equal_op", do
     local tokens = Lexer.new("'Hello' == 'world'"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -102,7 +102,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is less_than_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is less_than_op", do
     local tokens = Lexer.new("1 < 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -113,7 +113,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is less_or_equal_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is less_or_equal_op", do
     local tokens = Lexer.new("1 <= 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -124,7 +124,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is greater_than_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is greater_than_op", do
     local tokens = Lexer.new("1 > 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -135,7 +135,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is greater_or_equal_op", function()
+  it("should return a BinaryOpExpression node whose operands are NumberLiteralExpression and operator is greater_or_equal_op", do
     local tokens = Lexer.new("1 >= 2"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -146,7 +146,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are BooleanLiteralExpression and operator is and_op", function()
+  it("should return a BinaryOpExpression node whose operands are BooleanLiteralExpression and operator is and_op", do
     local tokens = Lexer.new("true and false"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -157,7 +157,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are BooleanLiteralExpression and operator is or_op", function()
+  it("should return a BinaryOpExpression node whose operands are BooleanLiteralExpression and operator is or_op", do
     local tokens = Lexer.new("false or true"):tokenize()
     local result = Parser.new(tokens):expression()
 
@@ -168,7 +168,7 @@ describe("BinaryOpExpression syntax", function()
     assert.same(AST.BinaryOpExpression.new(left_operand, operator, right_operand), result)
   end)
 
-  it("should return a BinaryOpExpression node whose operands are BinaryOpExpression and operator is and_op", function()
+  it("should return a BinaryOpExpression node whose operands are BinaryOpExpression and operator is and_op", do
     local tokens = Lexer.new("true == true and false == false"):tokenize()
     local result = Parser.new(tokens):expression()
 

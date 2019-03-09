@@ -1,9 +1,9 @@
 local require_dev = require "spec.helpers.require_dev"
 
-describe("Loop statement transpilation", function()
+describe("Loop statement transpilation", do
   require_dev()
 
-  it("should support while loops calling 'test' 5 times and 'loop_was_ran' 4 times", function()
+  it("should support while loops calling 'test' 5 times and 'loop_was_ran' 4 times", do
     local input = "while test() do loop_was_ran() end"
 
     local tokens = Lexer.new(input):tokenize()
@@ -11,11 +11,11 @@ describe("Loop statement transpilation", function()
     local result = Transpiler.new(ast):transpile()
 
     local n = 0
-    local test = spy.new(function()
+    local test = spy.new(do
       n = n + 1
       return n < 5
     end)
-    local loop_was_ran = spy.new(function() end)
+    local loop_was_ran = spy.new(do end)
 
     local program = Program.new(result, {
       test = test,
@@ -27,35 +27,35 @@ describe("Loop statement transpilation", function()
     assert.spy(loop_was_ran).was.called(4)
   end)
 
-  it("should support break statement to break out of the infinite while loop", function()
+  it("should support break statement to break out of the infinite while loop", do
     local input = "while true do test() break end"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    local test = spy.new(function() end)
+    local test = spy.new(do end)
 
     local program = Program.new(result, { test = test }):run()
 
     assert.spy(test).was.called(1)
   end)
 
-  it("should support return statement to return out of the infinite while loop", function()
+  it("should support return statement to return out of the infinite while loop", do
     local input = "while true do test() return end"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    local test = spy.new(function() end)
+    local test = spy.new(do end)
 
     local program = Program.new(result, { test = test }):run()
 
     assert.spy(test).was.called(1)
   end)
 
-  it("should support repeat until loops calling 'test' 5 times and 'loop_was_ran' 5 times", function()
+  it("should support repeat until loops calling 'test' 5 times and 'loop_was_ran' 5 times", do
     local input = "repeat loop_was_ran() until test()"
 
     local tokens = Lexer.new(input):tokenize()
@@ -63,11 +63,11 @@ describe("Loop statement transpilation", function()
     local result = Transpiler.new(ast):transpile()
 
     local n = 0
-    local test = spy.new(function()
+    local test = spy.new(do
       n = n + 1
       return n >= 5
     end)
-    local loop_was_ran = spy.new(function() end)
+    local loop_was_ran = spy.new(do end)
 
     local program = Program.new(result, {
       test = test,
@@ -79,42 +79,42 @@ describe("Loop statement transpilation", function()
     assert.spy(loop_was_ran).was.called(5)
   end)
 
-  it("should support ranged for loops calling 'test' 5 times", function()
+  it("should support ranged for loops calling 'test' 5 times", do
     local input = "for i = 1, 5 do test() end"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    local test = spy.new(function() end)
+    local test = spy.new(do end)
 
     local program = Program.new(result, { test = test }):run()
 
     assert.spy(test).was.called(5)
   end)
 
-  it("should support ranged for loops calling 'test' 5 times in increments of 2", function()
+  it("should support ranged for loops calling 'test' 5 times in increments of 2", do
     local input = "for i = 1, 10, 2 do test() end"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    local test = spy.new(function() end)
+    local test = spy.new(do end)
 
     local program = Program.new(result, { test = test }):run()
 
     assert.spy(test).was.called(5)
   end)
 
-  it("should support generic for loops calling 'test' for each item in the array", function()
+  it("should support generic for loops calling 'test' for each item in the array", do
     local input = "for i, v in pairs({ 6, 7, 8, 9, 10 }) do test(i, v) end"
 
     local tokens = Lexer.new(input):tokenize()
     local ast = Parser.new(tokens):parse()
     local result = Transpiler.new(ast):transpile()
 
-    local test = spy.new(function() end)
+    local test = spy.new(do end)
 
     local program = Program.new(result, { test = test }):run()
 
