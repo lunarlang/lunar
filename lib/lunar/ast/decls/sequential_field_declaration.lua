@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local SequentialFieldDeclaration = setmetatable({}, SyntaxNode)
-SequentialFieldDeclaration.__index = SequentialFieldDeclaration
+local SequentialFieldDeclaration = setmetatable({}, {
+  __index = SyntaxNode,
+})
+SequentialFieldDeclaration.__index = setmetatable({}, SyntaxNode)
 function SequentialFieldDeclaration.new(value)
-  local super = SyntaxNode.new(SyntaxKind.sequential_field_declaration)
-  local self = setmetatable(super, SequentialFieldDeclaration)
+  return SequentialFieldDeclaration.constructor(setmetatable({}, SequentialFieldDeclaration), value)
+end
+function SequentialFieldDeclaration.constructor(self, value)
+  SyntaxNode.constructor(self, SyntaxKind.sequential_field_declaration)
   self.value = value
   return self
 end

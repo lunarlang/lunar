@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local BooleanLiteralExpression = setmetatable({}, SyntaxNode)
-BooleanLiteralExpression.__index = BooleanLiteralExpression
+local BooleanLiteralExpression = setmetatable({}, {
+  __index = SyntaxNode,
+})
+BooleanLiteralExpression.__index = setmetatable({}, SyntaxNode)
 function BooleanLiteralExpression.new(value)
-  local super = SyntaxNode.new(SyntaxKind.boolean_literal_expression)
-  local self = setmetatable(super, BooleanLiteralExpression)
+  return BooleanLiteralExpression.constructor(setmetatable({}, BooleanLiteralExpression), value)
+end
+function BooleanLiteralExpression.constructor(self, value)
+  SyntaxNode.constructor(self, SyntaxKind.boolean_literal_expression)
   self.value = value
   return self
 end

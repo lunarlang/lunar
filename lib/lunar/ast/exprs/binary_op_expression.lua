@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local BinaryOpExpression = setmetatable({}, SyntaxNode)
-BinaryOpExpression.__index = BinaryOpExpression
+local BinaryOpExpression = setmetatable({}, {
+  __index = SyntaxNode,
+})
+BinaryOpExpression.__index = setmetatable({}, SyntaxNode)
 function BinaryOpExpression.new(left_operand, operator, right_operand)
-  local super = SyntaxNode.new(SyntaxKind.binary_op_expression)
-  local self = setmetatable(super, BinaryOpExpression)
+  return BinaryOpExpression.constructor(setmetatable({}, BinaryOpExpression), left_operand, operator, right_operand)
+end
+function BinaryOpExpression.constructor(self, left_operand, operator, right_operand)
+  SyntaxNode.constructor(self, SyntaxKind.binary_op_expression)
   self.left_operand = left_operand
   self.operator = operator
   self.right_operand = right_operand

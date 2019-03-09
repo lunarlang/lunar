@@ -7,11 +7,15 @@ local MemberExpression = require("lunar.ast.exprs.member_expression")
 local Identifier = require("lunar.ast.exprs.identifier")
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local ImportStatement = setmetatable({}, SyntaxNode)
-ImportStatement.__index = ImportStatement
+local ImportStatement = setmetatable({}, {
+  __index = SyntaxNode,
+})
+ImportStatement.__index = setmetatable({}, SyntaxNode)
 function ImportStatement.new(path, values, side_effects)
-  local super = SyntaxNode.new(SyntaxKind.import_statement)
-  local self = setmetatable(super, ImportStatement)
+  return ImportStatement.constructor(setmetatable({}, ImportStatement), path, values, side_effects)
+end
+function ImportStatement.constructor(self, path, values, side_effects)
+  SyntaxNode.constructor(self, SyntaxKind.import_statement)
   self.path = path
   self.values = values
   self.side_effects = side_effects

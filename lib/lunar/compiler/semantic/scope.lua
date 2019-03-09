@@ -1,14 +1,18 @@
 local SymbolTable = require("lunar.compiler.semantic.symbol_table")
 local Scope = {}
 Scope.__index = {}
+function Scope.new(level, parent, env, file_path)
+  return Scope.constructor(setmetatable({}, Scope), level, parent, env, file_path)
+end
 function Scope.constructor(self, level, parent, env, file_path)
+  self.symbol_table = SymbolTable.new()
   self.level = level
   self.parent = parent
   if (not parent) then
     self.env = env
     self.file_path = file_path
   end
-  self.symbol_table = SymbolTable.new()
+  return self
 end
 function Scope.__index:get_value(name)
   if self.parent then
@@ -64,10 +68,5 @@ function Scope.__index:add_type(symbol)
     error("Types must be bound to a root scope")
   end
   self.symbol_table:add_type(symbol)
-end
-function Scope.new(...)
-  local self = setmetatable({}, Scope)
-  Scope.constructor(self, ...)
-  return self
 end
 return Scope

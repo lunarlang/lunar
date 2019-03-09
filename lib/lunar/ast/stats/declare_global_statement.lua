@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local DeclareGlobalStatement = setmetatable({}, SyntaxNode)
-DeclareGlobalStatement.__index = DeclareGlobalStatement
+local DeclareGlobalStatement = setmetatable({}, {
+  __index = SyntaxNode,
+})
+DeclareGlobalStatement.__index = setmetatable({}, SyntaxNode)
 function DeclareGlobalStatement.new(identifier, is_type_declaration)
-  local super = SyntaxNode.new(SyntaxKind.declare_global_statement)
-  local self = setmetatable(super, DeclareGlobalStatement)
+  return DeclareGlobalStatement.constructor(setmetatable({}, DeclareGlobalStatement), identifier, is_type_declaration)
+end
+function DeclareGlobalStatement.constructor(self, identifier, is_type_declaration)
+  SyntaxNode.constructor(self, SyntaxKind.declare_global_statement)
   self.identifier = identifier
   self.is_type_declaration = is_type_declaration
   return self

@@ -3,11 +3,15 @@ local SyntaxKind = require("lunar.ast.syntax_kind")
 local DiagnosticUtils = require("lunar.utils.diagnostic_utils")
 local Symbol = require("lunar.compiler.semantic.symbol")
 local SymbolTable = require("lunar.compiler.semantic.symbol_table")
-local Binder = {}
+local Binder = setmetatable({}, {
+  __index = BaseBinder,
+})
 Binder.__index = setmetatable({}, BaseBinder)
+function Binder.new(ast, environment, file_path_dot)
+  return Binder.constructor(setmetatable({}, Binder), ast, environment, file_path_dot)
+end
 function Binder.constructor(self, ast, environment, file_path_dot)
   BaseBinder.constructor(self, environment, file_path_dot)
-  self.ast = ast
   self.contextual_varargs = nil
   self.is_function_scope = nil
   self.binding_visitors = {
@@ -48,6 +52,8 @@ function Binder.constructor(self, ast, environment, file_path_dot)
     [SyntaxKind.type_assertion_expression] = self.bind_type_assertion_expression,
     [SyntaxKind.parameter_declaration] = self.bind_parameter_declaration,
   }
+  self.ast = ast
+  return self
 end
 function Binder.__index:bind()
   self.environment:declare_visited_source(self.file_path, true)
@@ -553,10 +559,5 @@ function Binder.__index:bind_declare_returns_statement(stat)
   else
     source_returns:bind_declaration(stat)
   end
-end
-function Binder.new(...)
-  local self = setmetatable({}, Binder)
-  Binder.constructor(self, ...)
-  return self
 end
 return Binder

@@ -1,13 +1,17 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local Identifier = setmetatable({}, SyntaxNode)
-Identifier.__index = Identifier
+local Identifier = setmetatable({}, {
+  __index = SyntaxNode,
+})
+Identifier.__index = setmetatable({}, SyntaxNode)
 function Identifier.new(name, type_annotation)
-  local super = SyntaxNode.new(SyntaxKind.identifier)
-  local self = setmetatable(super, Identifier)
+  return Identifier.constructor(setmetatable({}, Identifier), name, type_annotation)
+end
+function Identifier.constructor(self, name, type_annotation)
+  SyntaxNode.constructor(self, SyntaxKind.identifier)
+  self.symbol = nil
   self.name = name
   self.type_annotation = type_annotation
-  self.symbol = nil
   return self
 end
 return Identifier

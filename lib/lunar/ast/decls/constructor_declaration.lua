@@ -9,16 +9,20 @@ local ExpressionStatement = require("lunar.ast.stats.expression_statement")
 local FunctionStatement = require("lunar.ast.stats.function_statement")
 local ReturnStatement = require("lunar.ast.stats.return_statement")
 local ParameterDeclaration = require("lunar.ast.decls.parameter_declaration")
-local ConstructorDeclaration = setmetatable({}, SyntaxNode)
-ConstructorDeclaration.__index = ConstructorDeclaration
+local ConstructorDeclaration = setmetatable({}, {
+  __index = SyntaxNode,
+})
+ConstructorDeclaration.__index = setmetatable({}, SyntaxNode)
 function ConstructorDeclaration.new(params, block)
-  local super = SyntaxNode.new(SyntaxKind.constructor_declaration)
-  local self = setmetatable(super, ConstructorDeclaration)
+  return ConstructorDeclaration.constructor(setmetatable({}, ConstructorDeclaration), params, block)
+end
+function ConstructorDeclaration.constructor(self, params, block)
+  SyntaxNode.constructor(self, SyntaxKind.constructor_declaration)
   self.params = params
   self.block = block
   return self
 end
-function ConstructorDeclaration:lower(class_identifier, class_base_identifier)
+function ConstructorDeclaration.__index:lower(class_identifier, class_base_identifier)
   if class_base_identifier ~= nil then
     for index, stat in pairs(self.block) do
       if stat.syntax_kind == SyntaxKind.expression_statement and stat.expr.syntax_kind == SyntaxKind.function_call_expression and stat.expr.base.syntax_kind == SyntaxKind.identifier and stat.expr.base.name == "super" then

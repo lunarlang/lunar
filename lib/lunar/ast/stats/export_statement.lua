@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local ExportStatement = setmetatable({}, SyntaxNode)
-ExportStatement.__index = ExportStatement
+local ExportStatement = setmetatable({}, {
+  __index = SyntaxNode,
+})
+ExportStatement.__index = setmetatable({}, SyntaxNode)
 function ExportStatement.new(body)
-  local super = SyntaxNode.new(SyntaxKind.export_statement)
-  local self = setmetatable(super, ExportStatement)
+  return ExportStatement.constructor(setmetatable({}, ExportStatement), body)
+end
+function ExportStatement.constructor(self, body)
+  SyntaxNode.constructor(self, SyntaxKind.export_statement)
   self.body = body
   return self
 end

@@ -2,17 +2,21 @@ local BaseLexer = require("lunar.compiler.lexical.base_lexer")
 local StringUtils = require("lunar.utils.string_utils")
 local TokenInfo = require("lunar.compiler.lexical.token_info")
 local TokenType = require("lunar.compiler.lexical.token_type")
-local Lexer = setmetatable({}, BaseLexer)
-Lexer.__index = Lexer
+local function pair(type, value)
+  return {
+    type = type,
+    value = value,
+  }
+end
+local Lexer = setmetatable({}, {
+  __index = BaseLexer,
+})
+Lexer.__index = setmetatable({}, BaseLexer)
 function Lexer.new(source)
-  local function pair(type, value)
-    return {
-      type = type,
-      value = value,
-    }
-  end
-  local super = BaseLexer.new(source)
-  local self = setmetatable(super, Lexer)
+  return Lexer.constructor(setmetatable({}, Lexer), source)
+end
+function Lexer.constructor(self, source)
+  BaseLexer.constructor(self, source)
   self.trivias = {
     pair(TokenType.end_of_line_trivia, "\r\n"),
     pair(TokenType.end_of_line_trivia, "\n"),
@@ -85,7 +89,7 @@ function Lexer.new(source)
   }
   return self
 end
-function Lexer:tokenize()
+function Lexer.__index:tokenize()
   local tokens = {}
   local ok, token
   repeat
@@ -100,18 +104,18 @@ function Lexer:tokenize()
   end
   return tokens
 end
-function Lexer:next_token()
+function Lexer.__index:next_token()
   local token = self:next_trivia() or self:next_comment() or self:next_string() or self:next_number() or self:next_keyword() or self:next_of(self.operators) or self:next_identifier()
   return token ~= nil, token
 end
-function Lexer:next_of(list)
+function Lexer.__index:next_of(list)
   for _, pair in pairs(list) do
     if self:match(pair.value) then
       return TokenInfo.new(pair.type, pair.value, self.line, self:get_column())
     end
   end
 end
-function Lexer:next_trivia()
+function Lexer.__index:next_trivia()
   for _, pair in pairs(self.trivias) do
     if self:match(pair.value) then
       if pair.type == TokenType.end_of_line_trivia then
@@ -124,7 +128,7 @@ function Lexer:next_trivia()
     end
   end
 end
-function Lexer:next_comment()
+function Lexer.__index:next_comment()
   local old_pos = self.position
   if self:move_if_match("--") then
     local buffer = "--"
@@ -144,7 +148,7 @@ function Lexer:next_comment()
     return TokenInfo.new(TokenType.comment, buffer, self.line, self:get_column())
   end
 end
-function Lexer:next_string()
+function Lexer.__index:next_string()
   local block = self:next_multiline_block()
   if block then
     return TokenInfo.new(TokenType.string, block.value, self.line, self:get_column())
@@ -175,7 +179,7 @@ function Lexer:next_string()
     return TokenInfo.new(TokenType.string, delimit .. buffer .. delimit, self.line, self:get_column())
   end
 end
-function Lexer:next_number()
+function Lexer.__index:next_number()
   local c = self:peek()
   if StringUtils.is_digit(c) or (c == "." and StringUtils.is_digit(self:peek(1))) then
     local old_pos = self.position
@@ -200,13 +204,13 @@ function Lexer:next_number()
     end
   end
 end
-function Lexer:next_keyword()
+function Lexer.__index:next_keyword()
   local id = self:next_identifier()
   if id and self.keywords[id.value] then
     return TokenInfo.new(self.keywords[id.value], id.value, self.line, self:get_column())
   end
 end
-function Lexer:next_identifier()
+function Lexer.__index:next_identifier()
   local c = self:peek()
   if StringUtils.is_letter(c) or c == "_" then
     local old_pos = self.position
@@ -220,7 +224,7 @@ function Lexer:next_identifier()
     return TokenInfo.new(TokenType.identifier, buffer, self.line, self:get_column())
   end
 end
-function Lexer:next_multiline_block()
+function Lexer.__index:next_multiline_block()
   if self:peek() == "[" then
     local old_pos = self.position
     local level = self:count("=", 1)

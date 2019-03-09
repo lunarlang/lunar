@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local ParameterDeclaration = setmetatable({}, SyntaxNode)
-ParameterDeclaration.__index = ParameterDeclaration
+local ParameterDeclaration = setmetatable({}, {
+  __index = SyntaxNode,
+})
+ParameterDeclaration.__index = setmetatable({}, SyntaxNode)
 function ParameterDeclaration.new(identifier)
-  local super = SyntaxNode.new(SyntaxKind.parameter_declaration)
-  local self = setmetatable(super, ParameterDeclaration)
+  return ParameterDeclaration.constructor(setmetatable({}, ParameterDeclaration), identifier)
+end
+function ParameterDeclaration.constructor(self, identifier)
+  SyntaxNode.constructor(self, SyntaxKind.parameter_declaration)
   self.identifier = identifier
   return self
 end

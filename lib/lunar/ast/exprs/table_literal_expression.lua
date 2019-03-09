@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local TableLiteralExpression = setmetatable({}, SyntaxNode)
-TableLiteralExpression.__index = TableLiteralExpression
+local TableLiteralExpression = setmetatable({}, {
+  __index = SyntaxNode,
+})
+TableLiteralExpression.__index = setmetatable({}, SyntaxNode)
 function TableLiteralExpression.new(fields)
-  local super = SyntaxNode.new(SyntaxKind.table_literal_expression)
-  local self = setmetatable(super, TableLiteralExpression)
+  return TableLiteralExpression.constructor(setmetatable({}, TableLiteralExpression), fields)
+end
+function TableLiteralExpression.constructor(self, fields)
+  SyntaxNode.constructor(self, SyntaxKind.table_literal_expression)
   self.fields = fields
   return self
 end

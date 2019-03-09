@@ -1,8 +1,12 @@
 local SymbolTable = {}
 SymbolTable.__index = {}
+function SymbolTable.new()
+  return SymbolTable.constructor(setmetatable({}, SymbolTable))
+end
 function SymbolTable.constructor(self)
   self.values = {}
   self.types = {}
+  return self
 end
 function SymbolTable.__index:get_value(name)
   return self.values[name]
@@ -51,10 +55,5 @@ function SymbolTable.__index:merge_declarations(other)
       self.types[global_name] = other_symbol
     end
   end
-end
-function SymbolTable.new(...)
-  local self = setmetatable({}, SymbolTable)
-  SymbolTable.constructor(self, ...)
-  return self
 end
 return SymbolTable

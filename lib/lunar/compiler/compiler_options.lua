@@ -1,5 +1,8 @@
 local CompilerOptions = {}
 CompilerOptions.__index = {}
+function CompilerOptions.new(partial_options)
+  return CompilerOptions.constructor(setmetatable({}, CompilerOptions), partial_options)
+end
 function CompilerOptions.constructor(self, partial_options)
   self.root_dir = partial_options.root_dir or error("root directory must be included in compiler options")
   self.include = partial_options.include or {
@@ -9,6 +12,7 @@ function CompilerOptions.constructor(self, partial_options)
   self.map_import_path = partial_options.map_import_path or function(source_path, import_path)
     return import_path
   end
+  return self
 end
 function CompilerOptions.__index:is_included(file_path)
   local includes_has = false
@@ -32,10 +36,5 @@ function CompilerOptions.__index:is_included(file_path)
     return true
   end
   return false
-end
-function CompilerOptions.new(...)
-  local self = setmetatable({}, CompilerOptions)
-  CompilerOptions.constructor(self)
-  return self
 end
 return CompilerOptions

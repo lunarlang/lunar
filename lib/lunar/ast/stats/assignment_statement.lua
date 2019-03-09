@@ -4,14 +4,15 @@ local BinaryOpKind = require("lunar.ast.exprs.binary_op_kind")
 local BinaryOpExpression = require("lunar.ast.exprs.binary_op_expression")
 local NilLiteralExpression = require("lunar.ast.exprs.nil_literal_expression")
 local SelfAssignmentOpKind = require("lunar.ast.stats.self_assignment_op_kind")
-local AssignmentStatement = setmetatable({}, SyntaxNode)
-AssignmentStatement.__index = AssignmentStatement
+local AssignmentStatement = setmetatable({}, {
+  __index = SyntaxNode,
+})
+AssignmentStatement.__index = setmetatable({}, SyntaxNode)
 function AssignmentStatement.new(variables, operator, exprs)
-  local super = SyntaxNode.new(SyntaxKind.assignment_statement)
-  local self = setmetatable(super, AssignmentStatement)
-  self.variables = variables
-  self.operator = operator
-  self.exprs = exprs
+  return AssignmentStatement.constructor(setmetatable({}, AssignmentStatement), variables, operator, exprs)
+end
+function AssignmentStatement.constructor(self, variables, operator, exprs)
+  SyntaxNode.constructor(self, SyntaxKind.assignment_statement)
   self.binary_op_map = {
     [SelfAssignmentOpKind.concatenation_equal_op] = BinaryOpKind.concatenation_op,
     [SelfAssignmentOpKind.addition_equal_op] = BinaryOpKind.addition_op,
@@ -20,9 +21,12 @@ function AssignmentStatement.new(variables, operator, exprs)
     [SelfAssignmentOpKind.division_equal_op] = BinaryOpKind.division_op,
     [SelfAssignmentOpKind.power_equal_op] = BinaryOpKind.power_op,
   }
+  self.variables = variables
+  self.operator = operator
+  self.exprs = exprs
   return self
 end
-function AssignmentStatement:lower()
+function AssignmentStatement.__index:lower()
   if self.operator == SelfAssignmentOpKind.equal_op then
     return self
   end

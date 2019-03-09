@@ -1,13 +1,17 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local MemberExpression = setmetatable({}, SyntaxNode)
-MemberExpression.__index = MemberExpression
+local MemberExpression = setmetatable({}, {
+  __index = SyntaxNode,
+})
+MemberExpression.__index = setmetatable({}, SyntaxNode)
 function MemberExpression.new(base, member_identifier, has_colon)
+  return MemberExpression.constructor(setmetatable({}, MemberExpression), base, member_identifier, has_colon)
+end
+function MemberExpression.constructor(self, base, member_identifier, has_colon)
+  SyntaxNode.constructor(self, SyntaxKind.member_expression)
   if has_colon == nil then
     has_colon = false
   end
-  local super = SyntaxNode.new(SyntaxKind.member_expression)
-  local self = setmetatable(super, MemberExpression)
   self.base = base
   self.member_identifier = member_identifier
   self.has_colon = has_colon

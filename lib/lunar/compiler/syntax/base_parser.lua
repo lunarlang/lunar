@@ -1,17 +1,19 @@
 local TokenInfo = require("lunar.compiler.lexical.token_info")
 local TokenType = require("lunar.compiler.lexical.token_type")
 local BaseParser = {}
-BaseParser.__index = BaseParser
+BaseParser.__index = {}
 function BaseParser.new(tokens)
-  local self = setmetatable({}, BaseParser)
+  return BaseParser.constructor(setmetatable({}, BaseParser), tokens)
+end
+function BaseParser.constructor(self, tokens)
   self.position = 1
   self.tokens = tokens
   return self
 end
-function BaseParser:is_trivial(token)
+function BaseParser.__index:is_trivial(token)
   return token.token_type == TokenType.whitespace_trivia or token.token_type == TokenType.end_of_line_trivia or token.token_type == TokenType.comment
 end
-function BaseParser:count_trivias(offset)
+function BaseParser.__index:count_trivias(offset)
   if offset == nil then
     offset = 0
   end
@@ -26,7 +28,7 @@ function BaseParser:count_trivias(offset)
   end
   return 0
 end
-function BaseParser:count_trivias_from_end()
+function BaseParser.__index:count_trivias_from_end()
   local n = 0
   for i = (#self.tokens), 0, (-1) do
     local token = self.tokens[i]
@@ -38,10 +40,10 @@ function BaseParser:count_trivias_from_end()
   end
   return 0
 end
-function BaseParser:is_finished()
+function BaseParser.__index:is_finished()
   return (self.position + self:count_trivias_from_end()) > (#self.tokens)
 end
-function BaseParser:move(by)
+function BaseParser.__index:move(by)
   if by == nil then
     by = 1
   end
@@ -49,13 +51,13 @@ function BaseParser:move(by)
     self.position = self.position + self:count_trivias(by) + by
   end
 end
-function BaseParser:peek(offset)
+function BaseParser.__index:peek(offset)
   if offset == nil then
     offset = 0
   end
   return self.tokens[self.position + self:count_trivias(offset) + offset]
 end
-function BaseParser:assert(...)
+function BaseParser.__index:assert(...)
   if self:is_finished() then
     return false
   end
@@ -68,7 +70,7 @@ function BaseParser:assert(...)
     end
   end
 end
-function BaseParser:assert_seq(...)
+function BaseParser.__index:assert_seq(...)
   if self:is_finished() then
     return false
   end
@@ -85,7 +87,7 @@ function BaseParser:assert_seq(...)
   end
   return true
 end
-function BaseParser:expect(token_type, reason)
+function BaseParser.__index:expect(token_type, reason)
   if self:is_finished() then
     return false
   end
@@ -96,12 +98,12 @@ function BaseParser:expect(token_type, reason)
   end
   error(("%d:%d %s; got %s"):format(token.line, token.column, reason, token.value), 0)
 end
-function BaseParser:consume()
+function BaseParser.__index:consume()
   local token = self:peek()
   self:move(1)
   return token
 end
-function BaseParser:match(...)
+function BaseParser.__index:match(...)
   if self:is_finished() then
     return false
   end

@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local FunctionCallExpression = setmetatable({}, SyntaxNode)
-FunctionCallExpression.__index = FunctionCallExpression
+local FunctionCallExpression = setmetatable({}, {
+  __index = SyntaxNode,
+})
+FunctionCallExpression.__index = setmetatable({}, SyntaxNode)
 function FunctionCallExpression.new(base, arguments)
-  local super = SyntaxNode.new(SyntaxKind.function_call_expression)
-  local self = setmetatable(super, FunctionCallExpression)
+  return FunctionCallExpression.constructor(setmetatable({}, FunctionCallExpression), base, arguments)
+end
+function FunctionCallExpression.constructor(self, base, arguments)
+  SyntaxNode.constructor(self, SyntaxKind.function_call_expression)
   self.base = base
   self.arguments = arguments
   return self

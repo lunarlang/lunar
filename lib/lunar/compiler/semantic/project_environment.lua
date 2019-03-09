@@ -3,6 +3,9 @@ local Symbol = require("lunar.compiler.semantic.symbol")
 local CoreGlobals = require("lunar.compiler.semantic.core_globals")
 local ProjectEnvironment = {}
 ProjectEnvironment.__index = {}
+function ProjectEnvironment.new()
+  return ProjectEnvironment.constructor(setmetatable({}, ProjectEnvironment))
+end
 function ProjectEnvironment.constructor(self)
   self.returns_map = {}
   self.visited_sources_map = {}
@@ -10,12 +13,8 @@ function ProjectEnvironment.constructor(self)
   self.globals_map = {}
   self.imports_map = {}
   self.env_globals = SymbolTable.new()
-  self:inject_globals(CoreGlobals)
   self.linked = false
-end
-function ProjectEnvironment.new(...)
-  local self = setmetatable({}, ProjectEnvironment)
-  ProjectEnvironment.constructor(self, ...)
+  self:inject_globals(CoreGlobals)
   return self
 end
 function ProjectEnvironment.__index:declare_visited_source(source_path_dot, exists)

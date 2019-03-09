@@ -2,16 +2,15 @@ local Scope = require("lunar.compiler.semantic.scope")
 local ProjectEnvironment = require("lunar.compiler.semantic.project_environment")
 local BaseBinder = {}
 BaseBinder.__index = {}
+function BaseBinder.new(environment, file_path_dot)
+  return BaseBinder.constructor(setmetatable({}, BaseBinder), environment, file_path_dot)
+end
 function BaseBinder.constructor(self, environment, file_path_dot)
   self.scope = nil
   self.root_scope = nil
   self.level = 0
   self.environment = environment or ProjectEnvironment.new()
   self.file_path = file_path_dot or "src"
-end
-function BaseBinder.new(...)
-  local self = setmetatable({}, BaseBinder)
-  BaseBinder.constructor(self, ...)
   return self
 end
 function BaseBinder.__index:push_scope(incrementLevel)

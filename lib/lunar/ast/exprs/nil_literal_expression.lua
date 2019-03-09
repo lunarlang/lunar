@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local NilLiteralExpression = setmetatable({}, SyntaxNode)
-NilLiteralExpression.__index = NilLiteralExpression
+local NilLiteralExpression = setmetatable({}, {
+  __index = SyntaxNode,
+})
+NilLiteralExpression.__index = setmetatable({}, SyntaxNode)
 function NilLiteralExpression.new()
-  local super = SyntaxNode.new(SyntaxKind.nil_literal_expression)
-  local self = setmetatable(super, NilLiteralExpression)
+  return NilLiteralExpression.constructor(setmetatable({}, NilLiteralExpression))
+end
+function NilLiteralExpression.constructor(self)
+  SyntaxNode.constructor(self, SyntaxKind.nil_literal_expression)
   return self
 end
 return NilLiteralExpression

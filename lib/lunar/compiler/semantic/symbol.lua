@@ -1,7 +1,9 @@
 local Symbol = {}
 Symbol.__index = {}
+function Symbol.new(name)
+  return Symbol.constructor(setmetatable({}, Symbol), name)
+end
 function Symbol.constructor(self, name)
-  self.name = name
   self.assignment_references = {}
   self.references = {}
   self.declarations = {}
@@ -9,6 +11,8 @@ function Symbol.constructor(self, name)
   self.builtin = false
   self.members = nil
   self.exports = nil
+  self.name = name
+  return self
 end
 function Symbol.__index:is_builtin()
   return self.builtin
@@ -99,12 +103,7 @@ function Symbol.__index:merge_into(new_symbol)
     end
   end
 end
-Symbol.__tostring = function(self)
+function Symbol.__index:__tostring()
   return "Symbol ('" .. tostring(self.name) .. "')"
-end
-function Symbol.new(...)
-  local self = setmetatable({}, Symbol)
-  Symbol.constructor(self, ...)
-  return self
 end
 return Symbol

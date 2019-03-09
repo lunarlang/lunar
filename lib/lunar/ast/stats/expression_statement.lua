@@ -1,10 +1,14 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local ExpressionStatement = setmetatable({}, SyntaxNode)
-ExpressionStatement.__index = ExpressionStatement
+local ExpressionStatement = setmetatable({}, {
+  __index = SyntaxNode,
+})
+ExpressionStatement.__index = setmetatable({}, SyntaxNode)
 function ExpressionStatement.new(expr)
-  local super = SyntaxNode.new(SyntaxKind.expression_statement)
-  local self = setmetatable(super, ExpressionStatement)
+  return ExpressionStatement.constructor(setmetatable({}, ExpressionStatement), expr)
+end
+function ExpressionStatement.constructor(self, expr)
+  SyntaxNode.constructor(self, SyntaxKind.expression_statement)
   self.expr = expr
   return self
 end
