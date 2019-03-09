@@ -1,0 +1,75 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+local BinaryOpKind = require "lunar.ast.exprs.binary_op_kind"
+local BinaryOpExpression = require "lunar.ast.exprs.binary_op_expression"
+local NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression"
+local SelfAssignmentOpKind = require "lunar.ast.stats.self_assignment_op_kind"
+
+local AssignmentStatement = setmetatable({}, SyntaxNode)
+AssignmentStatement.__index = AssignmentStatement
+
+function AssignmentStatement.new(variables, operator, exprs)
+  local super = SyntaxNode.new(SyntaxKind.assignment_statement)
+  local self = setmetatable(super, AssignmentStatement)
+  self.variables = variables
+  self.operator = operator
+  self.exprs = exprs
+
+  self.binary_op_map = {
+    [SelfAssignmentOpKind.concatenation_equal_op] = BinaryOpKind.concatenation_op,
+    [SelfAssignmentOpKind.addition_equal_op] = BinaryOpKind.addition_op,
+    [SelfAssignmentOpKind.subtraction_equal_op] = BinaryOpKind.subtraction_op,
+    [SelfAssignmentOpKind.multiplication_equal_op] = BinaryOpKind.multiplication_op,
+    [SelfAssignmentOpKind.division_equal_op] = BinaryOpKind.division_op,
+    [SelfAssignmentOpKind.power_equal_op] = BinaryOpKind.power_op,
+  }
+
+  return self
+end
+
+function AssignmentStatement:lower()
+  if self.operator == SelfAssignmentOpKind.equal_op then
+    return self -- as is
+  end
+
+  -- otherwise, we need to rewrite the assignments using this operator
+  local variables = {}
+  local exprs = {}
+
+  for index, expr in pairs(self.exprs) do
+    -- when we are given "a, b += 1, 2, c()"
+    -- lua will evaluate 1, 2, and c()
+    -- the problem is, if we discarded the 3rd expression
+    -- then we would accidentally introduce a subtle bug where c wasn't called
+    -- however, lua would call c despite it not being assigned to any variable
+    -- solution: don't do any self-assignability and don't discard expressions where its variables is out of range
+    -- so the result should be: "a, b = a + 1, b + 2, c()"
+
+    local variable = self.variables[index]
+    if variable ~= nil then
+      table.insert(variables, variable)
+      local op = self.binary_op_map[self.operator]
+      table.insert(exprs, BinaryOpExpression.new(variable, op, expr))
+    else
+      -- simply insert while doing nothing with it
+      table.insert(exprs, expr)
+    end
+  end
+
+  -- possibly have variables without any corresponding expressions?
+  if #self.variables > #variables then
+    -- if the variables without their corresponding expressions are a part of this self-assignment
+    -- we should rewrite these still, but with nil as the right operand so that it'll throw an error at runtime
+
+    for index = #variables, #self.variables do
+      local variable = self.variables[index]
+      table.insert(variables, variable)
+      local op = self.binary_op_map[self.operator]
+      table.insert(exprs, BinaryOpExpression.new(variable, op, NilLiteralExpression.new()))
+    end
+  end
+
+  return AssignmentStatement.new(variables, SelfAssignmentOpKind.equal_op, exprs)
+end
+
+return AssignmentStatement
