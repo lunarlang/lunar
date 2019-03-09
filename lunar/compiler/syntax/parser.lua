@@ -49,7 +49,7 @@ end
 
 function Parser:parse()
   local block = self:block()
-  self:move() -- force skip trivial token at end of file
+  self:move(0) -- force skip trivial token at end of file
 
   if not self:is_finished() then
     local weird_token = self:peek()
