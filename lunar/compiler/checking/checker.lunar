@@ -46,7 +46,7 @@ class Checker
     [SyntaxKind.parameter_declaration] = self.visit_parameter_declaration,
   }
 
-  constructor(self, ast, linked_env, is_ambient_context)
+  constructor(ast, linked_env, is_ambient_context)
     self.ast = ast
     self.env = linked_env
     self.is_ambient_context = is_ambient_context or false
