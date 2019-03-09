@@ -48,6 +48,8 @@ function Parser.new(tokens)
 end
 
 function Parser:parse()
+  -- ignore trivial tokens at start of file
+  self.position = self.position + self:count_trivias()
   local block = self:block()
 
   if not self:is_finished() then
