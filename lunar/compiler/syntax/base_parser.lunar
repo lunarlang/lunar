@@ -23,7 +23,7 @@ class BaseParser
       local token = self.tokens[i]
 
       if self:is_trivial(token) then
-        n = n + 1
+        n += 1
       else
         return n
       end
@@ -39,7 +39,7 @@ class BaseParser
       local token = self.tokens[i]
 
       if self:is_trivial(token) then
-        n = n + 1
+        n += 1
       else
         return n
       end
@@ -56,7 +56,7 @@ class BaseParser
     if by == nil then by = 1 end
 
     if not self:is_finished() then
-      self.position = self.position + self:count_trivias(by) + by
+      self.position += self:count_trivias(by) + by
     end
   end
 
@@ -100,7 +100,7 @@ class BaseParser
         return false
       end
 
-      non_trivial_count = non_trivial_count + 1
+      non_trivial_count += 1
     end
 
     return true

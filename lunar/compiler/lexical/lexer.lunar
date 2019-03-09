@@ -138,7 +138,7 @@ class Lexer << BaseLexer
         if pair.type == TokenType.end_of_line_trivia then
           local lineToken = TokenInfo.new(pair.type, pair.value, self.line, self:get_column())
 
-          self.line = self.line + 1
+          self.line += 1
           self.line_begins = self.position + #pair.value - 1
 
           return lineToken
@@ -168,7 +168,7 @@ class Lexer << BaseLexer
           break
         end
 
-        buffer = buffer .. self:consume()
+        buffer ..= self:consume()
       end
 
       self.position = old_pos
@@ -203,12 +203,8 @@ class Lexer << BaseLexer
         end
 
         -- we just escaped something last step!
-        if escaping then
-          escaping = false
-        else
-          escaping = self:peek() == "\\"
-        end
-        buffer = buffer .. self:consume()
+        escaping = not escaping and self:peek() == "\\" or false
+        buffer ..= self:consume()
       until not escaping and self:match(delimit)
 
       self.position = old_pos
@@ -226,14 +222,14 @@ class Lexer << BaseLexer
       local buffer = ""
 
       repeat
-        buffer = buffer .. self:consume()
+        buffer ..= self:consume()
       until not (StringUtils.is_digit(self:peek()) or self:match("."))
 
       if self:match("e") or self:match("E") then
-        buffer = buffer .. self:consume()
+        buffer ..= self:consume()
 
         if self:match("+") or self:match("-") then
-          buffer = buffer .. self:consume()
+          buffer ..= self:consume()
         end
       end
 
@@ -242,7 +238,7 @@ class Lexer << BaseLexer
           or StringUtils.is_letter(self:peek())
           or self:match("_")
         ) do
-        buffer = buffer .. self:consume()
+        buffer ..= self:consume()
       end
 
       if tonumber(buffer) then
@@ -271,7 +267,7 @@ class Lexer << BaseLexer
       local lookahead
 
       repeat
-        buffer = buffer .. self:consume()
+        buffer ..= self:consume()
         lookahead = self:peek()
       until not (StringUtils.is_letter(lookahead) or lookahead == "_" or StringUtils.is_digit(lookahead))
 
@@ -297,15 +293,14 @@ class Lexer << BaseLexer
           self:error("unfinished string near <eof>")
         end
 
-        buffer = buffer .. self:consume()
+        buffer ..= self:consume()
       until self:match("]" .. ("="):rep(level) .. "]")
 
       self.position = old_pos
-      buffer = buffer .. "]" .. ("="):rep(level) .. "]"
+      buffer ..= "]" .. ("="):rep(level) .. "]"
       return TokenInfo.new(TokenType.block, buffer, self.line, self:get_column())
     end
   end
 end
-
 
 return Lexer

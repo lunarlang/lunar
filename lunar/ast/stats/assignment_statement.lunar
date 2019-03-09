@@ -69,5 +69,4 @@ class AssignmentStatement << SyntaxNode
   end
 end
 
-
 return AssignmentStatement

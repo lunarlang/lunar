@@ -15,7 +15,7 @@ class BaseBinder
   -- Adds to the linked list of scopes
   function push_scope(incrementLevel)
     if incrementLevel then
-      self.level = self.level + 1
+      self.level += 1
     end
     self.scope = Scope.new(self.level, self.scope, self.environment, self.file_path)
 
@@ -29,7 +29,7 @@ class BaseBinder
       table.insert(removed_scopes, self.scope)
       self.scope = self.scope.parent
     until not self.scope or self.scope.level < self.level
-    self.level = self.level - 1
+    self.level -= 1
 
     return removed_scopes
   end

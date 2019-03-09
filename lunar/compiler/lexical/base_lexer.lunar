@@ -50,7 +50,7 @@ class BaseLexer
   function move(by)
     if by == nil then by = 0 end
 
-    self.position = self.position + by
+    self.position += by
   end
 
   function match(str)
