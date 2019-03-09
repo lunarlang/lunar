@@ -1,16 +1,13 @@
 local SyntaxNode = {}
-SyntaxNode.__index = SyntaxNode
-
+SyntaxNode.__index = {}
 function SyntaxNode.new(syntax_kind)
-  local self = setmetatable({}, SyntaxNode)
+  return SyntaxNode.constructor(setmetatable({}, SyntaxNode), syntax_kind)
+end
+function SyntaxNode.constructor(self, syntax_kind)
   self.syntax_kind = syntax_kind
-
   return self
 end
-
-function SyntaxNode:lower()
-  -- returns whether this node can be lowered, if true returns the lowered node(s)
+function SyntaxNode.__index:lower()
   return nil
 end
-
 return SyntaxNode
