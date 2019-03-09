@@ -23,4 +23,4 @@ script:
   - busted -C ./dist --verbose --coverage
 
 after_success:
-  - luacov-coveralls -r ./dist/lunar -e $TRAVIS_BUILD_DIR/lua_install -e "_spec"
+  - luacov-coveralls -r ./dist/lunar -e $TRAVIS_BUILD_DIR/dist/lua_install -e "_spec"
