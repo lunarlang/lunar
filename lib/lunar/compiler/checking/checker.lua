@@ -1,22 +1,17 @@
-local SyntaxKind = require 'lunar.ast.syntax_kind'
-
+local SyntaxKind = require('lunar.ast.syntax_kind')
 local Checker = {}
 Checker.__index = {}
-
 function Checker.new(...)
   local self = setmetatable({}, Checker)
   Checker.constructor(self, ...)
   return self
 end
-
 function Checker.constructor(self, ast, linked_env, is_ambient_context)
   self.ast = ast
   self.env = linked_env
   self.is_ambient_context = is_ambient_context or false
-  self.in_import_header = true -- True if no non-import statements have been made
-
+  self.in_import_header = true
   self.visitors = {
-    -- Statements
     [SyntaxKind.variable_statement] = self.visit_variable_statement,
     [SyntaxKind.do_statement] = self.visit_do_statement,
     [SyntaxKind.if_statement] = self.visit_if_statement,
@@ -35,8 +30,6 @@ function Checker.constructor(self, ast, linked_env, is_ambient_context)
     [SyntaxKind.declare_returns_statement] = self.visit_declare_returns_statement,
     [SyntaxKind.import_statement] = self.visit_import_statement,
     [SyntaxKind.export_statement] = self.visit_export_statement,
-    
-    -- Expressions
     [SyntaxKind.prefix_expression] = self.visit_prefix_expression,
     [SyntaxKind.lambda_expression] = self.visit_lambda_expression,
     [SyntaxKind.member_expression] = self.visit_member_expression,
@@ -54,65 +47,53 @@ function Checker.constructor(self, ast, linked_env, is_ambient_context)
     [SyntaxKind.identifier] = self.visit_identifier,
     [SyntaxKind.index_expression] = self.visit_index_expression,
     [SyntaxKind.type_assertion_expression] = self.visit_type_assertion_expression,
-
-    -- Declarations
     [SyntaxKind.parameter_declaration] = self.visit_parameter_declaration,
   }
 end
-
 function Checker.__index:check()
-  if not self.env.linked then
+  if (not self.env.linked) then
     error("Cannot check in an unlinked environment")
   end
   self:visit_statements(self.ast)
 end
-
 function Checker.__index:visit_statements(stats)
-  for i = 1, #stats do
+  for i = 1, (#stats) do
     self:visit_statement(stats[i])
   end
 end
-
 function Checker.__index:visit_expression_list(exprs)
-  for i = 1, #exprs do
+  for i = 1, (#exprs) do
     self:visit_node(exprs[i])
   end
 end
-
 function Checker.__index:visit_statement(stat)
-  -- Update context for non-import statements
   if stat.syntax_kind ~= SyntaxKind.import_statement then
     self.in_import_header = false
   end
-
   self:visit_node(stat)
 end
-
 function Checker.__index:visit_node(node)
   local visitor = self.visitors[node.syntax_kind]
   if visitor then
     visitor(self, node)
   end
 end
-
 function Checker.__index:visit_import_statement(stat)
-  if not self.in_import_header then
+  if (not self.in_import_header) then
     error("Imports must be declared at the top of a file")
   end
 end
-
 function Checker.__index:visit_declare_returns_statement(stat)
-  if not self.is_ambient_context then
+  if (not self.is_ambient_context) then
     error("Declare statements can only be made in a declaration file context")
   end
   self:visit_type_expression(stat.type_expr)
 end
-
 function Checker.__index:visit_declare_global_statement(stat)
-  if not self.is_ambient_context then
+  if (not self.is_ambient_context) then
     error("Declare statements can only be made in a declaration file context")
   end
-  if not stat.is_type_declaration then
+  if (not stat.is_type_declaration) then
     if stat.identifier.type_annotation then
       self:visit_type_expression(stat.identifier.type_annotation)
     end
@@ -120,50 +101,35 @@ function Checker.__index:visit_declare_global_statement(stat)
     error("Global type declarations are not yet supported")
   end
 end
-
 function Checker.__index:visit_declare_package_statement(stat)
-  if not self.is_ambient_context then
+  if (not self.is_ambient_context) then
     error("Declare statements can only be made in a declaration file context")
   end
   self:visit_type_expression(stat.type_expr)
 end
-
 function Checker.__index:visit_type_expression(expr)
-  -- Pass
 end
-
 function Checker.__index:visit_variable_statement(stat)
   local assignments = stat.exprlist
-
   if assignments then
-      self:visit_expression_list(assignments)
+    self:visit_expression_list(assignments)
   end
 end
-
 function Checker.__index:visit_do_statement(stat)
   self:visit_statements(stat.block)
 end
-
 function Checker.__index:visit_if_statement(stat)
-  -- Condition
   if stat.expr then
     self:visit_node(stat.expr)
   end
-
-  -- Block
   self:visit_statements(stat.block)
-
-  -- Elseif clauses
   self:visit_expression_list(stat.elseif_branches)
-
-  -- Else clause
   if stat.else_branch then
     self:visit_node(stat.else_branch)
   end
 end
-
 function Checker.__index:visit_class_statement(stat)
-  for i = 1, #stat.members do
+  for i = 1, (#stat.members) do
     local member = stat.members[i]
     if member.syntax_kind == SyntaxKind.class_function_declaration then
       self:visit_class_function_declaration(member)
@@ -174,39 +140,28 @@ function Checker.__index:visit_class_statement(stat)
     end
   end
 end
-
 function Checker.__index:visit_class_field_declaration(decl)
   if decl.value then
     self:visit_node(decl.value)
   end
 end
-
 function Checker.__index:visit_class_function_declaration(decl)
   self:visit_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
 end
-
 function Checker.__index:visit_class_constructor_declaration(decl)
   self:visit_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
 end
-
 function Checker.__index:visit_while_statement(stat)
-  -- Condition
   self:visit_node(stat.expr)
-
-  -- Block
   self:visit_statements(stat.block)
 end
-
 function Checker.__index:visit_break_statement(stat)
-  -- Pass
 end
-
 function Checker.__index:visit_return_statement(stat)
   if stat.exprlist then
     self:visit_expression_list(stat.exprlist)
   end
 end
-
 function Checker.__index:visit_export_statement(stat)
   local inner_stat = stat.body
   if inner_stat.syntax_kind == SyntaxKind.variable_statement then
@@ -217,61 +172,47 @@ function Checker.__index:visit_export_statement(stat)
     self:visit_class_statement(inner_stat)
   end
 end
-
 function Checker.__index:visit_function_statement(stat)
-  -- stat.base should be an identifier in local statements; the identifier should be included in the
-  -- function's block scope
-  if not stat.is_local then
+  if (not stat.is_local) then
     if stat.base.syntax_kind == SyntaxKind.member_expression then
       self:visit_member_expression(stat.base)
     end
   end
-
   self:visit_function_like_expression(stat.parameters, stat.block, stat.return_type_annotation)
 end
-
 function Checker.__index:visit_range_for_statement(stat)
   self:visit_node(stat.start_expr)
   self:visit_node(stat.end_expr)
   if stat.incremental_expr then
     self:visit_node(stat.incremental_expr)
   end
-
   self:visit_statements(stat.block)
 end
-
 function Checker.__index:visit_expression_statement(stat)
   self:visit_node(stat.expr)
 end
-
 function Checker.__index:visit_assignment_statement(stat)
   self:visit_expression_list(stat.exprs)
-
-  for i = 1, #stat.variables do
+  for i = 1, (#stat.variables) do
     local variable = stat.variables[i]
     self:visit_node(variable)
   end
 end
-
 function Checker.__index:visit_generic_for_statement(stat)
   self:visit_expression_list(stat.exprlist)
   self:visit_statements(stat.block)
 end
-
 function Checker.__index:visit_repeat_until_statement(stat)
   self:visit_statements(stat.block)
   self:visit_node(stat.expr)
 end
-
 function Checker.__index:visit_prefix_expression(stat)
   self:visit_node(stat.expr)
 end
-
 function Checker.__index:visit_lambda_expression(stat)
   if stat.expr then
     self:visit_node(stat.expr)
   end
-
   self:visit_expression_list(stat.parameters)
   if stat.implicit_return then
     self:visit_node(stat.body)
@@ -279,51 +220,39 @@ function Checker.__index:visit_lambda_expression(stat)
     self:visit_statements(stat.body)
   end
 end
-
 function Checker.__index:visit_member_expression(expr)
   self:visit_node(expr.base)
 end
-
 function Checker.__index:visit_index_expression(expr)
   self:visit_node(expr.base)
   self:visit_node(expr.index)
 end
-
 function Checker.__index:visit_argument_expression(expr)
   self:visit_node(expr.value)
 end
-
 function Checker.__index:visit_function_like_expression(params, block, return_type_annotation)
   self:visit_expression_list(params)
   self:visit_statements(block)
-
   if return_type_annotation then
     self:visit_type_expression(return_type_annotation)
   end
 end
-
 function Checker.__index:visit_function_expression(expr)
   self:visit_function_like_expression(expr.parameters, expr.block, expr.return_type_annotation)
 end
-
 function Checker.__index:visit_unary_op_expression(expr)
   self:visit_node(expr.right_operand)
 end
-
 function Checker.__index:visit_binary_op_expression(expr)
   self:visit_node(expr.left_operand)
   self:visit_node(expr.right_operand)
 end
-
 function Checker.__index:visit_nil_literal_expression(expr)
-  -- Pass
 end
-
 function Checker.__index:visit_function_call_expression(expr)
   self:visit_node(expr.base)
   self:visit_expression_list(expr.arguments)
 end
-
 function Checker.__index:visit_table_literal_expression(expr)
   if expr.syntax_kind == SyntaxKind.index_field_declaration then
     self:visit_index_field_declaration(expr)
@@ -333,43 +262,28 @@ function Checker.__index:visit_table_literal_expression(expr)
     self:visit_sequential_field_declaration(expr)
   end
 end
-
 function Checker.__index:visit_index_field_declaration(expr, table_literal_symbol)
   self:visit_node(expr.key)
   self:visit_node(expr.value)
 end
-
 function Checker.__index:visit_member_field_declaration(expr)
   self:visit_node(expr.value)
 end
-
 function Checker.__index:visit_sequential_field_declaration(expr)
   self:visit_node(expr.value)
 end
-
 function Checker.__index:visit_number_literal_expression(expr)
-  -- Pass
 end
-
 function Checker.__index:visit_string_literal_expression(expr)
-  -- Pass
 end
-
 function Checker.__index:visit_boolean_literal_expression(expr)
-  -- Pass
 end
-
 function Checker.__index:visit_variable_argument_expression(expr)
-  -- Pass
 end
-
 function Checker.__index:visit_type_assertion_expression(expr)
   self:visit_node(expr.base)
   self:visit_type_expression(expr.type)
 end
-
 function Checker.__index:visit_parameter_declaration(expr)
-  -- Pass
 end
-
 return Checker

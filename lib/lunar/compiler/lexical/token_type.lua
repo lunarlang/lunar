@@ -1,15 +1,11 @@
 return {
   whitespace_trivia = 1,
   end_of_line_trivia = 2,
-
-  -- tokens with any values (1xx)
   identifier = 100,
   string = 101,
   block = 102,
   comment = 103,
   number = 104,
-
-  -- keywords (2xx)
   and_keyword = 200,
   break_keyword = 201,
   do_keyword = 202,
@@ -35,8 +31,6 @@ return {
   declare_keyword = 222,
   import_keyword = 223,
   export_keyword = 224,
-
-  -- operators (4xx)
   plus = 400,
   minus = 401,
   asterisk = 402,
