@@ -20,6 +20,7 @@ install:
 
 script:
   - lunarc
+  - cd ./dist
   - busted --verbose --coverage
 
 after_success:
