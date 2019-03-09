@@ -96,6 +96,7 @@ Alternatively, you can download the source as a zipped file. In the top right of
 
 #### Installing
   - Linux
+    - Run `chmod +x ./install.sh`
     - Run `sudo ./install.sh`
     - Test by running `lunarc`
   - Windows
