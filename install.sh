@@ -29,5 +29,5 @@ fi
 cp ./bin/lunarc $CMD_TARGET_DIR
 chmod +x $CMD_TARGET_DIR/lunarc
 mkdir -p $LIB_TARGET_DIR/lunar
-cp -r ./lunar $LIB_TARGET_DIR
+cp -r ./dist/lunar $LIB_TARGET_DIR
 echo "Lunar has been installed."

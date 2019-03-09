@@ -1,6 +1,6 @@
 $targetDir = Join-Path $env:APPDATA "Lunar"
 $binDir = Join-Path $PSScriptRoot "bin"
-$lunarDir = Join-Path $PSScriptRoot "lunar"
+$lunarDir = Join-Path $PSScriptRoot "dist/lunar"
 
 $windowsId = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 $windowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($windowsId)

@@ -1,5 +1,5 @@
 language: python
-sudo: false
+sudo: required
 
 env:
   - LUA="lua=5.1"
@@ -14,8 +14,12 @@ install:
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
+  - lua ./lib/lunar/lunarc/init.lua
+  - chmod +x ./install.sh
+  - sudo ./install.sh
 
 script:
+  - lunarc
   - busted --verbose --coverage
 
 after_success:
