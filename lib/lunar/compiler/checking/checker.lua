@@ -1,10 +1,10 @@
 local SyntaxKind = require('lunar.ast.syntax_kind')
 local Checker = {}
 Checker.__index = {}
-function Checker.new(self, ast, linked_env, is_ambient_context)
-  return Checker.constructor(setmetatable({}, Checker), self, ast, linked_env, is_ambient_context)
+function Checker.new(ast, linked_env, is_ambient_context)
+  return Checker.constructor(setmetatable({}, Checker), ast, linked_env, is_ambient_context)
 end
-function Checker.constructor(self, self, ast, linked_env, is_ambient_context)
+function Checker.constructor(self, ast, linked_env, is_ambient_context)
   self.in_import_header = true
   self.visitors = {
     [SyntaxKind.variable_statement] = self.visit_variable_statement,
