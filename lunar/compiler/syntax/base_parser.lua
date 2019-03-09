@@ -12,6 +12,12 @@ function BaseParser.new(tokens)
   return self
 end
 
+function BaseParser:is_trivial(token)
+  return token.token_type == TokenType.whitespace_trivia
+      or token.token_type == TokenType.end_of_line_trivia
+      or token.token_type == TokenType.comment
+end
+
 function BaseParser:count_trivias(offset)
   if offset == nil then offset = 0 end
 
@@ -20,9 +26,23 @@ function BaseParser:count_trivias(offset)
   for i = self.position + offset, #self.tokens do
     local token = self.tokens[i]
 
-    if token.token_type == TokenType.whitespace_trivia
-      or token.token_type == TokenType.end_of_line_trivia
-      or token.token_type == TokenType.comment then
+    if self:is_trivial(token) then
+      n = n + 1
+    else
+      return n
+    end
+  end
+
+  return 0
+end
+
+function BaseParser:count_trivias_from_end()
+  local n = 0
+
+  for i = #self.tokens, 0, -1 do
+    local token = self.tokens[i]
+
+    if self:is_trivial(token) then
       n = n + 1
     else
       return n
@@ -33,7 +53,7 @@ function BaseParser:count_trivias(offset)
 end
 
 function BaseParser:is_finished()
-  return self.position > #self.tokens
+  return (self.position + self:count_trivias_from_end()) > #self.tokens
 end
 
 function BaseParser:move(by)
