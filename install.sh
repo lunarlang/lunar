@@ -26,6 +26,8 @@ if [ -f $CMD_TARGET_DIR/lunarc ]; then
   fi
 fi
 
+export LUA_PATH="./lib/?.lua;./lib/?/init.lua;$LUA_PATH"
+lua ./lib/lunar/lunarc/init.lua
 cp ./bin/lunarc $CMD_TARGET_DIR
 chmod +x $CMD_TARGET_DIR/lunarc
 mkdir -p $LIB_TARGET_DIR/lunar

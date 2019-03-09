@@ -25,6 +25,8 @@ if (!$windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::
     }
   }
 
+  $env:LUA_PATH = "./lib/?.lua;./lib/?/init.lua;$env:LUA_PATH"
+  Start-Process lua -ArgumentList "$PSScriptRoot/lib/lunar/lunarc/init.lua"
   Copy-Item -Path $binDir,$lunarDir -Destination $targetDir -Container -Recurse
 
   $env:PATH += ";" + $targetDir
