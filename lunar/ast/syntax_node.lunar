@@ -1,0 +1,12 @@
+class SyntaxNode
+  constructor(syntax_kind)
+    self.syntax_kind = syntax_kind
+  end
+
+  function lower()
+    -- returns whether this node can be lowered, if true returns the lowered node(s)
+    return nil
+  end
+end
+
+return SyntaxNode
