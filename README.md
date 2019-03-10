@@ -69,6 +69,23 @@ end
   - implements a language server for LSP features (intellisense, goto def, etc)
   - interoperate with Lua, both ways. Code written in Lunar should be as easy to use in Lua.
 
+## Roadmap
+These are the general idea of what we want to implement for Lunar. It does not cover everything in detail, and it's not strictly in any particular order.
+  - Syntax
+    - [x] Classes
+    - [x] Self-assignment operators
+    - [x] Lambda expressions
+    - [ ] Import/export
+    - [ ] Interfaces
+    - [ ] Extension methods
+  - Language Features (via Lunar's Compiler API)
+    - [ ] Semantic highlighting
+    - [ ] Static type checking
+    - [ ] Intellisense
+    - [ ] Static code analyzers
+    - [ ] Code refactorings/rewriters
+    - [ ] Linting with autofixes where possible.
+
 ## Getting Started
 Lunar is written for Lua 5.1, therefore you need the Lua 5.1 runtime. On some installs of Lua, you might not have `./?.lua` and `./?/init.lua` in your `LUA_PATH`. Configure your system environment variables and append `;./?.lua;./?/init.lua` into `LUA_PATH`.
 
