@@ -107,6 +107,19 @@ describe("Variables transpilation", do
     assert.equal(4, program.result[2])
   end)
 
+  it("should support self-assigning to a and b with the remainder", do
+    local input = "local a, b = 1, 3; a, b %= 1, 2; return a, b"
+
+    local tokens = Lexer.new(input):tokenize()
+    local ast = Parser.new(tokens):parse()
+    local result = Transpiler.new(ast):transpile()
+
+    local program = Program.new(result):run()
+
+    assert.equal(0, program.result[1])
+    assert.equal(1, program.result[2])
+  end)
+
   it("should support self-assigning with overflowing expressions", do
     local input = "local a = 1; a += 1, b()"
 

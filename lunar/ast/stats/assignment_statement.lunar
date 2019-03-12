@@ -13,6 +13,7 @@ class AssignmentStatement << SyntaxNode
     [SelfAssignmentOpKind.multiplication_equal_op] = BinaryOpKind.multiplication_op,
     [SelfAssignmentOpKind.division_equal_op] = BinaryOpKind.division_op,
     [SelfAssignmentOpKind.power_equal_op] = BinaryOpKind.power_op,
+    [SelfAssignmentOpKind.remainder_equal_op] = BinaryOpKind.modulus_op,
   }
 
   constructor(variables, operator, exprs)

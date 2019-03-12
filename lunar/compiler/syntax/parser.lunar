@@ -50,6 +50,7 @@ class Parser << BaseParser
     ["*="] = AST.SelfAssignmentOpKind.multiplication_equal_op,
     ["/="] = AST.SelfAssignmentOpKind.division_equal_op,
     ["^="] = AST.SelfAssignmentOpKind.power_equal_op,
+    ["%="] = AST.SelfAssignmentOpKind.remainder_equal_op,
   }
 
   constructor(tokens)
@@ -326,7 +327,8 @@ class Parser << BaseParser
           TokenType.minus_equal,
           TokenType.asterisk_equal,
           TokenType.slash_equal,
-          TokenType.caret_equal
+          TokenType.caret_equal,
+          TokenType.percent_equal,
         }
 
         local op

@@ -62,6 +62,7 @@ class Lexer << BaseLexer
     pair(TokenType.asterisk_equal, "*="),
     pair(TokenType.slash_equal, "/="),
     pair(TokenType.caret_equal, "^="),
+    pair(TokenType.percent_equal, "%="),
     pair(TokenType.double_left_angle, "<<"),
 
     pair(TokenType.left_paren, "("),

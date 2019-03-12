@@ -104,6 +104,16 @@ describe("AssignmentStatement syntax", do
     assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.power_equal_op, exprs) }, result)
   end)
 
+  it("should return one AssignmentStatement whose operator is remainder_equal_op", do
+    local tokens = Lexer.new("hello %= 1"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local variables = { AST.Identifier.new("hello") }
+    local exprs = { AST.NumberLiteralExpression.new(1) }
+
+    assert.same({ AST.AssignmentStatement.new(variables, AST.SelfAssignmentOpKind.remainder_equal_op, exprs) }, result)
+  end)
+
   it("should return one AssignmentStatement with one identifier and two expressions with concatenation_equal_op", do
     local tokens = Lexer.new("hello ..= 'world', a()"):tokenize()
     local result = Parser.new(tokens):parse()
