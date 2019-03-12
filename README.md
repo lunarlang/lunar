@@ -5,7 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/lunarlang/lunar/badge.svg?branch=master)](https://coveralls.io/github/lunarlang/lunar?branch=master)
 [![Discord Server](https://discordapp.com/api/guilds/517093929770942474/embed.png)](https://discord.gg/CHFC3pS)
 
-The Lua 5.1 superset programming language.
+The Lua 5.1 superset programming language. Check out the [language documentation](https:/github.com/lunarlang/evolution) which contains information about Lunar's syntax and semantics.
 
 ## Examples
 Classes, the staple of object-oriented programming, is implemented in Lunar.
