@@ -1,11 +1,14 @@
-<div align="center"><img src="https://i.imgur.com/8fH3GcD.png"/></div>
+<div align="center">
+  <img src="https://i.imgur.com/8fH3GcD.png"/>
 
-# Lunar
-[![Build Status](https://travis-ci.org/lunarlang/lunar.svg?branch=master)](https://travis-ci.org/lunarlang/lunar)
-[![Coverage Status](https://coveralls.io/repos/github/lunarlang/lunar/badge.svg?branch=master)](https://coveralls.io/github/lunarlang/lunar?branch=master)
-[![Discord Server](https://discordapp.com/api/guilds/517093929770942474/embed.png)](https://discord.gg/CHFC3pS)
+  # Lunar
+  [![Build Status](https://travis-ci.org/lunarlang/lunar.svg?branch=master)](https://travis-ci.org/lunarlang/lunar)
+  [![Coverage Status](https://coveralls.io/repos/github/lunarlang/lunar/badge.svg?branch=master)](https://coveralls.io/github/lunarlang/lunar?branch=master)
+  [![Discord Server](https://discordapp.com/api/guilds/517093929770942474/embed.png)](https://discord.gg/CHFC3pS)
 
-The Lua 5.1 superset programming language. Check out the [language documentation](https:/github.com/lunarlang/evolution) which contains information about Lunar's syntax and semantics.
+  The Lua 5.1 superset programming language. Check out the [language documentation](https:/github.com/lunarlang/evolution) which contains information about Lunar's syntax and semantics.
+
+</div>
 
 ## Examples
 Classes, the staple of object-oriented programming, is implemented in Lunar.
