@@ -866,7 +866,7 @@ class Parser << BaseParser
   end
 
   function parameter_declaration()
-    -- (identifier | '...') (':' type_expression)? ('=' expression)?
+    -- (identifier | '...') [':' type_expression] ['=' expression]
     if self:assert(TokenType.identifier, TokenType.triple_dot) then
       local param = self:consume()
 
