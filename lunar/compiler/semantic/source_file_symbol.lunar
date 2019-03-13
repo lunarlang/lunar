@@ -1,0 +1,15 @@
+local Symbol = require "lunar.compiler.semantic.symbol"
+local SymbolTable = require 'lunar.compiler.semantic.symbol_table'
+
+class SourceFileSymbol << Symbol
+  imports = {} -- ImportLink[]
+  globals = SymbolTable.new()
+  exports = SymbolTable.new()
+  return_declarations = {} -- Node[]
+
+  function __tostring()
+    return "SourceFileSymbol ('" .. tostring(self.name) .. "')"
+  end
+end
+
+return ModuleSymbol
