@@ -1,0 +1,16 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class MemberExpression << SyntaxNode
+  constructor(base, member_identifier, has_colon)
+    if has_colon == nil then has_colon = false end
+
+    super(SyntaxKind.member_expression)
+
+    self.base = base
+    self.member_identifier = member_identifier
+    self.has_colon = has_colon
+  end
+end
+
+return MemberExpression

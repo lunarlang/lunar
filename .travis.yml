@@ -1,5 +1,5 @@
 language: python
-sudo: false
+sudo: required
 
 env:
   - LUA="lua=5.1"
@@ -14,9 +14,15 @@ install:
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
+  - sudo cp ./lua_install/bin/lua /usr/local/bin
+  - sudo chmod +x /usr/local/bin/lua
+  - chmod +x ./install.sh
+  - sudo ./install.sh
 
 script:
-  - busted --verbose --coverage
+  - sudo lunarc
+  - busted -C ./dist --verbose --coverage
 
-after_success:
-  - luacov-coveralls -r ./lunar -e $TRAVIS_BUILD_DIR/lua_install -e "_spec"
+# after_success:
+#  - cd ./dist
+#  - luacov-coveralls -r ./lunar -e $TRAVIS_BUILD_DIR/lua_install -e "_spec"

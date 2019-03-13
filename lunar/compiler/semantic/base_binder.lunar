@@ -1,0 +1,38 @@
+local Scope = require "lunar.compiler.semantic.scope"
+local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
+
+class BaseBinder
+  scope = nil
+  root_scope = nil
+  level = 0
+
+  -- A binder should take in an AST and mutate its nodes by binding symbols
+  constructor(environment, file_path_dot)
+    self.environment = environment or ProjectEnvironment.new()
+    self.file_path = file_path_dot or "src"
+  end
+
+  -- Adds to the linked list of scopes
+  function push_scope(incrementLevel)
+    if incrementLevel then
+      self.level += 1
+    end
+    self.scope = Scope.new(self.level, self.scope, self.environment, self.file_path)
+
+    return self.scope
+  end
+
+  -- Removes all scopes at the current level
+  function pop_level_scopes()
+    local removed_scopes = {}
+    repeat
+      table.insert(removed_scopes, self.scope)
+      self.scope = self.scope.parent
+    until not self.scope or self.scope.level < self.level
+    self.level -= 1
+
+    return removed_scopes
+  end
+end
+
+return BaseBinder

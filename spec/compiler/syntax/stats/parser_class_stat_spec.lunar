@@ -1,0 +1,72 @@
+local require_dev = require "spec.helpers.require_dev"
+
+describe("ClassStatement syntax", do
+  require_dev()
+
+  it("should return one ClassStatement node whose name is 'C'", do
+    local tokens = Lexer.new("class C end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({ AST.ClassStatement.new(AST.Identifier.new("C"), nil, {}) }, result)
+  end)
+
+  it("should return one ClassStatement node whose name is 'C' and inherits from 'BaseC'", do
+    local tokens = Lexer.new("class C << BaseC end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({ AST.ClassStatement.new(AST.Identifier.new("C"), AST.Identifier.new("BaseC"), {}) }, result)
+  end)
+
+  it("should return one ClassStatement node with one instance function", do
+    local tokens = Lexer.new("class C function m() end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
+        AST.ClassFunctionDeclaration.new(false, AST.Identifier.new("m"), {}, {})
+      })
+    }, result)
+  end)
+
+  it("should return one ClassStatement node with one instance function and a return type annotation of 'nil'", do
+    local tokens = Lexer.new("class C function m(): nil end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
+        AST.ClassFunctionDeclaration.new(false, AST.Identifier.new("m"), {}, {}, AST.Identifier.new("nil"))
+      })
+    }, result)
+  end)
+
+  it("should return one ClassStatement node with one static function", do
+    local tokens = Lexer.new("class C static function m() end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
+        AST.ClassFunctionDeclaration.new(true, AST.Identifier.new("m"), {}, {})
+      })
+    }, result)
+  end)
+
+  it("should return one ClassStatement node with one constructor", do
+    local tokens = Lexer.new("class C constructor() end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
+        AST.ConstructorDeclaration.new({}, {})
+      })
+    }, result)
+  end)
+
+  it("should not return one ClassStatement node but instead return an ExpressionStatement calling 'class'", do
+    local tokens = Lexer.new("class()"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.same({
+      AST.ExpressionStatement.new(AST.FunctionCallExpression.new(AST.Identifier.new("class"), {}))
+    }, result)
+  end)
+end)

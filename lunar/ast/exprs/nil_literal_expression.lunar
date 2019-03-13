@@ -1,0 +1,10 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class NilLiteralExpression << SyntaxNode
+  constructor()
+    super(SyntaxKind.nil_literal_expression)
+  end
+end
+
+return NilLiteralExpression

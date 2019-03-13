@@ -1,0 +1,14 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class GenericForStatement << SyntaxNode
+  constructor(identifiers, exprlist, block)
+    super(SyntaxKind.generic_for_statement)
+
+    self.identifiers = identifiers
+    self.exprlist = exprlist
+    self.block = block
+  end
+end
+
+return GenericForStatement

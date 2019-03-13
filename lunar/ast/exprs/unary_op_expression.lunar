@@ -1,0 +1,13 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class UnaryOpExpression << SyntaxNode
+  constructor(operator, right_operand)
+    super(SyntaxKind.unary_op_expression)
+
+    self.operator = operator
+    self.right_operand = right_operand
+  end
+end
+
+return UnaryOpExpression

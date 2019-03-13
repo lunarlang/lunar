@@ -1,0 +1,12 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class ParameterDeclaration << SyntaxNode
+  constructor(identifier)
+    super(SyntaxKind.parameter_declaration)
+
+    self.identifier = identifier
+  end
+end
+
+return ParameterDeclaration

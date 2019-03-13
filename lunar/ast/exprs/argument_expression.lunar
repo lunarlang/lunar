@@ -1,0 +1,12 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class ArgumentExpression << SyntaxNode
+  constructor(expr)
+    super(SyntaxKind.argument_expression)
+
+    self.value = expr
+  end
+end
+
+return ArgumentExpression

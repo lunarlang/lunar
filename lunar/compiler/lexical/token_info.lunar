@@ -1,0 +1,14 @@
+class TokenInfo
+  constructor(token_type, value, line, column)
+    self.token_type = token_type
+    self.value = value
+    self.line = line
+    self.column = column
+  end
+
+  function __tostring()
+    return ("%d %s"):format(self.token_type, self.value)
+  end
+end
+
+return TokenInfo

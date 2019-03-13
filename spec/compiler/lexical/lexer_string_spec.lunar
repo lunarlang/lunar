@@ -1,0 +1,89 @@
+local require_dev = require "spec.helpers.require_dev"
+
+describe("Lexer:next_string", do
+  require_dev()
+
+  it("should return a string token whose value is empty", do
+    local tokens = Lexer.new("''"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "''", 1, 1)
+    }, tokens)
+  end)
+
+  it("should return a string token that has an escaped backslash at the end", do
+    local tokens = Lexer.new("'\\\\'"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "'\\\\'", 1, 1)
+    }, tokens)
+  end)
+
+  it("should return a string token that has an escaped linefeed at the end", do
+    local tokens = Lexer.new("'\\n'"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "'\\n'", 1, 1)
+    }, tokens)
+  end)
+
+  it("should return a string token that has an escaped single-quote at the end", do
+    local tokens = Lexer.new("'\\''"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "'\\''", 1, 1)
+    }, tokens)
+  end)
+
+  it("should return a string token using single quotes", do
+    local tokens = Lexer.new("'Hello, world!'"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "'Hello, world!'", 1, 1)
+    }, tokens)
+  end)
+
+  it("should return a string token using double quotes", do
+    local tokens = Lexer.new("\"Hello, world!\""):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "\"Hello, world!\"", 1, 1)
+    }, tokens)
+  end)
+
+  it("should return a string token using multiline block", do
+    local tokens = Lexer.new("[[ Hello, world! ]]"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "[[ Hello, world! ]]", 1, 1)
+    }, tokens)
+  end)
+
+  it("should return a string token using leveled multiline block", do
+    local tokens = Lexer.new("[====[ Hello, world! ]====]"):tokenize()
+
+    assert.same({
+      TokenInfo.new(TokenType.string, "[====[ Hello, world! ]====]", 1, 1)
+    }, tokens)
+  end)
+
+  it("should throw an error when encountering a newline while scanning", do
+    assert.has_error(|| Lexer.new("'abc\n'"):tokenize(), "unfinished string near ''abc'")
+  end)
+
+  it("should throw an error when encountering end of file while scanning", do
+    assert.has_error(|| Lexer.new("'abc"):tokenize(), "unfinished string near <eof>")
+  end)
+
+  it("should throw an error when encountering end of file while scanning multiline block", do
+    assert.has_error(|| Lexer.new("[[abc"):tokenize(), "unfinished string near <eof>")
+  end)
+
+  it("should not return a string token from invalid multiline block syntax", do
+    local tokens = Lexer.new("[ =[ Hello, world ]]"):tokenize()
+
+    assert.is_not.same({
+      TokenInfo.new(TokenType.string, "[ =[ Hello, world ]]", 1)
+    }, tokens)
+  end)
+end)

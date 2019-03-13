@@ -1,0 +1,22 @@
+class Program
+  constructor(code, override)
+    if override == nil then override = {} end
+
+    self.code = code
+    self.override = override
+  end
+
+  function run()
+    local exec = loadstring(self.code)
+    local env = getfenv(exec)
+
+    for name, obj in pairs(self.override) do
+      env[name] = obj
+    end
+
+    local result = { exec() }
+    return { env = env, result = result }
+  end
+end
+
+return Program

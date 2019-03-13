@@ -1,0 +1,5 @@
+return {
+  default = {
+    lpath = "./dist/?.init.lua;./dist/?/init.lua;"
+  }
+}

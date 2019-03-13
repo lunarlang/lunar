@@ -1,0 +1,13 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class IndexExpression << SyntaxNode
+  constructor(base, index)
+    super(SyntaxKind.index_expression)
+
+    self.base = base
+    self.index = index
+  end
+end
+
+return IndexExpression

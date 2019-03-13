@@ -1,0 +1,13 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class IndexFieldDeclaration << SyntaxNode
+  constructor(key, value)
+    super(SyntaxKind.index_field_declaration)
+
+    self.key = key
+    self.value = value
+  end
+end
+
+return IndexFieldDeclaration

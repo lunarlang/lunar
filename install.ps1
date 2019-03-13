@@ -1,6 +1,6 @@
 $targetDir = Join-Path $env:APPDATA "Lunar"
 $binDir = Join-Path $PSScriptRoot "bin"
-$lunarDir = Join-Path $PSScriptRoot "lunar"
+$lunarDir = Join-Path $PSScriptRoot "dist/lunar"
 
 $windowsId = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 $windowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($windowsId)
@@ -25,6 +25,8 @@ if (!$windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::
     }
   }
 
+  $env:LUA_PATH = "./lib/?.lua;./lib/?/init.lua;$env:LUA_PATH"
+  Start-Process lua -ArgumentList "$PSScriptRoot/lib/lunar/lunarc/init.lua"
   Copy-Item -Path $binDir,$lunarDir -Destination $targetDir -Container -Recurse
 
   $env:PATH += ";" + $targetDir

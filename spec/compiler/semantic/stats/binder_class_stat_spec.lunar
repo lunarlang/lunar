@@ -1,0 +1,201 @@
+local require_dev = require "spec.helpers.require_dev"
+
+describe("Bindings of class statements", do
+  require_dev()
+
+  it("should bind the class value as a local value symbol with no global bindings", do
+    local tokens = Lexer.new("class MyClass end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local class_stat = result[1]
+    local identifier = class_stat.identifier
+
+    assert.truthy(identifier.symbol)
+    assert.True(identifier.symbol:is_assigned())
+    assert.False(identifier.symbol:is_referenced())
+    assert.True(identifier.symbol:is_declared())
+    assert.False(env:has_global_value('src', "MyClass"))
+    assert.True(env:has_global_type('src', "MyClass"))
+  end)
+
+  it("should bind the class local value and type symbols", do
+    local tokens = Lexer.new("class MyClass end; local x: MyClass"):tokenize()
+    local result = Parser.new(tokens):parse()
+    Binder.new(result):bind()
+
+    local class_stat = result[1]
+    local var_stat = result[2]
+    local var_ident = var_stat.identlist[1]
+
+    assert.truthy(var_ident.type_annotation)
+    assert.truthy(var_ident.type_annotation.symbol)
+    assert.True(var_ident.type_annotation.symbol:is_declared())
+    assert.True(var_ident.type_annotation.symbol:is_assigned())
+    assert.True(var_ident.type_annotation.symbol:is_referenced())
+    assert.equal(class_stat, var_ident.type_annotation.symbol:get_canonical_declaration())
+  end)
+
+  it("should bind a variable reference to superclasses, but no type reference", do
+    local tokens = Lexer.new("class S end; class C << S end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local super_class_stat = result[1]
+    local super_class_ident = super_class_stat.identifier
+    local sub_class_stat = result[2]
+    local sub_class_super_ident = sub_class_stat.super_identifier
+
+    assert.truthy(super_class_ident.symbol)
+    assert.True(super_class_ident.symbol:is_assigned())
+    assert.True(super_class_ident.symbol:is_referenced())
+    assert.True(super_class_ident.symbol:is_declared())
+    assert.equal(super_class_stat, super_class_ident.symbol:get_canonical_declaration())
+    assert.equal(super_class_ident.symbol, sub_class_super_ident.symbol)
+    assert.False(env:has_global_value('src', "C"))
+    assert.True(env:has_global_type('src', "C"))
+    assert.False(env:has_global_value('src', "S"))
+    assert.True(env:has_global_type('src', "S"))
+  end)
+
+  it("should bind member function symbols inside of the class symbol members table", do
+    local tokens = Lexer.new("class X function Y() end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local class_stat = result[1]
+
+    local class_ident = class_stat.identifier
+    assert.truthy(class_ident.symbol)
+
+    local members = class_ident.symbol.members
+    assert.truthy(members)
+
+    assert.True(members:has_value("Y"))
+    assert.False(class_ident.symbol.exports:has_value("Y"))
+    assert.False(env:has_global_value('src', "X"))
+    assert.True(env:has_global_type('src', "X"))
+    assert.False(env:has_global_value('src', "Y"))
+  end)
+
+  it("should bind static function symbols inside of the class symbol statics table", do
+    local tokens = Lexer.new("class X static function Y() end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local class_stat = result[1]
+
+    local class_ident = class_stat.identifier
+    assert.truthy(class_ident.symbol)
+
+    local statics = class_ident.symbol.exports
+    assert.truthy(statics)
+
+    assert.True(statics:has_value("Y"))
+    assert.False(class_ident.symbol.members:has_value("Y"))
+    assert.False(env:has_global_value('src', "X"))
+    assert.True(env:has_global_type('src', "X"))
+    assert.False(env:has_global_value('src', "Y"))
+  end)
+
+  it("should bind instance fields to class symbol members table", do
+    local tokens = Lexer.new("class X static Y end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local class_stat = result[1]
+
+    local class_ident = class_stat.identifier
+    assert.truthy(class_ident.symbol)
+
+    local statics = class_ident.symbol.exports
+    assert.truthy(statics)
+
+    assert.True(statics:has_value("Y"))
+    assert.False(class_ident.symbol.members:has_value("Y"))
+    assert.False(env:has_global_value('src', "X"))
+    assert.True(env:has_global_type('src', "X"))
+    assert.False(env:has_global_value('src', "Y"))
+  end)
+
+  it("should error upon redeclaration of of the same field", do
+    local tokens = Lexer.new("class X Y Y end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.has_errors(|| Binder.new(result):bind())
+  end)
+
+  it("should allow declaration of static and instance fields of the same name", do
+    local tokens = Lexer.new("class X Y static Y end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    Binder.new(result):bind()
+
+    local class_stat = result[1]
+
+    local class_ident = class_stat.identifier
+    assert.truthy(class_ident.symbol)
+
+    local members = class_ident.symbol.members
+    local statics = class_ident.symbol.exports
+    assert.truthy(members)
+    assert.truthy(statics)
+
+    assert.True(members:has_value("Y"))
+    assert.True(statics:has_value("Y"))
+  end)
+
+  it("should bind constructor declaration to class statics", do
+    local tokens = Lexer.new("class X constructor() end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    Binder.new(result):bind()
+
+    local class_stat = result[1]
+
+    local class_ident = class_stat.identifier
+    assert.truthy(class_ident.symbol)
+
+    local members = class_ident.symbol.members
+    local statics = class_ident.symbol.exports
+    assert.truthy(members)
+    assert.truthy(statics)
+
+    assert.False(members:has_value("constructor"))
+    assert.True(statics:has_value("constructor"))
+  end)
+
+  it("should guard against constructor re-declaration", do
+    local tokens = Lexer.new("class X constructor() end constructor() end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    assert.has_errors(|| Binder.new(result):bind())
+  end)
+
+  it("should localize class value symbols but spread class type symbols within the source's scope", do
+    local tokens = Lexer.new("local obj: X = X.new() class X end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+
+    local ident = result[1].identlist[1]
+    local ident_expr_global = result[1].exprlist[1].base.base
+    local class_stat = result[2]
+
+    local class_ident = class_stat.identifier
+    assert.truthy(class_ident.symbol)
+
+    -- Check value symbol
+    assert.truthy(ident_expr_global.symbol)
+    assert.False(ident_expr_global.symbol:is_declared())
+    assert.False(ident_expr_global.symbol:is_assigned())
+    assert.True(ident_expr_global.symbol:is_referenced())
+
+    -- Check type symbol
+    assert.truthy(ident.type_annotation)
+    assert.truthy(ident.type_annotation.symbol)
+    assert.True(ident.type_annotation.symbol:is_assigned())
+    assert.True(ident.type_annotation.symbol:is_referenced())
+    assert.equal(class_stat, ident.type_annotation.symbol:get_canonical_declaration())
+
+    assert.True(env:has_global_value('src', "X"))
+    assert.True(env:has_global_type('src', "X"))
+  end)
+end)

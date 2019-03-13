@@ -1,0 +1,25 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class IfStatement << SyntaxNode
+  constructor(expr, block)
+    super(SyntaxKind.if_statement)
+
+    self.expr = expr -- unless else branch
+    self.block = block
+    self.elseif_branches = {}
+    self.else_branch = nil
+  end
+
+  function push_elseif(if_statement)
+    table.insert(self.elseif_branches, if_statement)
+    return self
+  end
+
+  function set_else(if_statement)
+    self.else_branch = if_statement
+    return self
+  end
+end
+
+return IfStatement

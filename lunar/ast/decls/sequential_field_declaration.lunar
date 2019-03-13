@@ -1,0 +1,12 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class SequentialFieldDeclaration << SyntaxNode
+  constructor(value)
+    super(SyntaxKind.sequential_field_declaration)
+
+    self.value = value
+  end
+end
+
+return SequentialFieldDeclaration

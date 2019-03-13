@@ -1,0 +1,13 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class TypeAssertionExpression << SyntaxNode
+  constructor(base, type)
+    super(SyntaxKind.type_assertion_expression)
+
+    self.base = base
+    self.type = type
+  end
+end
+
+return TypeAssertionExpression

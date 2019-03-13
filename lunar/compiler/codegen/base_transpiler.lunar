@@ -1,0 +1,47 @@
+class BaseTranspiler
+  indent_string = "  "
+  indent_count = 0
+  source = ""
+
+  function write(segment)
+    if segment == nil then segment = "" end
+
+    self.source ..= segment
+  end
+
+  function writeln(segment)
+    if segment == nil then segment = "" end
+
+    self:write(segment .. "\n")
+  end
+
+  function iwrite(segment)
+    if segment == nil then segment = "" end
+
+    self:write(self:get_indent() .. segment)
+  end
+
+  function iwriteln(segment)
+    if segment == nil then segment = "" end
+
+    self:writeln(self:get_indent() .. segment)
+  end
+
+  function get_indent()
+    if self.indent_count <= 0 then
+      return ""
+    end
+
+    return self.indent_string:rep(self.indent_count)
+  end
+
+  function indent()
+    self.indent_count += 1
+  end
+
+  function dedent()
+    self.indent_count -= 1
+  end
+end
+
+return BaseTranspiler

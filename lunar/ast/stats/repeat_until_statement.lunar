@@ -1,0 +1,13 @@
+local SyntaxKind = require "lunar.ast.syntax_kind"
+local SyntaxNode = require "lunar.ast.syntax_node"
+
+class RepeatUntilStatement << SyntaxNode
+  constructor(block, expr)
+    super(SyntaxKind.repeat_until_statement)
+
+    self.block = block
+    self.expr = expr
+  end
+end
+
+return RepeatUntilStatement
