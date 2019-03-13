@@ -1,5 +1,12 @@
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
+local ParameterDeclaration = require "lunar.ast.decls.parameter_declaration"
+local IfStatement = require "lunar.ast.stats.if_statement"
+local AssignmentStatement = require "lunar.ast.stats.assignment_statement"
+local SelfAssignmentOpKind = require "lunar.ast.stats.self_assignment_op_kind"
+local BinaryOpKind = require "lunar.ast.exprs.binary_op_kind"
+local BinaryOpExpression = require "lunar.ast.exprs.binary_op_expression"
+local NilLiteralExpression = require "lunar.ast.exprs.nil_literal_expression"
 
 class FunctionStatement << SyntaxNode
   constructor(base, parameters, block, return_type_annotation, is_local)
@@ -12,6 +19,27 @@ class FunctionStatement << SyntaxNode
     self.block = block
     self.is_local = is_local
     self.return_type_annotation = return_type_annotation
+  end
+
+  function lower()
+    local params, block = {}, {}
+
+    for _, param in pairs(self.parameters) do
+      table.insert(params, ParameterDeclaration.new(param.identifier, nil))
+
+      if param.has_default_value then
+        local condition = BinaryOpExpression.new(param.identifier, BinaryOpKind.equal_op, NilLiteralExpression.new())
+        local assign_param_stat = AssignmentStatement.new({ param.identifier }, SelfAssignmentOpKind.equal_op, { param.value })
+
+        table.insert(block, IfStatement.new(condition, { assign_param_stat }))
+      end
+    end
+
+    for _, stat in pairs(self.block) do
+      table.insert(block, stat)
+    end
+
+    return FunctionStatement.new(self.base, params, block, self.return_type_annotation, self.is_local)
   end
 end
 

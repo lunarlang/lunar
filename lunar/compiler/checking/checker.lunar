@@ -289,6 +289,15 @@ class Checker
     self:visit_expression_list(params)
     self:visit_statements(block)
 
+    local optionals_only = false
+    for index, param in pairs(params) do
+      optionals_only = optionals_only or param.has_default_value
+
+      if optionals_only and not param.has_default_value then
+        error(("required parameter #%d '%s' must also be optional parameters"):format(index, param.name))
+      end
+    end
+
     if return_type_annotation then
       self:visit_type_expression(return_type_annotation)
     end

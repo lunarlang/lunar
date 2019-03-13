@@ -64,4 +64,28 @@ describe("FunctionStatement syntax", do
       AST.FunctionStatement.new(expected_name, expected_params, {}, nil)
     }, result)
   end)
+
+  it("should attach a default value to parameters", do
+    local tokens = Lexer.new("function test(a = 1, b: string = 'test') end"):tokenize()
+    local result = Parser.new(tokens):parse()
+
+    local expected_name = AST.Identifier.new("test")
+    local expected_params = {
+      AST.ParameterDeclaration.new(AST.Identifier.new("a", nil), AST.NumberLiteralExpression.new(1)),
+      AST.ParameterDeclaration.new(
+        AST.Identifier.new("b", AST.Identifier.new("string")),
+        AST.StringLiteralExpression.new("'test'")
+      )
+    }
+
+    assert.same({
+      AST.FunctionStatement.new(expected_name, expected_params, {}, nil)
+    }, result)
+  end)
+
+  it("should raise an error when parameter '...' has a default value", do
+    local tokens = Lexer.new("function a(... = 1) end"):tokenize()
+
+    assert.error(do Parser.new(tokens):parse() end, "optional parameter '...' is not supported!")
+  end)
 end)

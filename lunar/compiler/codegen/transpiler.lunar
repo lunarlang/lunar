@@ -230,17 +230,19 @@ class Transpiler << BaseTranspiler
   end
 
   function visit_function_statement(stat)
-    if stat.is_local then
+    local lowered = stat:lower()
+
+    if lowered.is_local then
       self:iwrite("local ")
     end
 
     self:write("function ")
-    self:visit_node(stat.base)
+    self:visit_node(lowered.base)
     self:write("(")
-    self:visit_params(stat.parameters)
+    self:visit_params(lowered.parameters)
     self:writeln(")")
     self:indent()
-    self:visit_block(stat.block)
+    self:visit_block(lowered.block)
     self:dedent()
     self:iwriteln("end")
   end
@@ -393,11 +395,13 @@ class Transpiler << BaseTranspiler
   end
 
   function visit_function_expression(expr)
+    local lowered = expr:lower()
+
     self:write("function(")
-    self:visit_params(expr.parameters)
+    self:visit_params(lowered.parameters)
     self:writeln(")")
     self:indent()
-    self:visit_block(expr.block)
+    self:visit_block(lowered.block)
     self:dedent()
     self:iwrite("end")
   end

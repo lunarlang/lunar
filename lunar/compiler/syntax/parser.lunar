@@ -866,7 +866,7 @@ class Parser << BaseParser
   end
 
   function parameter_declaration()
-    -- identifier | '...'
+    -- (identifier | '...') (':' type_expression)? ('=' expression)?
     if self:assert(TokenType.identifier, TokenType.triple_dot) then
       local param = self:consume()
 
@@ -875,7 +875,17 @@ class Parser << BaseParser
         type_annotation = self:type_expression()
       end
 
-      return AST.ParameterDeclaration.new(AST.Identifier.new(param.value, type_annotation))
+      local value = nil
+      if self:match(TokenType.equal) then
+        -- we may support this in the future, but not right now
+        if param.value == "..." then
+          error("optional parameter '...' is not supported!")
+        end
+
+        value = self:expression()
+      end
+
+      return AST.ParameterDeclaration.new(AST.Identifier.new(param.value, type_annotation), value)
     end
   end
 

@@ -148,4 +148,32 @@ describe("LiteralExpression syntax", do
 
     assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true), result)
   end)
+
+  it("should return one FunctionExpression node with default parameters", do
+    local tokens = Lexer.new("function(a, b = 1, c: string = 'hi') end"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local expected_params = {
+      AST.ParameterDeclaration.new(AST.Identifier.new("a", nil)),
+      AST.ParameterDeclaration.new(AST.Identifier.new("b", nil), AST.NumberLiteralExpression.new(1)),
+      AST.ParameterDeclaration.new(AST.Identifier.new("c", AST.Identifier.new("string")), AST.StringLiteralExpression.new("'hi'"))
+    }
+
+    assert.same(AST.FunctionExpression.new(expected_params, {}), result)
+  end)
+
+  it("should return one LambdaExpression node with default parameters", do
+    local tokens = Lexer.new("|a, b = 1, c: string = 'hi'| nil"):tokenize()
+    local result = Parser.new(tokens):expression()
+
+    local expected_params = {
+      AST.ParameterDeclaration.new(AST.Identifier.new("a", nil)),
+      AST.ParameterDeclaration.new(AST.Identifier.new("b", nil), AST.NumberLiteralExpression.new(1)),
+      AST.ParameterDeclaration.new(AST.Identifier.new("c", AST.Identifier.new("string")), AST.StringLiteralExpression.new("'hi'"))
+    }
+
+    local expected_expr = AST.NilLiteralExpression.new()
+
+    assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true), result)
+  end)
 end)
