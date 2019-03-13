@@ -13,7 +13,7 @@ function Checker.constructor(self, ast, linked_env, is_ambient_context)
   self.ast = ast
   self.env = linked_env
   self.is_ambient_context = is_ambient_context or false
-  self.in_import_header = true -- True if no non-import statements have been made
+  self.is_header_context = true -- True as long as only imports and unrendered statements have been visited
 
   self.visitors = {
     -- Statements
@@ -81,8 +81,11 @@ end
 
 function Checker.__index:visit_statement(stat)
   -- Update context for non-import statements
-  if stat.syntax_kind ~= SyntaxKind.import_statement then
-    self.in_import_header = false
+  if stat.syntax_kind ~= SyntaxKind.import_statement
+    and stat.syntax_kind ~= SyntaxKind.declare_global_statement
+    and stat.syntax_kind ~= SyntaxKind.declare_package_statement
+    and stat.syntax_kind ~= SyntaxKind.declare_returns_statement then
+    self.is_header_context = false
   end
 
   self:visit_node(stat)
@@ -96,7 +99,7 @@ function Checker.__index:visit_node(node)
 end
 
 function Checker.__index:visit_import_statement(stat)
-  if not self.in_import_header then
+  if not self.is_header_context then
     error("Imports must be declared at the top of a file")
   end
 end
@@ -158,7 +161,7 @@ function Checker.__index:visit_if_statement(stat)
 
   -- Else clause
   if stat.else_branch then
-    self:visit_node(stat.else_branch)
+    self:visit_statement(stat.else_branch)
   end
 end
 
