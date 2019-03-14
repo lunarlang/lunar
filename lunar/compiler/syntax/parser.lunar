@@ -303,7 +303,8 @@ class Parser << BaseParser
     if primaryexpr ~= nil then
       -- immediately return this if it is a FunctionCallExpression as an ExpressionStatement
       if primaryexpr.syntax_kind == SyntaxKind.function_call_expression then
-        return AST.ExpressionStatement.new(primaryexpr)
+        local test = AST.ExpressionStatement.new(primaryexpr)
+        return test
       elseif primaryexpr.syntax_kind == SyntaxKind.member_expression
         or primaryexpr.syntax_kind == SyntaxKind.index_expression
         or primaryexpr.syntax_kind == SyntaxKind.identifier then
@@ -670,8 +671,13 @@ class Parser << BaseParser
           args
         )
       elseif self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
-        local args = self:function_arg_list()
-        expr = AST.FunctionCallExpression.new(expr, args)
+        if expr then
+          local args = self:function_arg_list()
+          expr = AST.FunctionCallExpression.new(expr, args)
+        else
+          -- No base found
+          error("unexpected symbol near '" .. self:consume().value .. "'")
+        end
       else
         return expr
       end

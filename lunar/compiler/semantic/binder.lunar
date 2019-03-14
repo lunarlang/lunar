@@ -390,10 +390,18 @@ class Binder << BaseBinder
   end
 
   function bind_import_statement(stat)
+    if self.scope.level ~= self.root_scope.level then
+      error("Imports cannot be declared outside of the root scope")
+    end
+
     self.environment:declare_import(self.file_path, stat)
   end
 
   function bind_export_statement(stat)
+    if self.scope.level ~= self.root_scope.level then
+      error("Exports cannot be declared outside of the root scope")
+    end
+
     local inner_stat = stat.body
     local identifier
     if inner_stat.syntax_kind == SyntaxKind.variable_statement then
