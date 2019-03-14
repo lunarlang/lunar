@@ -14,6 +14,7 @@ install:
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
+  - luarocks install luacheck
   - sudo cp ./lua_install/bin/lua /usr/local/bin
   - sudo chmod +x /usr/local/bin/lua
   - chmod +x ./install.sh
@@ -21,6 +22,7 @@ install:
 
 script:
   - sudo lunarc
+  - luacheck ./dist -q --only 011
   - busted -C ./dist --verbose --coverage
 
 # after_success:
