@@ -371,24 +371,16 @@ class Binder << BaseBinder
     end
 
     if not self.is_function_scope then
-      if self.scope.level ~= self.root_scope.level then
-        error("Conditional returns are not allowed in source files")
-      end
+      local source_file_symbol = self.environment:get_source_file_symbol(self.file_path)
 
-      -- Declare source file return expression
-      local source_returns = self.environment:get_returns_symbol(self.file_path)
-      if source_returns then
-        error("Cannot re-declare source returns")
-      else
-        source_returns = self.environment:create_returns_symbol(self.file_path)
+      if source_file_symbol:has_declared_export_values()
+        or source_file_symbol:has_declared_export_as() then
+        error("Cannot export and return values in the same source file")
+      elseif source_file_symbol:has_declared_final_returns() then
+        error("Final return type was already declared for this source file")
       end
-
-      -- Check if we have exported static values
-      if next(source_returns.exports.values) then
-        error("Cannot export and return values in the same scope")
-      else
-        source_returns:bind_declaration(stat)
-      end
+      
+      source_file_symbol:bind_returns_declaration(stat)
     end
   end
 
@@ -404,17 +396,40 @@ class Binder << BaseBinder
     if self.scope.level ~= self.root_scope.level then
       error("Exports cannot be declared outside of the root scope")
     end
+    local source_file_symbol = self.environment:get_source_file_symbol(self.file_path)
+    if source_file_symbol:has_declared_returns()
+    or source_file_symbol:has_declared_export_as() then
+      error("Cannot export and return values at the same time")
+    end
 
     local inner_stat = stat.body
     local identifier
+    local is_value_export = false
+    local is_type_export = false
     if inner_stat.syntax_kind == SyntaxKind.variable_statement then
       identifier = inner_stat.identlist[1]
+      is_value_export = true
     elseif inner_stat.syntax_kind == SyntaxKind.function_statement then
       identifier = inner_stat.base
+      is_value_export = true
     elseif inner_stat.syntax_kind == SyntaxKind.class_statement then
       identifier = inner_stat.identifier
+      is_value_export = true
+      is_type_export = true
     else
       error("Unbound export statement")
+    end
+
+    -- Check existing bound types/exports
+    if is_value_export then
+      if source_file_symbol.exports:has_value(identifier.name) then
+        error("Cannot to re-declare value export")
+      end
+    end
+    if is_value_export then
+      if source_file_symbol.exports:has_type(identifier.name) then
+        error("Cannot to re-declare type export")
+      end
     end
 
     -- In a non-strict mode, we should push the scope if the name was previously declared
@@ -423,25 +438,23 @@ class Binder << BaseBinder
     end
 
     -- Bind the statement as a normal local statement
-    local type_symbol = nil
     if inner_stat.syntax_kind == SyntaxKind.variable_statement then
       self:bind_variable_statement(inner_stat)
     elseif inner_stat.syntax_kind == SyntaxKind.function_statement then
       self:bind_function_statement(inner_stat)
     elseif inner_stat.syntax_kind == SyntaxKind.class_statement then
       self:bind_class_statement(inner_stat)
-      type_symbol = self.environment:get_global_type(self.file_path, identifier.name)
     end
 
-    -- Add the value symbol to the source file's exports
-    local value_symbol = self.scope:get_value(identifier.name)
-    self.environment:add_exports_value(self.file_path, value_symbol)
-
-    -- Add the type symbol to the source file's exports if it exists
-    if type_symbol then
-      self.environment:add_exports_type(self.file_path, type_symbol)
+    if is_value_export then
+      local value_symbol = self.scope:get_value(identifier.name)
+      source_file_symbol.exports:add_value(value_symbol)
     end
 
+    if is_type_export then
+      local type_symbol = self.environment:get_global_type(self.file_path, identifier.name)
+      source_file_symbol.exports:add_type(type_symbol)
+    end
   end
 
   function bind_function_statement(stat)
@@ -722,45 +735,40 @@ class Binder << BaseBinder
     self:bind_type_expression(stat.type_expr)
 
     -- Declare source file return expression
-    local source_returns = self.environment:get_returns_symbol(stat.path)
-    if source_returns then
-      error("Attempt to re-declare package returns")
-    else
-      source_returns = self.environment:create_returns_symbol(stat.path)
-
-      -- Declare that we have visited this source with defined returns
-      self.environment:declare_visited_source(stat.path, true)
+    local source_file_symbol = self.environment:get_source_file_symbol(stat.path)
+    if not source_file_symbol then
+      source_file_symbol = self.environment:create_source_file_symbol(stat.path)
     end
 
-    -- Check if we have exported static values
-    if next(source_returns.exports.values) then
-      error("Cannot export and return values in the same scope")
-    else
-      source_returns:bind_declaration(stat)
+    if source_file_symbol:has_declared_export_values()
+      or source_file_symbol:has_declared_returns() 
+      or source_file_symbol:has_declared_export_as() then
+      error("Attempt to re-declare package as export")
     end
+    
+    source_file_symbol:bind_export_as_declaration(stat)
+
+    -- Declare that we have visited this source with defined returns
+    self.environment:declare_visited_source(stat.path, true)
   end
 
   function bind_declare_returns_statement(stat)
     if self.scope.level ~= self.root_scope.level then
-      error("Returns cannot be made outside of the root scope")
+      error("Returns cannot be declared outside of the root scope")
     end
 
     self:bind_type_expression(stat.type_expr)
 
-    -- Declare source file return expression
-    local source_returns = self.environment:get_returns_symbol(self.file_path)
-    if source_returns then
-      error("Attempt to re-declare source file returns")
-    else
-      source_returns = self.environment:create_returns_symbol(self.file_path)
-    end
+    local source_file_symbol = self.environment:get_source_file_symbol(self.file_path)
 
-    -- Check if we have exported static values
-    if next(source_returns.exports.values) then
-      error("Cannot export and return values in the same scope")
-    else
-      source_returns:bind_declaration(stat)
+    if source_file_symbol:has_declared_export_values()
+    or source_file_symbol:has_declared_export_as() then
+      error("Cannot export and return values in the same source file")
+    elseif source_file_symbol:has_declared_returns() then
+      error("Canot re-declare final return type")
     end
+    
+    source_file_symbol:bind_returns_declaration(stat)
   end
 end
 

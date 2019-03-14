@@ -33,10 +33,10 @@ describe("Bindings of declared identifiers", do
 
     local dec_stat = result[1]
 
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_env_symbol)
-    assert.equal(dec_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(dec_stat, package_env_symbol.export_as_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.False(package_env_symbol:is_referenced())
   end)
@@ -57,7 +57,7 @@ describe("Bindings of declared identifiers", do
     local expr_stat = result[3]
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -67,7 +67,7 @@ describe("Bindings of declared identifiers", do
     assert.True(package_alias_ident.symbol:is_assigned())
     assert.True(package_alias_ident.symbol:is_referenced())
 
-    assert.equal(dec_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(dec_stat, package_env_symbol.export_as_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.True(package_env_symbol:is_referenced())
   end)
@@ -93,7 +93,7 @@ describe("Bindings of declared identifiers", do
     env:link_external_references()
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -103,7 +103,7 @@ describe("Bindings of declared identifiers", do
     assert.True(package_alias_ident.symbol:is_assigned())
     assert.True(package_alias_ident.symbol:is_referenced())
 
-    assert.equal(dec_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(dec_stat, package_env_symbol.return_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.True(package_env_symbol:is_referenced())
   end)
@@ -129,7 +129,7 @@ describe("Bindings of declared identifiers", do
     env:link_external_references()
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -139,7 +139,7 @@ describe("Bindings of declared identifiers", do
     assert.True(package_alias_ident.symbol:is_assigned())
     assert.True(package_alias_ident.symbol:is_referenced())
 
-    assert.equal(return_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(return_stat, package_env_symbol.return_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.True(package_env_symbol:is_referenced())
   end)
@@ -166,7 +166,7 @@ describe("Bindings of declared identifiers", do
     env:link_external_references()
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -213,7 +213,7 @@ describe("Bindings of declared identifiers", do
 
     local package_alias_value_ident = expr_stat.expr.arguments[1].value
     local package_alias_type_ident = var_stat.identlist[1].type_annotation
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
     local global_env_symbol = env:get_global_value('y', 'MyClass')
 
     assert.truthy(package_env_symbol)
@@ -279,7 +279,7 @@ describe("Bindings of declared identifiers", do
 
     local package_alias_value_ident = expr_stat.expr.arguments[1].value
     local package_alias_type_ident = var_stat.identlist[1].type_annotation
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_env_symbol)
 

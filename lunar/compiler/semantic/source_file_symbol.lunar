@@ -1,15 +1,48 @@
 local Symbol = require "lunar.compiler.semantic.symbol"
 local SymbolTable = require 'lunar.compiler.semantic.symbol_table'
+local SyntaxKind = require 'lunar.ast.syntax_kind'
 
 class SourceFileSymbol << Symbol
-  imports = {} -- ImportLink[]
+  imports = {} -- ImportStatement[]
   globals = SymbolTable.new()
   exports = SymbolTable.new()
-  return_declarations = {} -- Node[]
+  return_declarations = {} -- (ReturnStatement or DeclareReturnsStatement)[]
+  export_as_declarations = {} -- (ExportAsStatement or DeclarePackageStatement)[]
 
   -- Todo: get rid of this constructor when the bug gets patched
   constructor(...)
     super(...)
+  end
+
+  function has_declared_returns()
+    return #self.return_declarations > 0
+  end
+
+  function has_declared_final_returns()
+    for i = 1, #self.return_declarations do
+      if self.return_declarations[i].syntax_kind == SyntaxKind.declare_returns_statement then
+        return true
+      end
+    end
+    return self:has_declared_export_as()
+  end
+
+  function has_declared_export_as()
+    return #self.export_as_declarations > 0
+  end
+
+  function has_declared_export_values()
+    return next(self.exports.values) ~= nil
+  end
+
+  function bind_returns_declaration(stat)
+    local decls = self.return_declarations
+    decls[#decls + 1] = stat
+  end
+
+  function bind_export_as_declaration(stat)
+    local decls = self.export_as_declarations
+    decls[#decls + 1] = stat
   end
 
   function __tostring()
@@ -17,4 +50,4 @@ class SourceFileSymbol << Symbol
   end
 end
 
-return ModuleSymbol
+return SourceFileSymbol
