@@ -7,6 +7,11 @@ class SourceFileSymbol << Symbol
   exports = SymbolTable.new()
   return_declarations = {} -- Node[]
 
+  -- Todo: get rid of this constructor when the bug gets patched
+  constructor(...)
+    super(...)
+  end
+
   function __tostring()
     return "SourceFileSymbol ('" .. tostring(self.name) .. "')"
   end

@@ -6,6 +6,11 @@ class ClassSymbol << Symbol
   members = SymbolTable.new()
   statics = SymbolTable.new()
 
+  -- Todo: get rid of this constructor when the bug gets patched
+  constructor(...)
+    super(...)
+  end
+
   function merge_into(new_class_symbol)
     super.__index.merge_into(self, new_class_symbol)
 
