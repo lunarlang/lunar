@@ -74,13 +74,13 @@ class Parser << BaseParser
     local stats = {}
 
     while not self:is_finished() do
-      local stat = self:statement()
+      local stat = self:match_statement()
       if stat ~= nil then
         table.insert(stats, stat)
         self:match(TokenType.semi_colon)
       end
 
-      local last = self:last_statement()
+      local last = self:match_last_statement()
       if last ~= nil then
         table.insert(stats, last)
         self:match(TokenType.semi_colon)
@@ -95,7 +95,7 @@ class Parser << BaseParser
     return stats
   end
 
-  function class_member()
+  function match_class_member()
     if self:assert_seq("constructor") then
       self:move(1)
       self:expect(TokenType.left_paren, "Expected '(' after 'constructor'")
@@ -155,11 +155,10 @@ class Parser << BaseParser
     self.position = old_position
   end
 
-  function statement()
+  function match_statement()
     return self:class_statement()
         or self:import_statement()
         or self:export_statement()
-        or self:expression_statement()
         or self:do_statement()
         or self:while_statement()
         or self:repeat_until_statement()
@@ -168,6 +167,8 @@ class Parser << BaseParser
         or self:function_statement()
         or self:variable_statement()
         or self:declare_statement()
+
+        or self:expression_statement()
   end
 
   function class_statement()
@@ -184,7 +185,7 @@ class Parser << BaseParser
 
       local members = {}
       repeat
-        local member = self:class_member()
+        local member = self:match_class_member()
         self:match(TokenType.semi_colon)
 
         if member ~= nil then
@@ -299,7 +300,7 @@ class Parser << BaseParser
   end
 
   function expression_statement()
-    local primaryexpr = self:primary_expression()
+    local primaryexpr = self:match_primary_expression()
     if primaryexpr ~= nil then
       -- immediately return this if it is a FunctionCallExpression as an ExpressionStatement
       if primaryexpr.syntax_kind == SyntaxKind.function_call_expression then
@@ -311,7 +312,7 @@ class Parser << BaseParser
         local variables = { primaryexpr }
 
         while self:match(TokenType.comma) do
-          local expr = self:primary_expression()
+          local expr = self:match_primary_expression()
           if expr and (expr.syntax_kind == SyntaxKind.member_expression
             or primaryexpr.syntax_kind == SyntaxKind.index_expression
             or  primaryexpr.syntax_kind == SyntaxKind.identifier) then
@@ -580,7 +581,7 @@ class Parser << BaseParser
     end
   end
 
-  function last_statement()
+  function match_last_statement()
     -- 'break'
     if self:match(TokenType.break_keyword) then
       return AST.BreakStatement.new()
@@ -599,12 +600,15 @@ class Parser << BaseParser
     end
   end
 
-  function function_arg()
+  function match_function_arg()
     -- expr
-    local expr = self:expression()
-    if expr ~= nil then
+    local expr = self:match_expression()
+
+    if expr then
       return AST.ArgumentExpression.new(expr)
     end
+    
+    return expr
   end
 
   function function_arg_list()
@@ -613,8 +617,7 @@ class Parser << BaseParser
       local args = {}
 
       repeat
-        local arg = self:function_arg()
-
+        local arg = self:match_function_arg()
         if arg ~= nil then
           table.insert(args, arg)
         end
@@ -627,11 +630,11 @@ class Parser << BaseParser
 
     -- string | TableLiteralExpression
     if self:assert(TokenType.string, TokenType.left_brace) then
-      return { self:function_arg() }
+      return { self:match_function_arg() }
     end
   end
 
-  function prefix_expression()
+  function match_prefix_expression()
     -- '(' expr ')'
     if self:match(TokenType.left_paren) then
       local expr = AST.PrefixExpression.new(self:expression())
@@ -648,12 +651,20 @@ class Parser << BaseParser
     end
   end
 
+  function match_expression()
+    return self:match_sub_expression(0)
+  end
+
   function expression()
     return self:sub_expression(0)
   end
 
-  function primary_expression()
-    local expr = self:prefix_expression()
+  function match_primary_expression()
+    local expr = self:match_prefix_expression()
+    
+    if not expr then
+      return nil
+    end
 
     while true do
       if self:match(TokenType.dot) then
@@ -671,20 +682,15 @@ class Parser << BaseParser
           args
         )
       elseif self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
-        if expr then
-          local args = self:function_arg_list()
-          expr = AST.FunctionCallExpression.new(expr, args)
-        else
-          -- No base found
-          error("unexpected symbol near '" .. self:consume().value .. "'")
-        end
+        local args = self:function_arg_list()
+        expr = AST.FunctionCallExpression.new(expr, args)
       else
         return expr
       end
     end
   end
 
-  function simple_expression()
+  function match_simple_expression()
     -- 'nil'
     if self:match(TokenType.nil_keyword) then
       return AST.NilLiteralExpression.new()
@@ -766,7 +772,7 @@ class Parser << BaseParser
       return AST.LambdaExpression.new({}, block, false, nil)
     end
 
-    return self:primary_expression()
+    return self:match_primary_expression()
   end
 
   function type_expression()
@@ -825,6 +831,14 @@ class Parser << BaseParser
   end
 
   function sub_expression(limit)
+    local expr = self:match_sub_expression(limit)
+    if expr == nil then
+      self:error_near_next_token("unexpected symbol")
+    end
+    return expr
+  end
+
+  function match_sub_expression(limit)
     local expr
 
     local unary_op = self:get_unary_op()
@@ -832,7 +846,7 @@ class Parser << BaseParser
       self:consume()
       expr = AST.UnaryOpExpression.new(unary_op, self:sub_expression(unary_priority))
     else
-      expr = self:simple_expression()
+      expr = self:match_simple_expression()
     end
 
     local binary_op = self:get_binary_op()
@@ -841,6 +855,9 @@ class Parser << BaseParser
       self:consume()
       -- parse a new sub_expression with the right priority of this binary_op
       local next_expr = self:sub_expression(priority[binary_op][2])
+      if expr == nil then
+        self:error_near_next_token("unexpected symbol")
+      end
       expr = AST.BinaryOpExpression.new(expr, binary_op, next_expr)
 
       -- is there any binary op after this?
@@ -850,6 +867,9 @@ class Parser << BaseParser
     -- Type assertions
     while self:match(TokenType.as_keyword) do
       -- Parse a type expression
+      if expr == nil then
+        error("unexpected symbol near 'as'")
+      end
       expr = AST.TypeAssertionExpression.new(expr, self:type_expression())
     end
 
@@ -861,7 +881,7 @@ class Parser << BaseParser
     local exprlist = {}
 
     repeat
-      local expr = self:expression()
+      local expr = self:match_expression()
 
       if expr ~= nil then
         table.insert(exprlist, expr)
@@ -871,7 +891,7 @@ class Parser << BaseParser
     return exprlist
   end
 
-  function parameter_declaration()
+  function match_parameter_declaration()
     -- identifier | '...'
     if self:assert(TokenType.identifier, TokenType.triple_dot) then
       local param = self:consume()
@@ -892,7 +912,7 @@ class Parser << BaseParser
     local param
 
     repeat
-      param = self:parameter_declaration()
+      param = self:match_parameter_declaration()
       if param ~= nil then
         table.insert(paramlist, param)
       end
@@ -901,7 +921,7 @@ class Parser << BaseParser
     return paramlist
   end
 
-  function field_declaration()
+  function match_field_declaration()
     -- '[' expr ']' '=' expr
     if self:match(TokenType.left_bracket) then
       local key = self:expression()
@@ -922,7 +942,7 @@ class Parser << BaseParser
     end
 
     -- expr
-    local value = self:expression()
+    local value = self:match_expression()
     if value ~= nil then
       return AST.SequentialFieldDeclaration.new(value)
     end
@@ -934,7 +954,7 @@ class Parser << BaseParser
     local lastfield
 
     repeat
-      lastfield = self:field_declaration()
+      lastfield = self:match_field_declaration()
 
       if lastfield ~= nil then
         table.insert(fieldlist, lastfield)
@@ -943,6 +963,15 @@ class Parser << BaseParser
     until lastfield == nil
 
     return fieldlist
+  end
+
+  function error_near_next_token(message)
+    local next_token = self:consume()
+    if next_token then
+      error(message .. " near '" .. next_token.value .. "'")
+    else
+      error(message .. " near '<EOF>'")
+    end
   end
 end
 

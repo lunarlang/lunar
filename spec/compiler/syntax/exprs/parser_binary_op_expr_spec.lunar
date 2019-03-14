@@ -181,4 +181,14 @@ describe("BinaryOpExpression syntax", do
 
     assert.same(AST.BinaryOpExpression.new(left_operand, AST.BinaryOpKind.and_op, right_operand), result)
   end)
+
+  it("should guard against unfinished binary expressions", do
+    local tokens = Lexer.new("1 -"):tokenize()
+    
+    local success, value = pcall(function()
+      return Parser.new(tokens):expression()
+    end)
+
+    assert.False(success)
+  end)
 end)
