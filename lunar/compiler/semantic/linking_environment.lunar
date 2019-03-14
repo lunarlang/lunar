@@ -12,7 +12,7 @@ typealias ReturnsMap = Map<string, {
 }>
 ]]
 
-class ProjectEnvironment
+class LinkingEnvironment
   returns_map = {} -- public returns_map: ReturnsMap
   visited_sources_map = {} -- Map<string, boolean>
   -- A map determining whether or not a source file in the project environment was bound
@@ -292,4 +292,4 @@ class ProjectEnvironment
   end
 end
 
-return ProjectEnvironment
+return LinkingEnvironment

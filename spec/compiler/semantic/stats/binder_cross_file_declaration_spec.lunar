@@ -28,7 +28,7 @@ describe("Bindings of declared identifiers", do
     local tokens = Lexer.new("declare package 'x' string"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
     Binder.new(result, env):bind()
 
     local dec_stat = result[1]
@@ -46,7 +46,7 @@ describe("Bindings of declared identifiers", do
     local tokens = Lexer.new("declare package 'x' string; from 'x' import * as x; print(x)"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
     Binder.new(result, env):bind()
 
     -- link
@@ -73,7 +73,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should allow declaration of return type symbols within a local source file", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("declare returns string"):tokenize()
@@ -109,7 +109,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should allow implicit declaration of return type symbols within a local source file", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("return 'Hello, world!'"):tokenize()
@@ -145,7 +145,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should allow implicit declaration of export symbols within a local source file", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("export x = 'Hello, world!'"):tokenize()
@@ -190,7 +190,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should allow imports of standalone class type symbols", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("export class MyClass end"):tokenize()
@@ -256,7 +256,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should allow import class type symbols with class value symbols", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("export class MyClass end"):tokenize()
@@ -314,7 +314,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against re-declaration of the same export", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -325,7 +325,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against declaration of exports with returns", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -336,7 +336,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against declaration of exports with returns declaration", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -347,7 +347,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against re-declaration of returns across files", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -363,7 +363,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against re-declaration of returns within files", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -374,7 +374,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against re-declaration of returns within files", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'

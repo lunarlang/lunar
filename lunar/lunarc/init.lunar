@@ -18,7 +18,7 @@ local Parser = require "lunar.compiler.syntax.parser"
 local Binder = require "lunar.compiler.semantic.binder"
 local Checker = require "lunar.compiler.checking.checker"
 local Transpiler = require "lunar.compiler.codegen.transpiler"
-local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
+local LinkingEnvironment = require "lunar.compiler.semantic.linking_environment"
 local PathUtils = require "lunar.utils.path_utils"
 
 local function join(...)
@@ -41,7 +41,7 @@ local function assert_file_ext(name, ext)
   return name:sub(-#ext) == ext
 end
 
-local project_env = ProjectEnvironment.new()
+local project_env = LinkingEnvironment.new()
 local parsed_sources = {}
 local error_infos = {}
 
