@@ -1,2 +1,17 @@
-include = { "lunar", "spec" }
+source_environments = {
+  {
+    include = { "lunar" },
+    environment = {
+      "lunar.lunarc.lua_lib",
+      "lunar.lunarc.dependencies",
+    }
+  },
+  {
+    include = { "spec" },
+    environment = {
+      "lunar.lunarc.lua_lib",
+      "spec.helpers.environment",
+    }
+  },
+}
 out_dir = "dist"
