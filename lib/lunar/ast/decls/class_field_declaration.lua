@@ -4,15 +4,14 @@ local Identifier = require("lunar.ast.exprs.identifier")
 local MemberExpression = require("lunar.ast.exprs.member_expression")
 local AssignmentStatement = require("lunar.ast.stats.assignment_statement")
 local SelfAssignmentOpKind = require("lunar.ast.stats.self_assignment_op_kind")
-local ClassFieldDeclaration = setmetatable({}, {
-  __index = SyntaxNode,
-})
+local ClassFieldDeclaration = setmetatable({}, { __index = SyntaxNode })
 ClassFieldDeclaration.__index = setmetatable({}, SyntaxNode)
+local super = SyntaxNode.constructor
 function ClassFieldDeclaration.new(is_static, identifier, type_annotation, value)
   return ClassFieldDeclaration.constructor(setmetatable({}, ClassFieldDeclaration), is_static, identifier, type_annotation, value)
 end
 function ClassFieldDeclaration.constructor(self, is_static, identifier, type_annotation, value)
-  SyntaxNode.constructor(self, SyntaxKind.class_field_declaration)
+  super(self, SyntaxKind.class_field_declaration)
   self.is_static = is_static
   self.identifier = identifier
   self.type_annotation = type_annotation

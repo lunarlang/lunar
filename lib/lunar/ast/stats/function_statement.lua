@@ -1,14 +1,13 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local FunctionStatement = setmetatable({}, {
-  __index = SyntaxNode,
-})
+local FunctionStatement = setmetatable({}, { __index = SyntaxNode })
 FunctionStatement.__index = setmetatable({}, SyntaxNode)
+local super = SyntaxNode.constructor
 function FunctionStatement.new(base, parameters, block, return_type_annotation, is_local)
   return FunctionStatement.constructor(setmetatable({}, FunctionStatement), base, parameters, block, return_type_annotation, is_local)
 end
 function FunctionStatement.constructor(self, base, parameters, block, return_type_annotation, is_local)
-  SyntaxNode.constructor(self, SyntaxKind.function_statement)
+  super(self, SyntaxKind.function_statement)
   if is_local == nil then
     is_local = false
   end

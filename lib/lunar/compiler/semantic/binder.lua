@@ -3,15 +3,14 @@ local SyntaxKind = require("lunar.ast.syntax_kind")
 local DiagnosticUtils = require("lunar.utils.diagnostic_utils")
 local Symbol = require("lunar.compiler.semantic.symbol")
 local SymbolTable = require("lunar.compiler.semantic.symbol_table")
-local Binder = setmetatable({}, {
-  __index = BaseBinder,
-})
+local Binder = setmetatable({}, { __index = BaseBinder })
 Binder.__index = setmetatable({}, BaseBinder)
+local super = BaseBinder.constructor
 function Binder.new(ast, environment, file_path_dot)
   return Binder.constructor(setmetatable({}, Binder), ast, environment, file_path_dot)
 end
 function Binder.constructor(self, ast, environment, file_path_dot)
-  BaseBinder.constructor(self, environment, file_path_dot)
+  super(self, environment, file_path_dot)
   self.contextual_varargs = nil
   self.is_function_scope = nil
   self.binding_visitors = {

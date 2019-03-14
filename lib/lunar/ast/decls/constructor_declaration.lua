@@ -9,15 +9,14 @@ local ExpressionStatement = require("lunar.ast.stats.expression_statement")
 local FunctionStatement = require("lunar.ast.stats.function_statement")
 local ReturnStatement = require("lunar.ast.stats.return_statement")
 local ParameterDeclaration = require("lunar.ast.decls.parameter_declaration")
-local ConstructorDeclaration = setmetatable({}, {
-  __index = SyntaxNode,
-})
+local ConstructorDeclaration = setmetatable({}, { __index = SyntaxNode })
 ConstructorDeclaration.__index = setmetatable({}, SyntaxNode)
+local super = SyntaxNode.constructor
 function ConstructorDeclaration.new(params, block)
   return ConstructorDeclaration.constructor(setmetatable({}, ConstructorDeclaration), params, block)
 end
 function ConstructorDeclaration.constructor(self, params, block)
-  SyntaxNode.constructor(self, SyntaxKind.constructor_declaration)
+  super(self, SyntaxKind.constructor_declaration)
   self.params = params
   self.block = block
   return self

@@ -1,13 +1,13 @@
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local SyntaxNode = require("lunar.ast.syntax_node")
-local WhileStatement = setmetatable({}, {
-  __index = SyntaxNode,
-})
+local WhileStatement = setmetatable({}, { __index = SyntaxNode })
 WhileStatement.__index = setmetatable({}, SyntaxNode)
+local super = SyntaxNode.constructor
 function WhileStatement.new(expr, block)
   return WhileStatement.constructor(setmetatable({}, WhileStatement), expr, block)
 end
 function WhileStatement.constructor(self, expr, block)
+  super(self)
   local super = SyntaxNode.new(SyntaxKind.while_statement)
   local self = setmetatable(super, WhileStatement)
   self.expr = expr

@@ -65,15 +65,14 @@ local priority = {
     1,
   },
 }
-local Parser = setmetatable({}, {
-  __index = BaseParser,
-})
+local Parser = setmetatable({}, { __index = BaseParser })
 Parser.__index = setmetatable({}, BaseParser)
+local super = BaseParser.constructor
 function Parser.new(tokens)
   return Parser.constructor(setmetatable({}, Parser), tokens)
 end
 function Parser.constructor(self, tokens)
-  BaseParser.constructor(self, tokens)
+  super(self, tokens)
   self.binary_op_map = {
     ["+"] = AST.BinaryOpKind.addition_op,
     ["-"] = AST.BinaryOpKind.subtraction_op,
@@ -104,6 +103,7 @@ function Parser.constructor(self, tokens)
     ["*="] = AST.SelfAssignmentOpKind.multiplication_equal_op,
     ["/="] = AST.SelfAssignmentOpKind.division_equal_op,
     ["^="] = AST.SelfAssignmentOpKind.power_equal_op,
+    ["%="] = AST.SelfAssignmentOpKind.remainder_equal_op,
   }
   return self
 end
@@ -300,6 +300,7 @@ function Parser.__index:expression_statement()
         TokenType.asterisk_equal,
         TokenType.slash_equal,
         TokenType.caret_equal,
+        TokenType.percent_equal,
       }
       local op
       if (not self:assert(unpack(self_assignable_ops))) then

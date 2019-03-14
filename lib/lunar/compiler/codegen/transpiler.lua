@@ -1,15 +1,14 @@
 local AST = require("lunar.ast")
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local BaseTranspiler = require("lunar.compiler.codegen.base_transpiler")
-local Transpiler = setmetatable({}, {
-  __index = BaseTranspiler,
-})
+local Transpiler = setmetatable({}, { __index = BaseTranspiler })
 Transpiler.__index = setmetatable({}, BaseTranspiler)
+local super = BaseTranspiler.constructor
 function Transpiler.new(ast)
   return Transpiler.constructor(setmetatable({}, Transpiler), ast)
 end
 function Transpiler.constructor(self, ast)
-  BaseTranspiler.constructor(self)
+  super(self)
   self.footer_exports = nil
   self.visitors = {
     [SyntaxKind.do_statement] = self.visit_do_statement,
@@ -147,6 +146,87 @@ function Transpiler.__index:visit_exprlist(exprlist)
     end
   end
 end
+function Transpiler.__index:visit_class_function_declaration_list(methods, class_decl)
+  for _, method in pairs(methods) do
+    self:visit_class_function_declaration(method, class_decl)
+  end
+end
+function Transpiler.__index:visit_constructor_declaration(ctor, fields, class_decl)
+  if fields == nil then
+    fields = {}
+  end
+  self:iwrite("function ")
+  self:visit_identifier(class_decl.identifier)
+  self:write(".new(")
+  if ctor and ctor.params and (#ctor.params) > 0 then
+    self:visit_params(ctor.params)
+  end
+  self:writeln(")")
+  self:indent()
+  self:iwrite("return ")
+  self:visit_identifier(class_decl.identifier)
+  self:write(".constructor(setmetatable({}, ")
+  self:visit_identifier(class_decl.identifier)
+  self:write(")")
+  if ctor and ctor.params and (#ctor.params) > 0 then
+    self:write(", ")
+    self:visit_params(ctor.params)
+  end
+  self:writeln(")")
+  self:dedent()
+  self:iwriteln("end")
+  self:iwrite("function ")
+  self:visit_identifier(class_decl.identifier)
+  self:write(".constructor(self")
+  if ctor and ctor.params and (#ctor.params) > 0 then
+    self:write(", ")
+    self:visit_params(ctor.params)
+  end
+  self:writeln(")")
+  self:indent()
+  if class_decl.super_identifier then
+    self:iwrite("super(self")
+    for index, stat in pairs(ctor and ctor.block or {}) do
+      if stat.syntax_kind == SyntaxKind.expression_statement and stat.expr.syntax_kind == SyntaxKind.function_call_expression and stat.expr.base.syntax_kind == SyntaxKind.identifier and stat.expr.base.name == "super" then
+        local super_stat = stat
+        table.remove(ctor.block, index)
+        if super_stat.expr and super_stat.expr.arguments and (#super_stat.expr.arguments) > 0 then
+          self:write(", ")
+          self:visit_args(super_stat.expr.arguments)
+        end
+        break
+      end
+    end
+    self:writeln(")")
+  end
+  for _, field in pairs(fields) do
+    self:iwrite("self.")
+    self:visit_identifier(field.identifier)
+    self:write(" = ")
+    self:visit_node(field.value)
+    self:writeln()
+  end
+  self:visit_block(ctor and ctor.block or {})
+  self:iwriteln("return self")
+  self:dedent()
+  self:iwriteln("end")
+end
+function Transpiler.__index:visit_class_function_declaration(method, class_decl)
+  self:iwrite("function ")
+  self:visit_identifier(class_decl.identifier)
+  self:write(".")
+  if (not method.is_static) then
+    self:write("__index:")
+  end
+  self:visit_identifier(method.identifier)
+  self:write("(")
+  self:visit_params(method.params)
+  self:writeln(")")
+  self:indent()
+  self:visit_block(method.block)
+  self:dedent()
+  self:iwriteln("end")
+end
 function Transpiler.__index:visit_do_statement(stat)
   self:iwriteln("do")
   self:indent()
@@ -178,7 +258,55 @@ function Transpiler.__index:visit_if_statement(stat)
   self:iwriteln("end")
 end
 function Transpiler.__index:visit_class_statement(stat)
-  self:visit_block(stat:lower())
+  self:iwrite("local ")
+  self:visit_identifier(stat.identifier)
+  self:write(" = ")
+  if stat.super_identifier ~= nil then
+    self:write("setmetatable({}, { __index = ")
+    self:visit_identifier(stat.super_identifier)
+    self:writeln(" })")
+  else
+    self:writeln("{}")
+  end
+  self:visit_identifier(stat.identifier)
+  self:write(".__index = ")
+  if stat.super_identifier ~= nil then
+    self:write("setmetatable({}, ")
+    self:visit_identifier(stat.super_identifier)
+    self:writeln(")")
+  else
+    self:writeln("{}")
+  end
+  if stat.super_identifier then
+    self:iwrite("local super = ")
+    self:visit_identifier(stat.super_identifier)
+    self:writeln(".constructor")
+  end
+  local instance_fields, static_fields = {}, {}
+  local instance_methods, static_methods = {}, {}
+  local ctor = nil
+  for _, member in pairs(stat.members) do
+    if member.syntax_kind == SyntaxKind.class_field_declaration then
+      local list = member.is_static and static_fields or instance_fields
+      table.insert(list, member)
+    elseif member.syntax_kind == SyntaxKind.class_function_declaration then
+      local list = member.is_static and static_methods or instance_methods
+      table.insert(list, member)
+    elseif member.syntax_kind == SyntaxKind.constructor_declaration then
+      ctor = member
+    end
+  end
+  for _, field in pairs(static_fields) do
+    self:visit_identifier(stat.identifier)
+    self:write(".")
+    self:visit_identifier(field.identifier)
+    self:write(" = ")
+    self:visit_node(field.value)
+    self:writeln()
+  end
+  self:visit_constructor_declaration(ctor, instance_fields, stat)
+  self:visit_class_function_declaration_list(static_methods, stat)
+  self:visit_class_function_declaration_list(instance_methods, stat)
 end
 function Transpiler.__index:visit_while_statement(stat)
   self:iwrite("while ")

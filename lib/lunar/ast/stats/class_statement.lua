@@ -9,15 +9,14 @@ local AssignmentStatement = require("lunar.ast.stats.assignment_statement")
 local SelfAssignmentOpKind = require("lunar.ast.stats.self_assignment_op_kind")
 local ConstructorDeclaration = require("lunar.ast.decls.constructor_declaration")
 local MemberFieldDeclaration = require("lunar.ast.decls.member_field_declaration")
-local ClassStatement = setmetatable({}, {
-  __index = SyntaxNode,
-})
+local ClassStatement = setmetatable({}, { __index = SyntaxNode })
 ClassStatement.__index = setmetatable({}, SyntaxNode)
+local super = SyntaxNode.constructor
 function ClassStatement.new(identifier, super_identifier, members)
   return ClassStatement.constructor(setmetatable({}, ClassStatement), identifier, super_identifier, members)
 end
 function ClassStatement.constructor(self, identifier, super_identifier, members)
-  SyntaxNode.constructor(self, SyntaxKind.class_statement)
+  super(self, SyntaxKind.class_statement)
   self.identifier = identifier
   self.super_identifier = super_identifier
   self.members = members
