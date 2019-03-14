@@ -685,6 +685,10 @@ class Binder << BaseBinder
   end
 
   function bind_declare_global_statement(stat)
+    if self.scope.level ~= self.root_scope.level then
+      error("Globals cannot be cannot be declared outside of the root scope")
+    end
+
     if not stat.is_type_declaration then
       -- Search for ambient globals (in the whole environment only)
       local symbol = self.environment.env_globals:get_value(stat.identifier.name)
@@ -708,6 +712,10 @@ class Binder << BaseBinder
   end
 
   function bind_declare_package_statement(stat)
+    if self.scope.level ~= self.root_scope.level then
+      error("Packages cannot be declared outside of the root scope")
+    end
+
     self:bind_type_expression(stat.type_expr)
 
     -- Declare source file return expression
@@ -730,6 +738,10 @@ class Binder << BaseBinder
   end
 
   function bind_declare_returns_statement(stat)
+    if self.scope.level ~= self.root_scope.level then
+      error("Returns cannot be made outside of the root scope")
+    end
+
     self:bind_type_expression(stat.type_expr)
 
     -- Declare source file return expression

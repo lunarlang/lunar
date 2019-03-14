@@ -391,4 +391,53 @@ describe("Bindings of declared identifiers", do
       Binder.new(result_x, env, 'x'):bind()
     end))
   end)
+
+  it("should guard against imports outside of root scope", do
+    assert.False(pcall(do
+      local tokens = Lexer.new("if true then import 'src2' end"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should not guard against imports inside of root scope", do
+    assert.True(pcall(do
+      local tokens = Lexer.new("import 'src2'"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should guard against exports outside of root scope", do
+    assert.False(pcall(do
+      local tokens = Lexer.new("if true then export x = 'foo' end"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should not guard against exports inside of root scope", do
+    assert.True(pcall(do
+      local tokens = Lexer.new("export x = 'foo'"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should guard against declare statements outside of root scope", do
+    assert.False(pcall(do
+      local tokens = Lexer.new("if true then declare global x: string end"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should not guard against declare statements inside of root scope", do
+    assert.True(pcall(do
+      local tokens = Lexer.new("declare global x: string"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
 end)
