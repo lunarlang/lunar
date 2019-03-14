@@ -48,4 +48,4 @@ class ClassSymbol << Symbol
   end
 end
 
-return ModuleSymbol
+return ClassSymbol

@@ -229,7 +229,7 @@ describe("Bindings of declared identifiers", do
 
     local export_type_symbol = package_env_symbol.exports:get_type('MyClass')
     local export_value_symbol = package_env_symbol.exports:get_value('MyClass')
-    assert.is_not_equal(export_type_symbol, export_value_symbol)
+    assert.equal(export_type_symbol, export_value_symbol)
 
     -- Type symbol for 'MyClass' should bind as an alias to the package export type
     assert.truthy(package_alias_type_ident.symbol)
@@ -253,10 +253,6 @@ describe("Bindings of declared identifiers", do
     assert.equal(export_inner_stat, export_type_symbol:get_canonical_declaration())
     assert.True(export_type_symbol:is_assigned())
     assert.True(export_type_symbol:is_referenced())
-
-    assert.equal(export_inner_stat, export_value_symbol:get_canonical_declaration())
-    assert.True(export_value_symbol:is_assigned())
-    assert.False(export_value_symbol:is_referenced())
   end)
 
   it("should allow import class type symbols with class value symbols", do
@@ -291,7 +287,7 @@ describe("Bindings of declared identifiers", do
     local export_value_symbol = package_env_symbol.exports:get_value('MyClass')
     assert.truthy(export_type_symbol)
     assert.truthy(export_value_symbol)
-    assert.is_not.equal(export_type_symbol, export_value_symbol)
+    assert.equal(export_type_symbol, export_value_symbol)
     assert.is_not.equal(export_type_symbol, package_alias_type_ident.symbol)
     assert.is_not.equal(export_value_symbol, package_alias_value_ident.symbol)
 
@@ -315,10 +311,6 @@ describe("Bindings of declared identifiers", do
     assert.equal(export_inner_stat, export_type_symbol:get_canonical_declaration())
     assert.True(export_type_symbol:is_assigned())
     assert.True(export_type_symbol:is_referenced())
-
-    assert.equal(export_inner_stat, export_value_symbol:get_canonical_declaration())
-    assert.True(export_value_symbol:is_assigned())
-    assert.True(export_value_symbol:is_referenced())
   end)
 
   it("should guard against re-declaration of the same export", do

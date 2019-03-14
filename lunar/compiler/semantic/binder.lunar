@@ -2,7 +2,7 @@ local BaseBinder = require "lunar.compiler.semantic.base_binder"
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local DiagnosticUtils = require "lunar.utils.diagnostic_utils"
 local Symbol = require "lunar.compiler.semantic.symbol"
-local SymbolTable = require "lunar.compiler.semantic.symbol_table"
+local ClassSymbol = require "lunar.compiler.semantic.class_symbol"
 
 class Binder << BaseBinder
   contextual_varargs = nil
@@ -231,24 +231,27 @@ class Binder << BaseBinder
       self:push_scope(false)
     end
 
-    -- Declare and assign type symbol
+    -- Add class value symbol
+    -- In a non-strict mode, we should push the scope for re-declared variable
+    if self.scope:has_level_value(identifier.name) then
+      self:push_scope(false)
+    end
+
+    local class_symbol = ClassSymbol.new(identifier.name)
+    class_symbol:bind_assignment_reference(identifier)
+    class_symbol:bind_declaration_reference(identifier, stat)
+    self.scope:add_value(class_symbol)
+
+    -- Merge existing type symbol if it exists
     local type_symbol = self.environment:get_global_type(self.file_path, identifier.name)
     if type_symbol then
       if type_symbol:is_declared() then
         error("Attempt to re-declare type '" .. identifier.name .. "'")
       end
+      type_symbol:merge_into(class_symbol)
     else
-      type_symbol = Symbol.new(identifier.name)
-      self.environment:add_global_type(self.file_path, type_symbol)
+      self.environment:add_global_type(self.file_path, class_symbol)
     end
-    type_symbol:bind_assignment_reference(identifier)
-    type_symbol:bind_declaration_reference(identifier, stat)
-
-    -- Add value symbol
-    self:bind_value_assignment_declaration(identifier, stat)
-    local value_symbol = self.scope:get_value(identifier.name)
-    value_symbol.members = SymbolTable.new()
-    value_symbol.exports = SymbolTable.new()
 
     self:push_scope(true)
 
@@ -272,11 +275,11 @@ class Binder << BaseBinder
     for i = 1, #stat.members do
       local member = stat.members[i]
       if member.syntax_kind == SyntaxKind.class_function_declaration then
-        self:bind_class_function_declaration(member, value_symbol)
+        self:bind_class_function_declaration(member, class_symbol)
       elseif member.syntax_kind == SyntaxKind.class_field_declaration then
-        self:bind_class_field_declaration(member, value_symbol)
+        self:bind_class_field_declaration(member, class_symbol)
       elseif member.syntax_kind == SyntaxKind.constructor_declaration then
-        self:bind_class_constructor_declaration(member, value_symbol)
+        self:bind_class_constructor_declaration(member, class_symbol)
       else
         error("Unbound class declaration of syntax kind '"
           .. tostring(DiagnosticUtils.index_of(SyntaxKind, member.syntax_kind))
@@ -290,7 +293,7 @@ class Binder << BaseBinder
 
   function bind_class_field_declaration(decl, class_symbol)
     if decl.is_static then
-      if class_symbol.exports:has_value(decl.identifier.name) then
+      if class_symbol.statics:has_value(decl.identifier.name) then
         error("Attempt to re-declare static class field '" .. decl.identifier.name .. "'")
       end
     else
@@ -303,7 +306,7 @@ class Binder << BaseBinder
     member_symbol:bind_declaration_reference(decl.identifier, decl)
 
     if decl.is_static then
-      class_symbol.exports:add_value(member_symbol)
+      class_symbol.statics:add_value(member_symbol)
     else
       class_symbol.members:add_value(member_symbol)
     end
@@ -315,7 +318,7 @@ class Binder << BaseBinder
 
   function bind_class_function_declaration(decl, class_symbol)
     if decl.is_static then
-      if class_symbol.exports:has_value(decl.identifier.name) then
+      if class_symbol.statics:has_value(decl.identifier.name) then
         error("Attempt to re-declare static class field '" .. decl.identifier.name .. "'")
       end
     else
@@ -328,7 +331,7 @@ class Binder << BaseBinder
     member_symbol:bind_declaration_reference(decl.identifier, decl)
 
     if decl.is_static then
-      class_symbol.exports:add_value(member_symbol)
+      class_symbol.statics:add_value(member_symbol)
     else
       class_symbol.members:add_value(member_symbol)
     end
@@ -337,13 +340,13 @@ class Binder << BaseBinder
   end
 
   function bind_class_constructor_declaration(decl, class_symbol)
-    if class_symbol.exports:has_value('constructor') then
+    if class_symbol.statics:has_value('constructor') then
       error("Attempt to re-declare class constructor")
     end
     local member_symbol = Symbol.new('constructor')
     member_symbol:bind_declaration(decl)
 
-    class_symbol.exports:add_value(member_symbol)
+    class_symbol.statics:add_value(member_symbol)
 
     self:bind_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
   end
