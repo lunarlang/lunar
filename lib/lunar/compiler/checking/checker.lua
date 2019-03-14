@@ -5,7 +5,7 @@ function Checker.new(ast, linked_env, is_ambient_context)
   return Checker.constructor(setmetatable({}, Checker), ast, linked_env, is_ambient_context)
 end
 function Checker.constructor(self, ast, linked_env, is_ambient_context)
-  self.in_import_header = true
+  self.in_header_context = true
   self.visitors = {
     [SyntaxKind.variable_statement] = self.visit_variable_statement,
     [SyntaxKind.do_statement] = self.visit_do_statement,
@@ -66,12 +66,8 @@ function Checker.__index:visit_expression_list(exprs)
   end
 end
 function Checker.__index:visit_statement(stat)
-  -- Update context for non-import statements
-  if stat.syntax_kind ~= SyntaxKind.import_statement
-    and stat.syntax_kind ~= SyntaxKind.declare_global_statement
-    and stat.syntax_kind ~= SyntaxKind.declare_package_statement
-    and stat.syntax_kind ~= SyntaxKind.declare_returns_statement then
-    self.in_import_header = false
+  if stat.syntax_kind ~= SyntaxKind.import_statement and stat.syntax_kind ~= SyntaxKind.declare_global_statement and stat.syntax_kind ~= SyntaxKind.declare_package_statement and stat.syntax_kind ~= SyntaxKind.declare_returns_statement then
+    self.is_header_context = false
   end
   self:visit_node(stat)
 end
@@ -82,7 +78,7 @@ function Checker.__index:visit_node(node)
   end
 end
 function Checker.__index:visit_import_statement(stat)
-  if (not self.in_import_header) then
+  if (not self.in_header_context) then
     error("Imports must be declared at the top of a file")
   end
 end
@@ -128,7 +124,7 @@ function Checker.__index:visit_if_statement(stat)
   self:visit_statements(stat.block)
   self:visit_expression_list(stat.elseif_branches)
   if stat.else_branch then
-    self:visit_statement(stat.else_branch)
+    self:visit_statements(stat.else_branch)
   end
 end
 function Checker.__index:visit_class_statement(stat)

@@ -6,4 +6,5 @@ return {
   multiplication_equal_op = 5,
   division_equal_op = 6,
   power_equal_op = 7,
+  remainder_equal_op = 8,
 }

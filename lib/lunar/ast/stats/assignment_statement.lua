@@ -20,6 +20,7 @@ function AssignmentStatement.constructor(self, variables, operator, exprs)
     [SelfAssignmentOpKind.multiplication_equal_op] = BinaryOpKind.multiplication_op,
     [SelfAssignmentOpKind.division_equal_op] = BinaryOpKind.division_op,
     [SelfAssignmentOpKind.power_equal_op] = BinaryOpKind.power_op,
+    [SelfAssignmentOpKind.remainder_equal_op] = BinaryOpKind.modulus_op,
   }
   self.variables = variables
   self.operator = operator

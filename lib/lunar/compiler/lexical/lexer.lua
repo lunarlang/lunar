@@ -64,6 +64,7 @@ function Lexer.constructor(self, source)
     pair(TokenType.asterisk_equal, "*="),
     pair(TokenType.slash_equal, "/="),
     pair(TokenType.caret_equal, "^="),
+    pair(TokenType.percent_equal, "%="),
     pair(TokenType.double_left_angle, "<<"),
     pair(TokenType.left_paren, "("),
     pair(TokenType.right_paren, ")"),
@@ -168,11 +169,7 @@ function Lexer.__index:next_string()
       elseif trivia_token and trivia_token.token_type == TokenType.end_of_line_trivia then
         self:error(("unfinished string near '%s'"):format(delimit .. buffer))
       end
-      if escaping then
-        escaping = false
-      else
-        escaping = self:peek() == "\\"
-      end
+      escaping = (not escaping) and self:peek() == "\\" or false
       buffer = buffer .. self:consume()
     until (not escaping) and self:match(delimit)
     self.position = old_pos

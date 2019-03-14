@@ -1,5 +1,5 @@
 local Scope = require("lunar.compiler.semantic.scope")
-local ProjectEnvironment = require("lunar.compiler.semantic.project_environment")
+local LinkingEnvironment = require("lunar.compiler.semantic.linking_environment")
 local BaseBinder = {}
 BaseBinder.__index = {}
 function BaseBinder.new(environment, file_path_dot)
@@ -9,7 +9,7 @@ function BaseBinder.constructor(self, environment, file_path_dot)
   self.scope = nil
   self.root_scope = nil
   self.level = 0
-  self.environment = environment or ProjectEnvironment.new()
+  self.environment = environment or LinkingEnvironment.new()
   self.file_path = file_path_dot or "src"
   return self
 end

@@ -104,6 +104,7 @@ function Parser.constructor(self, tokens)
     ["*="] = AST.SelfAssignmentOpKind.multiplication_equal_op,
     ["/="] = AST.SelfAssignmentOpKind.division_equal_op,
     ["^="] = AST.SelfAssignmentOpKind.power_equal_op,
+    ["%="] = AST.SelfAssignmentOpKind.remainder_equal_op,
   }
   return self
 end
@@ -119,12 +120,12 @@ end
 function Parser.__index:block()
   local stats = {}
   while (not self:is_finished()) do
-    local stat = self:statement()
+    local stat = self:match_statement()
     if stat ~= nil then
       table.insert(stats, stat)
       self:match(TokenType.semi_colon)
     end
-    local last = self:last_statement()
+    local last = self:match_last_statement()
     if last ~= nil then
       table.insert(stats, last)
       self:match(TokenType.semi_colon)
@@ -136,7 +137,7 @@ function Parser.__index:block()
   end
   return stats
 end
-function Parser.__index:class_member()
+function Parser.__index:match_class_member()
   if self:assert_seq("constructor") then
     self:move(1)
     self:expect(TokenType.left_paren, "Expected '(' after 'constructor'")
@@ -180,8 +181,8 @@ function Parser.__index:class_member()
   end
   self.position = old_position
 end
-function Parser.__index:statement()
-  return self:class_statement() or self:import_statement() or self:export_statement() or self:expression_statement() or self:do_statement() or self:while_statement() or self:repeat_until_statement() or self:if_statement() or self:for_statement() or self:function_statement() or self:variable_statement() or self:declare_statement()
+function Parser.__index:match_statement()
+  return self:class_statement() or self:import_statement() or self:export_statement() or self:do_statement() or self:while_statement() or self:repeat_until_statement() or self:if_statement() or self:for_statement() or self:function_statement() or self:variable_statement() or self:declare_statement() or self:expression_statement()
 end
 function Parser.__index:class_statement()
   if self:assert_seq("class", TokenType.identifier) then
@@ -193,7 +194,7 @@ function Parser.__index:class_statement()
     end
     local members = {}
     repeat
-      local member = self:class_member()
+      local member = self:match_class_member()
       self:match(TokenType.semi_colon)
       if member ~= nil then
         table.insert(members, member)
@@ -276,16 +277,17 @@ function Parser.__index:export_statement()
   end
 end
 function Parser.__index:expression_statement()
-  local primaryexpr = self:primary_expression()
+  local primaryexpr = self:match_primary_expression()
   if primaryexpr ~= nil then
     if primaryexpr.syntax_kind == SyntaxKind.function_call_expression then
-      return AST.ExpressionStatement.new(primaryexpr)
+      local test = AST.ExpressionStatement.new(primaryexpr)
+      return test
     elseif primaryexpr.syntax_kind == SyntaxKind.member_expression or primaryexpr.syntax_kind == SyntaxKind.index_expression or primaryexpr.syntax_kind == SyntaxKind.identifier then
       local variables = {
         primaryexpr,
       }
       while self:match(TokenType.comma) do
-        local expr = self:primary_expression()
+        local expr = self:match_primary_expression()
         if expr and (expr.syntax_kind == SyntaxKind.member_expression or primaryexpr.syntax_kind == SyntaxKind.index_expression or primaryexpr.syntax_kind == SyntaxKind.identifier) then
           table.insert(variables, expr)
         else
@@ -300,6 +302,7 @@ function Parser.__index:expression_statement()
         TokenType.asterisk_equal,
         TokenType.slash_equal,
         TokenType.caret_equal,
+        TokenType.percent_equal,
       }
       local op
       if (not self:assert(unpack(self_assignable_ops))) then
@@ -490,7 +493,7 @@ function Parser.__index:parse_string_contents(string_token)
     return string_token.value:sub(length + 1, (-length) - 1)
   end
 end
-function Parser.__index:last_statement()
+function Parser.__index:match_last_statement()
   if self:match(TokenType.break_keyword) then
     return AST.BreakStatement.new()
   end
@@ -502,17 +505,18 @@ function Parser.__index:last_statement()
     return AST.ReturnStatement.new(exprlist)
   end
 end
-function Parser.__index:function_arg()
-  local expr = self:expression()
-  if expr ~= nil then
+function Parser.__index:match_function_arg()
+  local expr = self:match_expression()
+  if expr then
     return AST.ArgumentExpression.new(expr)
   end
+  return expr
 end
 function Parser.__index:function_arg_list()
   if self:match(TokenType.left_paren) then
     local args = {}
     repeat
-      local arg = self:function_arg()
+      local arg = self:match_function_arg()
       if arg ~= nil then
         table.insert(args, arg)
       end
@@ -522,11 +526,11 @@ function Parser.__index:function_arg_list()
   end
   if self:assert(TokenType.string, TokenType.left_brace) then
     return {
-      self:function_arg(),
+      self:match_function_arg(),
     }
   end
 end
-function Parser.__index:prefix_expression()
+function Parser.__index:match_prefix_expression()
   if self:match(TokenType.left_paren) then
     local expr = AST.PrefixExpression.new(self:expression())
     self:expect(TokenType.right_paren, "Expected ')' to close '('")
@@ -537,11 +541,17 @@ function Parser.__index:prefix_expression()
     return AST.Identifier.new(identifier.value)
   end
 end
+function Parser.__index:match_expression()
+  return self:match_sub_expression(0)
+end
 function Parser.__index:expression()
   return self:sub_expression(0)
 end
-function Parser.__index:primary_expression()
-  local expr = self:prefix_expression()
+function Parser.__index:match_primary_expression()
+  local expr = self:match_prefix_expression()
+  if (not expr) then
+    return nil
+  end
   while true do
     if self:match(TokenType.dot) then
       local identifier = self:expect(TokenType.identifier, "Expected identifier after '.'")
@@ -562,7 +572,7 @@ function Parser.__index:primary_expression()
     end
   end
 end
-function Parser.__index:simple_expression()
+function Parser.__index:match_simple_expression()
   if self:match(TokenType.nil_keyword) then
     return AST.NilLiteralExpression.new()
   end
@@ -618,7 +628,7 @@ function Parser.__index:simple_expression()
     self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
     return AST.LambdaExpression.new({}, block, false, nil)
   end
-  return self:primary_expression()
+  return self:match_primary_expression()
 end
 function Parser.__index:type_expression()
   if self:assert(TokenType.nil_keyword) or self:assert(TokenType.function_keyword) or self:assert(TokenType.true_keyword) or self:assert(TokenType.false_keyword) then
@@ -665,22 +675,35 @@ function Parser.__index:get_binary_op()
   end
 end
 function Parser.__index:sub_expression(limit)
+  local expr = self:match_sub_expression(limit)
+  if expr == nil then
+    self:error_near_next_token("unexpected symbol")
+  end
+  return expr
+end
+function Parser.__index:match_sub_expression(limit)
   local expr
   local unary_op = self:get_unary_op()
   if unary_op ~= nil then
     self:consume()
     expr = AST.UnaryOpExpression.new(unary_op, self:sub_expression(unary_priority))
   else
-    expr = self:simple_expression()
+    expr = self:match_simple_expression()
   end
   local binary_op = self:get_binary_op()
   while binary_op ~= nil and priority[binary_op][1] > limit do
     self:consume()
     local next_expr = self:sub_expression(priority[binary_op][2])
+    if expr == nil then
+      self:error_near_next_token("unexpected symbol")
+    end
     expr = AST.BinaryOpExpression.new(expr, binary_op, next_expr)
     binary_op = self:get_binary_op()
   end
   while self:match(TokenType.as_keyword) do
+    if expr == nil then
+      error("unexpected symbol near 'as'")
+    end
     expr = AST.TypeAssertionExpression.new(expr, self:type_expression())
   end
   return expr
@@ -688,14 +711,14 @@ end
 function Parser.__index:expression_list()
   local exprlist = {}
   repeat
-    local expr = self:expression()
+    local expr = self:match_expression()
     if expr ~= nil then
       table.insert(exprlist, expr)
     end
   until (not self:match(TokenType.comma))
   return exprlist
 end
-function Parser.__index:parameter_declaration()
+function Parser.__index:match_parameter_declaration()
   if self:assert(TokenType.identifier, TokenType.triple_dot) then
     local param = self:consume()
     local type_annotation = nil
@@ -709,14 +732,14 @@ function Parser.__index:parameter_list()
   local paramlist = {}
   local param
   repeat
-    param = self:parameter_declaration()
+    param = self:match_parameter_declaration()
     if param ~= nil then
       table.insert(paramlist, param)
     end
   until (not self:match(TokenType.comma)) or param.identifier.name == "..."
   return paramlist
 end
-function Parser.__index:field_declaration()
+function Parser.__index:match_field_declaration()
   if self:match(TokenType.left_bracket) then
     local key = self:expression()
     self:expect(TokenType.right_bracket, "Expected ']' to close '['")
@@ -730,7 +753,7 @@ function Parser.__index:field_declaration()
     local value = self:expression()
     return AST.MemberFieldDeclaration.new(AST.Identifier.new(key.value), value)
   end
-  local value = self:expression()
+  local value = self:match_expression()
   if value ~= nil then
     return AST.SequentialFieldDeclaration.new(value)
   end
@@ -739,12 +762,20 @@ function Parser.__index:field_list()
   local fieldlist = {}
   local lastfield
   repeat
-    lastfield = self:field_declaration()
+    lastfield = self:match_field_declaration()
     if lastfield ~= nil then
       table.insert(fieldlist, lastfield)
       self:match(TokenType.comma, TokenType.semi_colon)
     end
   until lastfield == nil
   return fieldlist
+end
+function Parser.__index:error_near_next_token(message)
+  local next_token = self:consume()
+  if next_token then
+    error(message .. " near '" .. next_token.value .. "'")
+  else
+    error(message .. " near '<EOF>'")
+  end
 end
 return Parser
