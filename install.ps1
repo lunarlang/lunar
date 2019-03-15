@@ -1,3 +1,5 @@
+[Console]::WriteLine("Installing Lunar...")
+
 $targetDir = Join-Path $env:APPDATA "Lunar"
 $binDir = Join-Path $PSScriptRoot "bin"
 $lunarDir = Join-Path $PSScriptRoot "dist/lunar"
@@ -10,7 +12,7 @@ if (!$windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::
 } else {
 
   if (Test-Path $targetDir) {
-    $confirmation = Read-Host "Would you like to reinstall or uninstall? [R/U]"
+    $confirmation = Read-Host "A Lunar was install found, would you like to reinstall or uninstall it? [R/U]"
 
     if ($confirmation.ToLower() -eq "u") {
       [Console]::WriteLine("Uninstalling Lunar...")
@@ -34,3 +36,6 @@ if (!$windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::
 
   [Console]::WriteLine("Lunar has been installed in $targetDir")
 }
+
+Write-Host "Press any key to close this window."
+Read-Host
