@@ -1,3 +1,5 @@
+[Console]::WriteLine("Installing Lunar...")
+
 $targetDir = Join-Path $env:APPDATA "Lunar"
 $binDir = Join-Path $PSScriptRoot "bin"
 $lunarDir = Join-Path $PSScriptRoot "dist/lunar"
@@ -34,3 +36,6 @@ if (!$windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::
 
   [Console]::WriteLine("Lunar has been installed in $targetDir")
 }
+
+Write-Host "Press any key to close this window."
+Read-Host

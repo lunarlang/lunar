@@ -66,10 +66,9 @@ Alternatively, you can download the source as a zipped file. In the top right of
     - Run `sudo ./install.sh`
     - Test by running `lunarc`
   - Windows
-    - Find the `install.ps1` file, right click on it, and click `Run with PowerShell`
-      - We would normally recommend you run this similar to Linux, however there are strict rules about running unsigned Powershell scripts from a Powershell session.
-    - In the command line, test your install by using `lunarc`
-      - You may have to open a new window to update the PATH.
+    - Find the `install.bat` file and open it
+    - Test by running `lunarc`
+      - You may need to open a new Command Prompt or Powershell.
 
 #### Reinstalling and Uninstalling
   We've included a way to reinstall and uninstall Lunar. Follow the [Installing](#installing) steps, and then you should be prompted to press R to reinstall, or U to uninstall.
