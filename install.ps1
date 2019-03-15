@@ -12,7 +12,7 @@ if (!$windowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::
 } else {
 
   if (Test-Path $targetDir) {
-    $confirmation = Read-Host "Would you like to reinstall or uninstall? [R/U]"
+    $confirmation = Read-Host "A Lunar was install found, would you like to reinstall or uninstall it? [R/U]"
 
     if ($confirmation.ToLower() -eq "u") {
       [Console]::WriteLine("Uninstalling Lunar...")
