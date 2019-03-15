@@ -1,7 +1,7 @@
 local SyntaxKind = require 'lunar.ast.syntax_kind'
 
 class Checker
-  in_import_header = true -- True if no non-import statements have been made
+  in_header_context = true -- True as long as only imports and unrendered statements have been visited
   visitors = {
     -- Statements
     [SyntaxKind.variable_statement] = self.visit_variable_statement,
@@ -73,8 +73,11 @@ class Checker
 
   function visit_statement(stat)
     -- Update context for non-import statements
-    if stat.syntax_kind ~= SyntaxKind.import_statement then
-      self.in_import_header = false
+    if stat.syntax_kind ~= SyntaxKind.import_statement
+      and stat.syntax_kind ~= SyntaxKind.declare_global_statement
+      and stat.syntax_kind ~= SyntaxKind.declare_package_statement
+      and stat.syntax_kind ~= SyntaxKind.declare_returns_statement then
+      self.is_header_context = false
     end
 
     self:visit_node(stat)
@@ -88,7 +91,7 @@ class Checker
   end
 
   function visit_import_statement(stat)
-    if not self.in_import_header then
+    if not self.in_header_context then
       error("Imports must be declared at the top of a file")
     end
   end
@@ -150,7 +153,7 @@ class Checker
 
     -- Else clause
     if stat.else_branch then
-      self:visit_node(stat.else_branch)
+      self:visit_statements(stat.else_branch)
     end
   end
 

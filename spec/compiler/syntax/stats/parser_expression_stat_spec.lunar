@@ -11,4 +11,44 @@ describe("ExpressionStatement syntax", do
       AST.ExpressionStatement.new(AST.FunctionCallExpression.new(AST.Identifier.new("hello"), {}))
     }, result)
   end)
+
+  it("should guard against base-less literal expressions", do
+    local tokens = Lexer.new("''"):tokenize()
+    
+    local success, value = pcall(function()
+      return Parser.new(tokens):parse()
+    end)
+
+    assert.False(success)
+  end)
+
+  it("should guard against base-less index expressions", do
+    local tokens = Lexer.new("['']"):tokenize()
+    
+    local success, value = pcall(function()
+      return Parser.new(tokens):parse()
+    end)
+
+    assert.False(success)
+  end)
+
+  it("should guard against base-less '.' member expressions", do
+    local tokens = Lexer.new("."):tokenize()
+    
+    local success, value = pcall(function()
+      return Parser.new(tokens):parse()
+    end)
+
+    assert.False(success)
+  end)
+
+  it("should guard against base-less ':' member expressions", do
+    local tokens = Lexer.new("."):tokenize()
+    
+    local success, value = pcall(function()
+      return Parser.new(tokens):parse()
+    end)
+
+    assert.False(success)
+  end)
 end)

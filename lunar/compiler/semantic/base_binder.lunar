@@ -1,5 +1,5 @@
 local Scope = require "lunar.compiler.semantic.scope"
-local ProjectEnvironment = require "lunar.compiler.semantic.project_environment"
+local LinkingEnvironment = require "lunar.compiler.semantic.linking_environment"
 
 class BaseBinder
   scope = nil
@@ -8,7 +8,7 @@ class BaseBinder
 
   -- A binder should take in an AST and mutate its nodes by binding symbols
   constructor(environment, file_path_dot)
-    self.environment = environment or ProjectEnvironment.new()
+    self.environment = environment or LinkingEnvironment.new()
     self.file_path = file_path_dot or "src"
   end
 

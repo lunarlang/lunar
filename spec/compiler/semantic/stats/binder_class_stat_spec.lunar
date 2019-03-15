@@ -72,7 +72,7 @@ describe("Bindings of class statements", do
     assert.truthy(members)
 
     assert.True(members:has_value("Y"))
-    assert.False(class_ident.symbol.exports:has_value("Y"))
+    assert.False(class_ident.symbol.statics:has_value("Y"))
     assert.False(env:has_global_value('src', "X"))
     assert.True(env:has_global_type('src', "X"))
     assert.False(env:has_global_value('src', "Y"))
@@ -88,7 +88,7 @@ describe("Bindings of class statements", do
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
-    local statics = class_ident.symbol.exports
+    local statics = class_ident.symbol.statics
     assert.truthy(statics)
 
     assert.True(statics:has_value("Y"))
@@ -108,7 +108,7 @@ describe("Bindings of class statements", do
     local class_ident = class_stat.identifier
     assert.truthy(class_ident.symbol)
 
-    local statics = class_ident.symbol.exports
+    local statics = class_ident.symbol.statics
     assert.truthy(statics)
 
     assert.True(statics:has_value("Y"))
@@ -136,7 +136,7 @@ describe("Bindings of class statements", do
     assert.truthy(class_ident.symbol)
 
     local members = class_ident.symbol.members
-    local statics = class_ident.symbol.exports
+    local statics = class_ident.symbol.statics
     assert.truthy(members)
     assert.truthy(statics)
 
@@ -155,7 +155,7 @@ describe("Bindings of class statements", do
     assert.truthy(class_ident.symbol)
 
     local members = class_ident.symbol.members
-    local statics = class_ident.symbol.exports
+    local statics = class_ident.symbol.statics
     assert.truthy(members)
     assert.truthy(statics)
 

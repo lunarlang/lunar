@@ -28,15 +28,15 @@ describe("Bindings of declared identifiers", do
     local tokens = Lexer.new("declare package 'x' string"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
     Binder.new(result, env):bind()
 
     local dec_stat = result[1]
 
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_env_symbol)
-    assert.equal(dec_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(dec_stat, package_env_symbol.export_as_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.False(package_env_symbol:is_referenced())
   end)
@@ -46,7 +46,7 @@ describe("Bindings of declared identifiers", do
     local tokens = Lexer.new("declare package 'x' string; from 'x' import * as x; print(x)"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
     Binder.new(result, env):bind()
 
     -- link
@@ -57,7 +57,7 @@ describe("Bindings of declared identifiers", do
     local expr_stat = result[3]
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -67,13 +67,13 @@ describe("Bindings of declared identifiers", do
     assert.True(package_alias_ident.symbol:is_assigned())
     assert.True(package_alias_ident.symbol:is_referenced())
 
-    assert.equal(dec_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(dec_stat, package_env_symbol.export_as_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.True(package_env_symbol:is_referenced())
   end)
 
   it("should allow declaration of return type symbols within a local source file", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("declare returns string"):tokenize()
@@ -93,7 +93,7 @@ describe("Bindings of declared identifiers", do
     env:link_external_references()
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -103,13 +103,13 @@ describe("Bindings of declared identifiers", do
     assert.True(package_alias_ident.symbol:is_assigned())
     assert.True(package_alias_ident.symbol:is_referenced())
 
-    assert.equal(dec_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(dec_stat, package_env_symbol.return_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.True(package_env_symbol:is_referenced())
   end)
 
   it("should allow implicit declaration of return type symbols within a local source file", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("return 'Hello, world!'"):tokenize()
@@ -129,7 +129,7 @@ describe("Bindings of declared identifiers", do
     env:link_external_references()
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -139,13 +139,13 @@ describe("Bindings of declared identifiers", do
     assert.True(package_alias_ident.symbol:is_assigned())
     assert.True(package_alias_ident.symbol:is_referenced())
 
-    assert.equal(return_stat, package_env_symbol:get_canonical_declaration())
+    assert.equal(return_stat, package_env_symbol.return_declarations[1])
     assert.False(package_env_symbol:is_assigned())
     assert.True(package_env_symbol:is_referenced())
   end)
 
   it("should allow implicit declaration of export symbols within a local source file", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("export x = 'Hello, world!'"):tokenize()
@@ -166,7 +166,7 @@ describe("Bindings of declared identifiers", do
     env:link_external_references()
 
     local package_alias_ident = expr_stat.expr.arguments[1].value
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_alias_ident.symbol)
     assert.truthy(package_env_symbol)
@@ -190,7 +190,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should allow imports of standalone class type symbols", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("export class MyClass end"):tokenize()
@@ -213,7 +213,7 @@ describe("Bindings of declared identifiers", do
 
     local package_alias_value_ident = expr_stat.expr.arguments[1].value
     local package_alias_type_ident = var_stat.identlist[1].type_annotation
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
     local global_env_symbol = env:get_global_value('y', 'MyClass')
 
     assert.truthy(package_env_symbol)
@@ -229,7 +229,7 @@ describe("Bindings of declared identifiers", do
 
     local export_type_symbol = package_env_symbol.exports:get_type('MyClass')
     local export_value_symbol = package_env_symbol.exports:get_value('MyClass')
-    assert.is_not_equal(export_type_symbol, export_value_symbol)
+    assert.equal(export_type_symbol, export_value_symbol)
 
     -- Type symbol for 'MyClass' should bind as an alias to the package export type
     assert.truthy(package_alias_type_ident.symbol)
@@ -253,14 +253,10 @@ describe("Bindings of declared identifiers", do
     assert.equal(export_inner_stat, export_type_symbol:get_canonical_declaration())
     assert.True(export_type_symbol:is_assigned())
     assert.True(export_type_symbol:is_referenced())
-
-    assert.equal(export_inner_stat, export_value_symbol:get_canonical_declaration())
-    assert.True(export_value_symbol:is_assigned())
-    assert.False(export_value_symbol:is_referenced())
   end)
 
   it("should allow import class type symbols with class value symbols", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     -- file 'x'
     local tokens_x = Lexer.new("export class MyClass end"):tokenize()
@@ -283,7 +279,7 @@ describe("Bindings of declared identifiers", do
 
     local package_alias_value_ident = expr_stat.expr.arguments[1].value
     local package_alias_type_ident = var_stat.identlist[1].type_annotation
-    local package_env_symbol = env:get_returns_symbol('x')
+    local package_env_symbol = env:get_source_file_symbol('x')
 
     assert.truthy(package_env_symbol)
 
@@ -291,7 +287,7 @@ describe("Bindings of declared identifiers", do
     local export_value_symbol = package_env_symbol.exports:get_value('MyClass')
     assert.truthy(export_type_symbol)
     assert.truthy(export_value_symbol)
-    assert.is_not.equal(export_type_symbol, export_value_symbol)
+    assert.equal(export_type_symbol, export_value_symbol)
     assert.is_not.equal(export_type_symbol, package_alias_type_ident.symbol)
     assert.is_not.equal(export_value_symbol, package_alias_value_ident.symbol)
 
@@ -315,14 +311,10 @@ describe("Bindings of declared identifiers", do
     assert.equal(export_inner_stat, export_type_symbol:get_canonical_declaration())
     assert.True(export_type_symbol:is_assigned())
     assert.True(export_type_symbol:is_referenced())
-
-    assert.equal(export_inner_stat, export_value_symbol:get_canonical_declaration())
-    assert.True(export_value_symbol:is_assigned())
-    assert.True(export_value_symbol:is_referenced())
   end)
 
   it("should guard against re-declaration of the same export", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -333,7 +325,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against declaration of exports with returns", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -344,7 +336,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against declaration of exports with returns declaration", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -355,7 +347,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against re-declaration of returns across files", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -371,7 +363,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against re-declaration of returns within files", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -382,7 +374,7 @@ describe("Bindings of declared identifiers", do
   end)
 
   it("should guard against re-declaration of returns within files", do
-    local env = ProjectEnvironment.new()
+    local env = LinkingEnvironment.new()
 
     assert.False(pcall(do
       -- file 'x'
@@ -391,4 +383,53 @@ describe("Bindings of declared identifiers", do
       Binder.new(result_x, env, 'x'):bind()
     end))
   end)
+
+  it("should guard against imports outside of root scope", do
+    assert.False(pcall(do
+      local tokens = Lexer.new("if true then import 'src2' end"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should not guard against imports inside of root scope", do
+    assert.True(pcall(do
+      local tokens = Lexer.new("import 'src2'"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should guard against exports outside of root scope", do
+    assert.False(pcall(do
+      local tokens = Lexer.new("if true then export x = 'foo' end"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should not guard against exports inside of root scope", do
+    assert.True(pcall(do
+      local tokens = Lexer.new("export x = 'foo'"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should guard against declare statements outside of root scope", do
+    assert.False(pcall(do
+      local tokens = Lexer.new("if true then declare global x: string end"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
+  it("should not guard against declare statements inside of root scope", do
+    assert.True(pcall(do
+      local tokens = Lexer.new("declare global x: string"):tokenize()
+      local result = Parser.new(tokens):parse()
+      Binder.new(result):bind()
+    end))
+  end)
+
 end)

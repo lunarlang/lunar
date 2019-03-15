@@ -9,7 +9,6 @@ function Identifier.new(name, type_annotation)
 end
 function Identifier.constructor(self, name, type_annotation)
   SyntaxNode.constructor(self, SyntaxKind.identifier)
-  self.symbol = nil
   self.name = name
   self.type_annotation = type_annotation
   return self

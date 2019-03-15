@@ -1,41 +1,43 @@
 local SymbolTable = require("lunar.compiler.semantic.symbol_table")
 local Symbol = require("lunar.compiler.semantic.symbol")
+local SourceFileSymbol = require("lunar.compiler.semantic.source_file_symbol")
 local CoreGlobals = require("lunar.compiler.semantic.core_globals")
-local ProjectEnvironment = {}
-ProjectEnvironment.__index = {}
-function ProjectEnvironment.new()
-  return ProjectEnvironment.constructor(setmetatable({}, ProjectEnvironment))
+local LinkingEnvironment = {}
+LinkingEnvironment.__index = {}
+function LinkingEnvironment.new()
+  return LinkingEnvironment.constructor(setmetatable({}, LinkingEnvironment))
 end
-function ProjectEnvironment.constructor(self)
-  self.returns_map = {}
+function LinkingEnvironment.constructor(self)
+  self.source_file_symbol_map = {}
   self.visited_sources_map = {}
   self.existing_sources_map = {}
-  self.globals_map = {}
-  self.imports_map = {}
   self.env_globals = SymbolTable.new()
   self.linked = false
   self:inject_globals(CoreGlobals)
   return self
 end
-function ProjectEnvironment.__index:declare_visited_source(source_path_dot, exists)
+function LinkingEnvironment.__index:declare_visited_source(source_path_dot, exists)
   if self.visited_sources_map[source_path_dot] then
     error("Multiple declared modules found at the same path: '" .. source_path_dot .. "'")
   end
   self.visited_sources_map[source_path_dot] = true
   self.existing_sources_map[source_path_dot] = exists
-  self.globals_map[source_path_dot] = SymbolTable.new()
-  self.imports_map[source_path_dot] = {}
+  local existing_symbol = self.source_file_symbol_map[source_path_dot]
+  if (not existing_symbol) then
+    self.source_file_symbol_map[source_path_dot] = SourceFileSymbol.new(source_path_dot)
+  end
 end
-function ProjectEnvironment.__index:link_external_references()
+function LinkingEnvironment.__index:link_external_references()
   if self.linked then
     error("Project environment has already been linked")
   end
   self.linked = true
-  for source_path_dot, infile_globals in pairs(self.globals_map) do
-    for i = 1, (#self.imports_map[source_path_dot]) do
-      local import_statement = self.imports_map[source_path_dot][i]
-      local referenced_returns = self.returns_map[import_statement.path]
-      if (not referenced_returns) then
+  for source_path_dot, source_file_symbol in pairs(self.source_file_symbol_map) do
+    local infile_globals = source_file_symbol.globals
+    for i = 1, (#source_file_symbol.imports) do
+      local import_statement = source_file_symbol.imports[i]
+      local referenced_source_file_symbol = self.source_file_symbol_map[import_statement.path]
+      if (not referenced_source_file_symbol) then
         if next(import_statement.values) then
           if self.existing_sources_map[import_statement.path] then
             error("Module '" .. import_statement.path .. "' has no exports")
@@ -49,7 +51,7 @@ function ProjectEnvironment.__index:link_external_references()
         local import_name = value_decl.identifier.name
         local alias_ident = value_decl.alias_identifier or value_decl.identifier
         if import_name == "*" then
-          referenced_returns:bind_reference(value_decl.identifier)
+          referenced_source_file_symbol:bind_reference(value_decl.identifier)
           local alias_symbol = Symbol.new(alias_ident.name)
           alias_symbol:bind_assignment_reference(alias_ident)
           alias_symbol:bind_declaration_reference(alias_ident, import_statement)
@@ -63,7 +65,7 @@ function ProjectEnvironment.__index:link_external_references()
           end
         else
           if value_decl.is_type then
-            local referenced_type_export = referenced_returns.exports:get_type(import_name)
+            local referenced_type_export = referenced_source_file_symbol.exports:get_type(import_name)
             if referenced_type_export then
               referenced_type_export:bind_reference(value_decl.identifier)
               local alias_symbol = Symbol.new(alias_ident.name)
@@ -81,7 +83,7 @@ function ProjectEnvironment.__index:link_external_references()
               error("Module '" .. import_statement.path .. "' has no exported type '" .. import_name .. "'")
             end
           else
-            local referenced_type_export = referenced_returns.exports:get_type(import_name)
+            local referenced_type_export = referenced_source_file_symbol.exports:get_type(import_name)
             if referenced_type_export then
               referenced_type_export:bind_reference(value_decl.identifier)
               local alias_symbol = Symbol.new(alias_ident.name)
@@ -96,7 +98,7 @@ function ProjectEnvironment.__index:link_external_references()
                 infile_globals.types[alias_ident.name] = alias_symbol
               end
             end
-            local referenced_value_export = referenced_returns.exports:get_value(import_name)
+            local referenced_value_export = referenced_source_file_symbol.exports:get_value(import_name)
             if referenced_value_export then
               referenced_value_export:bind_reference(value_decl.identifier)
               local alias_symbol = Symbol.new(alias_ident.name)
@@ -139,7 +141,7 @@ function ProjectEnvironment.__index:link_external_references()
     end
   end
 end
-function ProjectEnvironment.__index:get_unvisited_sources()
+function LinkingEnvironment.__index:get_unvisited_sources()
   local unvisited_sources = {}
   for path, was_visited in pairs(self.visited_sources_map) do
     if (not was_visited) then
@@ -148,7 +150,7 @@ function ProjectEnvironment.__index:get_unvisited_sources()
   end
   return unvisited_sources
 end
-function ProjectEnvironment.__index:inject_globals(globals)
+function LinkingEnvironment.__index:inject_globals(globals)
   for name, symbol in pairs(globals.values) do
     self.env_globals.values[name] = symbol
   end
@@ -156,79 +158,47 @@ function ProjectEnvironment.__index:inject_globals(globals)
     self.env_globals.types[name] = symbol
   end
 end
-function ProjectEnvironment.__index:add_exports_value(source_path_dot, symbol)
-  local existing = self.returns_map[source_path_dot]
+function LinkingEnvironment.__index:create_source_file_symbol(source_path_dot)
+  local existing = self.source_file_symbol_map[source_path_dot]
   if existing then
-    if existing:is_declared() then
-      error("Cannot export and return values at the same time")
-    end
-    existing.exports:add_value(symbol)
+    error("Cannot re-declare source files")
   else
-    local returns = Symbol.new()
-    returns.exports = SymbolTable.new()
-    returns.exports:add_value(symbol)
-    self.returns_map[source_path_dot] = returns
+    local source_file_symbol = SourceFileSymbol.new(source_path_dot)
+    self.source_file_symbol_map[source_path_dot] = source_file_symbol
     if self.visited_sources_map[source_path_dot] == nil then
       self.visited_sources_map[source_path_dot] = false
     end
+    return source_file_symbol
   end
 end
-function ProjectEnvironment.__index:add_exports_type(source_path_dot, symbol)
-  local existing = self.returns_map[source_path_dot]
-  if existing then
-    existing.exports:add_type(symbol)
-  else
-    local returns = Symbol.new()
-    returns.exports = SymbolTable.new()
-    returns.exports:add_type(symbol)
-    self.returns_map[source_path_dot] = returns
-    if self.visited_sources_map[source_path_dot] == nil then
-      self.visited_sources_map[source_path_dot] = false
-    end
-  end
+function LinkingEnvironment.__index:get_source_file_symbol(source_path_dot)
+  return self.source_file_symbol_map[source_path_dot] and self.source_file_symbol_map[source_path_dot]
 end
-function ProjectEnvironment.__index:create_returns_symbol(source_path_dot)
-  local existing = self.returns_map[source_path_dot]
-  if existing then
-    error("Cannot re-declare source file returns")
-  else
-    local returns = Symbol.new()
-    returns.exports = SymbolTable.new()
-    self.returns_map[source_path_dot] = returns
-    if self.visited_sources_map[source_path_dot] == nil then
-      self.visited_sources_map[source_path_dot] = false
-    end
-    return returns
-  end
+function LinkingEnvironment.__index:get_exports_value(source_path_dot, value_name)
+  return self.source_file_symbol_map[source_path_dot] and self.source_file_symbol_map[source_path_dot].exports:get_value(value_name)
 end
-function ProjectEnvironment.__index:get_returns_symbol(source_path_dot)
-  return self.returns_map[source_path_dot] and self.returns_map[source_path_dot]
+function LinkingEnvironment.__index:get_exports_type(source_path_dot, type_name)
+  return self.source_file_symbol_map[source_path_dot] and self.source_file_symbol_map[source_path_dot].exports:get_type(type_name)
 end
-function ProjectEnvironment.__index:get_exports_value(source_path_dot, value_name)
-  return self.returns_map[source_path_dot] and self.returns_map[source_path_dot].exports:get_value(value_name)
+function LinkingEnvironment.__index:has_global_value(source_path_dot, value_name)
+  return self.source_file_symbol_map[source_path_dot] and self.source_file_symbol_map[source_path_dot].globals:has_value(value_name)
 end
-function ProjectEnvironment.__index:get_exports_type(source_path_dot, type_name)
-  return self.returns_map[source_path_dot] and self.returns_map[source_path_dot].exports:get_type(type_name)
+function LinkingEnvironment.__index:has_global_type(source_path_dot, type_name)
+  return self.source_file_symbol_map[source_path_dot] and self.source_file_symbol_map[source_path_dot].globals:has_type(type_name)
 end
-function ProjectEnvironment.__index:has_global_value(source_path_dot, value_name)
-  return self.globals_map[source_path_dot] and self.globals_map[source_path_dot]:has_value(value_name)
+function LinkingEnvironment.__index:get_global_value(source_path_dot, value_name)
+  return self.source_file_symbol_map[source_path_dot] and self.source_file_symbol_map[source_path_dot].globals:get_value(value_name)
 end
-function ProjectEnvironment.__index:has_global_type(source_path_dot, type_name)
-  return self.globals_map[source_path_dot] and self.globals_map[source_path_dot]:has_type(type_name)
+function LinkingEnvironment.__index:get_global_type(source_path_dot, type_name)
+  return self.source_file_symbol_map[source_path_dot] and self.source_file_symbol_map[source_path_dot].globals:get_type(type_name)
 end
-function ProjectEnvironment.__index:get_global_value(source_path_dot, value_name)
-  return self.globals_map[source_path_dot] and self.globals_map[source_path_dot]:get_value(value_name)
+function LinkingEnvironment.__index:add_global_value(source_path_dot, value_name)
+  return self.source_file_symbol_map[source_path_dot].globals:add_value(value_name)
 end
-function ProjectEnvironment.__index:get_global_type(source_path_dot, type_name)
-  return self.globals_map[source_path_dot] and self.globals_map[source_path_dot]:get_type(type_name)
+function LinkingEnvironment.__index:add_global_type(source_path_dot, type_name)
+  return self.source_file_symbol_map[source_path_dot].globals:add_type(type_name)
 end
-function ProjectEnvironment.__index:add_global_value(source_path_dot, value_name)
-  return self.globals_map[source_path_dot]:add_value(value_name)
+function LinkingEnvironment.__index:declare_import(source_path_dot, ast)
+  return table.insert(self.source_file_symbol_map[source_path_dot].imports, ast)
 end
-function ProjectEnvironment.__index:add_global_type(source_path_dot, type_name)
-  return self.globals_map[source_path_dot]:add_type(type_name)
-end
-function ProjectEnvironment.__index:declare_import(source_path_dot, ast)
-  return table.insert(self.imports_map[source_path_dot], ast)
-end
-return ProjectEnvironment
+return LinkingEnvironment

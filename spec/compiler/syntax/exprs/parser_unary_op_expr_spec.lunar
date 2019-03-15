@@ -32,4 +32,14 @@ describe("UnaryOpExpression syntax", do
 
     assert.same(AST.UnaryOpExpression.new(operator, operand), result)
   end)
+
+  it("should guard against unfinished unary expressions", do
+    local tokens = Lexer.new("#"):tokenize()
+    
+    local success, value = pcall(function()
+      return Parser.new(tokens):expression()
+    end)
+
+    assert.False(success)
+  end)
 end)

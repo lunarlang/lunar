@@ -9,7 +9,6 @@ function VariableArgumentExpression.new()
 end
 function VariableArgumentExpression.constructor(self)
   SyntaxNode.constructor(self, SyntaxKind.variable_argument_expression)
-  self.symbol = nil
   return self
 end
 return VariableArgumentExpression

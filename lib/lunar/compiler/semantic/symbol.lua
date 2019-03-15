@@ -9,8 +9,6 @@ function Symbol.constructor(self, name)
   self.declarations = {}
   self.declaration_references = {}
   self.builtin = false
-  self.members = nil
-  self.exports = nil
   self.name = name
   return self
 end
@@ -71,35 +69,6 @@ function Symbol.__index:merge_into(new_symbol)
         node.symbol = new_symbol
       end
       other_nodes[(#other_nodes) + 1] = node
-    end
-  end
-  for _, k in pairs({
-    "members",
-    "exports",
-  }) do
-    local symtab = self[k]
-    if symtab then
-      local other_symtab = new_symbol[k]
-      if other_symtab then
-        for name, symbol in pairs(symtab.values) do
-          local other_symbol = other_symtab:get_value(name)
-          if other_symbol then
-            symbol:merge_into(other_symbol)
-          else
-            other_symtab:add_value(symbol)
-          end
-        end
-        for name, symbol in pairs(symtab.types) do
-          local other_symbol = other_symtab:get_type(name)
-          if other_symbol then
-            symbol:merge_into(other_symbol)
-          else
-            other_symtab:add_type(symbol)
-          end
-        end
-      else
-        new_symbol[k] = symtab
-      end
     end
   end
 end

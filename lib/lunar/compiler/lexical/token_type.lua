@@ -65,4 +65,5 @@ return {
   slash_equal = 431,
   caret_equal = 432,
   double_left_angle = 433,
+  percent_equal = 434,
 }

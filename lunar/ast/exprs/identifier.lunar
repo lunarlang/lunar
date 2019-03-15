@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class Identifier << SyntaxNode
-  symbol = nil -- Symbol | nil - The symbol corresponding to this identifier, initialized in binding
+  symbol -- Symbol | nil - The symbol corresponding to this identifier, initialized in binding
 
   constructor(name, type_annotation)
     super(SyntaxKind.identifier)
