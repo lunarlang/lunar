@@ -122,6 +122,16 @@ class BaseParser
     error(("%d:%d %s; got %s"):format(token.line, token.column, reason, token.value), 0)
   end
 
+  -- Scans for the next token and produces an error message (or "EOF" if there is no next token)
+  function error_near_next_token(message)
+    local next_token = self:consume()
+    if next_token then
+      error(message .. " near '" .. next_token.value .. "'")
+    else
+      error(message .. " near '<EOF>'")
+    end
+  end
+
   -- Consumes the current token irrespective of the token_type (not to be used without asserting the type beforehand!)
   function consume()
     local token = self:peek()

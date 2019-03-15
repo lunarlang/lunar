@@ -35,12 +35,13 @@ local out_dir = config.out_dir or fail("'out_dir' was not defined in '.lunarconf
 local function assert_file_ext(name, ext)
   return name:sub((-(#ext))) == ext
 end
+lfs.mkdir(out_dir)
+local error_infos = {}
 for source_env_index = 1, (#source_environments) do
   local include = source_environments[source_env_index].include
   local env_modules = source_environments[source_env_index].environment or nil
   local project_env = LinkingEnvironment.new()
   local parsed_sources = {}
-  local error_infos = {}
   local function parse_and_bind_source(source, in_path, in_path_dot, out_path)
     local success, err = pcall(function()
       local tokens = Lexer.new(source):tokenize()
@@ -104,7 +105,6 @@ for source_env_index = 1, (#source_environments) do
       out_file:flush()
     end
   end
-  lfs.mkdir(out_dir)
   for i = 1, (#env_modules) do
     local source_path_dot = env_modules[i]
     local absolute_path = PathUtils.dot_path_to_absolute(source_path_dot)
@@ -170,10 +170,10 @@ for source_env_index = 1, (#source_environments) do
       out_file:flush()
     end
   end
-  if (#error_infos) > 0 then
-    for _, error_info in pairs(error_infos) do
-      io.stderr:write(error_info.in_path .. ":" .. error_info.error .. "\n")
-    end
-    os.exit(1)
+end
+if (#error_infos) > 0 then
+  for _, error_info in pairs(error_infos) do
+    io.stderr:write(error_info.in_path .. ":" .. error_info.error .. "\n")
   end
+  os.exit(1)
 end

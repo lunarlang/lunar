@@ -41,13 +41,14 @@ local function assert_file_ext(name, ext)
   return name:sub(-#ext) == ext
 end
 
+lfs.mkdir(out_dir)
+local error_infos = {}
 for source_env_index = 1, #source_environments do
   local include = source_environments[source_env_index].include
   local env_modules = source_environments[source_env_index].environment or nil
 
   local project_env = LinkingEnvironment.new()
   local parsed_sources = {}
-  local error_infos = {}
   
   local function parse_and_bind_source(source, in_path, in_path_dot, out_path)
     local success, err = pcall(function()
@@ -126,8 +127,6 @@ for source_env_index = 1, #source_environments do
       out_file:flush()
     end
   end
-  
-  lfs.mkdir(out_dir)
 
   -- Parse and bind environment files
   for i = 1, #env_modules do
@@ -222,12 +221,12 @@ for source_env_index = 1, #source_environments do
     end
   end
   
-  if #error_infos > 0 then
-    for _, error_info in pairs(error_infos) do
-      io.stderr:write(error_info.in_path .. ":" .. error_info.error .. "\n")
-    end
+end
   
-    os.exit(1)
+if #error_infos > 0 then
+  for _, error_info in pairs(error_infos) do
+    io.stderr:write(error_info.in_path .. ":" .. error_info.error .. "\n")
   end
-  
+
+  os.exit(1)
 end
