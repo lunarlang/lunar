@@ -1,0 +1,21 @@
+local require_dev = require "spec.helpers.require_dev"
+
+describe("Checked class statements", do
+  require_dev()
+
+  it("should guard against returning within the constructor", do
+    local tokens = Lexer.new("class X constructor() return 2 end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+    env:link_external_references()
+    assert.has_errors(|| Checker.new(result, env, false):check())
+  end)
+
+  it("should allow returning nested functions within the constructor", do
+    local tokens = Lexer.new("class X constructor() local x = || do return 2 end; local y = function()return 2 end end end"):tokenize()
+    local result = Parser.new(tokens):parse()
+    local env = Binder.new(result):bind()
+    env:link_external_references()
+    Checker.new(result, env, false):check()
+  end)
+end)

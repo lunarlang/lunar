@@ -2,27 +2,8 @@ local SyntaxKind = require 'lunar.ast.syntax_kind'
 
 class Checker
   in_header_context = true -- True as long as only imports and unrendered statements have been visited
+  return_context = "source_file" -- "source_file" or "function" or "constructor"
   visitors = {
-    -- Statements
-    [SyntaxKind.variable_statement] = self.visit_variable_statement,
-    [SyntaxKind.do_statement] = self.visit_do_statement,
-    [SyntaxKind.if_statement] = self.visit_if_statement,
-    [SyntaxKind.class_statement] = self.visit_class_statement,
-    [SyntaxKind.while_statement] = self.visit_while_statement,
-    [SyntaxKind.break_statement] = self.visit_break_statement,
-    [SyntaxKind.return_statement] = self.visit_return_statement,
-    [SyntaxKind.function_statement] = self.visit_function_statement,
-    [SyntaxKind.range_for_statement] = self.visit_range_for_statement,
-    [SyntaxKind.expression_statement] = self.visit_expression_statement,
-    [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
-    [SyntaxKind.generic_for_statement] = self.visit_generic_for_statement,
-    [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
-    [SyntaxKind.declare_global_statement] = self.visit_declare_global_statement,
-    [SyntaxKind.declare_package_statement] = self.visit_declare_package_statement,
-    [SyntaxKind.declare_returns_statement] = self.visit_declare_returns_statement,
-    [SyntaxKind.import_statement] = self.visit_import_statement,
-    [SyntaxKind.export_statement] = self.visit_export_statement,
-
     -- Expressions
     [SyntaxKind.prefix_expression] = self.visit_prefix_expression,
     [SyntaxKind.lambda_expression] = self.visit_lambda_expression,
@@ -41,9 +22,27 @@ class Checker
     [SyntaxKind.identifier] = self.visit_identifier,
     [SyntaxKind.index_expression] = self.visit_index_expression,
     [SyntaxKind.type_assertion_expression] = self.visit_type_assertion_expression,
+  }
 
-    -- Declarations
-    [SyntaxKind.parameter_declaration] = self.visit_parameter_declaration,
+  stat_visitors = {
+    [SyntaxKind.variable_statement] = self.visit_variable_statement,
+    [SyntaxKind.do_statement] = self.visit_do_statement,
+    [SyntaxKind.if_statement] = self.visit_if_statement,
+    [SyntaxKind.class_statement] = self.visit_class_statement,
+    [SyntaxKind.while_statement] = self.visit_while_statement,
+    [SyntaxKind.break_statement] = self.visit_break_statement,
+    [SyntaxKind.return_statement] = self.visit_return_statement,
+    [SyntaxKind.function_statement] = self.visit_function_statement,
+    [SyntaxKind.range_for_statement] = self.visit_range_for_statement,
+    [SyntaxKind.expression_statement] = self.visit_expression_statement,
+    [SyntaxKind.assignment_statement] = self.visit_assignment_statement,
+    [SyntaxKind.generic_for_statement] = self.visit_generic_for_statement,
+    [SyntaxKind.repeat_until_statement] = self.visit_repeat_until_statement,
+    [SyntaxKind.declare_global_statement] = self.visit_declare_global_statement,
+    [SyntaxKind.declare_package_statement] = self.visit_declare_package_statement,
+    [SyntaxKind.declare_returns_statement] = self.visit_declare_returns_statement,
+    [SyntaxKind.import_statement] = self.visit_import_statement,
+    [SyntaxKind.export_statement] = self.visit_export_statement,
   }
 
   constructor(ast, linked_env, is_ambient_context)
@@ -67,7 +66,7 @@ class Checker
 
   function visit_expression_list(exprs)
     for i = 1, #exprs do
-      self:visit_node(exprs[i])
+      self:visit_expression(exprs[i])
     end
   end
 
@@ -80,13 +79,16 @@ class Checker
       self.is_header_context = false
     end
 
-    self:visit_node(stat)
+    local visitor = self.stat_visitors[stat.syntax_kind]
+    if visitor then
+      visitor(self, stat)
+    end
   end
 
-  function visit_node(node)
-    local visitor = self.visitors[node.syntax_kind]
+  function visit_expression(expr)
+    local visitor = self.visitors[expr.syntax_kind]
     if visitor then
-      visitor(self, node)
+      visitor(self, expr)
     end
   end
 
@@ -142,7 +144,7 @@ class Checker
   function visit_if_statement(stat)
     -- Condition
     if stat.expr then
-      self:visit_node(stat.expr)
+      self:visit_expression(stat.expr)
     end
 
     -- Block
@@ -172,7 +174,7 @@ class Checker
 
   function visit_class_field_declaration(decl)
     if decl.value then
-      self:visit_node(decl.value)
+      self:visit_expression(decl.value)
     end
   end
 
@@ -181,12 +183,21 @@ class Checker
   end
 
   function visit_class_constructor_declaration(decl)
-    self:visit_function_like_expression(decl.params, decl.block, decl.return_type_annotation)
+    for i = 1, #decl.params do
+      self:visit_parameter_declaration(decl.params[i])
+    end
+
+    local save_return_context = self.return_context
+    self.return_context = "constructor"
+
+    self:visit_statements(decl.block)
+
+    self.return_context = save_return_context
   end
 
   function visit_while_statement(stat)
     -- Condition
-    self:visit_node(stat.expr)
+    self:visit_expression(stat.expr)
 
     -- Block
     self:visit_statements(stat.block)
@@ -197,6 +208,10 @@ class Checker
   end
 
   function visit_return_statement(stat)
+    if self.return_context == "constructor" then
+      error("Cannot return inside of class constructor")
+    end
+
     if stat.exprlist then
       self:visit_expression_list(stat.exprlist)
     end
@@ -226,17 +241,17 @@ class Checker
   end
 
   function visit_range_for_statement(stat)
-    self:visit_node(stat.start_expr)
-    self:visit_node(stat.end_expr)
+    self:visit_expression(stat.start_expr)
+    self:visit_expression(stat.end_expr)
     if stat.incremental_expr then
-      self:visit_node(stat.incremental_expr)
+      self:visit_expression(stat.incremental_expr)
     end
 
     self:visit_statements(stat.block)
   end
 
   function visit_expression_statement(stat)
-    self:visit_node(stat.expr)
+    self:visit_expression(stat.expr)
   end
 
   function visit_assignment_statement(stat)
@@ -244,7 +259,7 @@ class Checker
 
     for i = 1, #stat.variables do
       local variable = stat.variables[i]
-      self:visit_node(variable)
+      self:visit_expression(variable)
     end
   end
 
@@ -255,42 +270,57 @@ class Checker
 
   function visit_repeat_until_statement(stat)
     self:visit_statements(stat.block)
-    self:visit_node(stat.expr)
+    self:visit_expression(stat.expr)
   end
 
   function visit_prefix_expression(stat)
-    self:visit_node(stat.expr)
+    self:visit_expression(stat.expr)
   end
 
   function visit_lambda_expression(stat)
     if stat.expr then
-      self:visit_node(stat.expr)
+      self:visit_expression(stat.expr)
     end
 
-    self:visit_expression_list(stat.parameters)
+    for i = 1, #stat.parameters do
+      self:visit_parameter_declaration(stat.parameters[i])
+    end
     if stat.implicit_return then
-      self:visit_node(stat.body)
+      self:visit_expression(stat.body)
     else
+      local save_return_context = self.return_context
+      self.return_context = "function"
+  
       self:visit_statements(stat.body)
+
+      self.return_context = save_return_context
     end
   end
 
   function visit_member_expression(expr)
-    self:visit_node(expr.base)
+    self:visit_expression(expr.base)
   end
 
   function visit_index_expression(expr)
-    self:visit_node(expr.base)
-    self:visit_node(expr.index)
+    self:visit_expression(expr.base)
+    self:visit_expression(expr.index)
   end
 
   function visit_argument_expression(expr)
-    self:visit_node(expr.value)
+    self:visit_expression(expr.value)
   end
 
   function visit_function_like_expression(params, block, return_type_annotation)
-    self:visit_expression_list(params)
+    for i = 1, #params do
+      self:visit_parameter_declaration(params[i])
+    end
+
+    local save_return_context = self.return_context
+    self.return_context = "function"
+
     self:visit_statements(block)
+
+    self.return_context = save_return_context
 
     if return_type_annotation then
       self:visit_type_expression(return_type_annotation)
@@ -302,12 +332,12 @@ class Checker
   end
 
   function visit_unary_op_expression(expr)
-    self:visit_node(expr.right_operand)
+    self:visit_expression(expr.right_operand)
   end
 
   function visit_binary_op_expression(expr)
-    self:visit_node(expr.left_operand)
-    self:visit_node(expr.right_operand)
+    self:visit_expression(expr.left_operand)
+    self:visit_expression(expr.right_operand)
   end
 
   function visit_nil_literal_expression(expr)
@@ -315,7 +345,7 @@ class Checker
   end
 
   function visit_function_call_expression(expr)
-    self:visit_node(expr.base)
+    self:visit_expression(expr.base)
     self:visit_expression_list(expr.arguments)
   end
 
@@ -330,16 +360,16 @@ class Checker
   end
 
   function visit_index_field_declaration(expr, table_literal_symbol)
-    self:visit_node(expr.key)
-    self:visit_node(expr.value)
+    self:visit_expression(expr.key)
+    self:visit_expression(expr.value)
   end
 
   function visit_member_field_declaration(expr)
-    self:visit_node(expr.value)
+    self:visit_expression(expr.value)
   end
 
   function visit_sequential_field_declaration(expr)
-    self:visit_node(expr.value)
+    self:visit_expression(expr.value)
   end
 
   function visit_number_literal_expression(expr)
@@ -359,7 +389,7 @@ class Checker
   end
 
   function visit_type_assertion_expression(expr)
-    self:visit_node(expr.base)
+    self:visit_expression(expr.base)
     self:visit_type_expression(expr.type)
   end
 
