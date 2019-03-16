@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class StringLiteralExpression << SyntaxNode
-  constructor(value)
+  constructor(start_pos, end_pos, value)
     super(SyntaxKind.string_literal_expression)
 
     self.value = value

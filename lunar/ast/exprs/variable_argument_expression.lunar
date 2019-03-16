@@ -4,7 +4,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 class VariableArgumentExpression << SyntaxNode
   symbol -- Symbol | nil - The symbol corresponding to this identifier, initialized in binding
 
-  constructor()
+  constructor(start_pos, end_pos)
     super(SyntaxKind.variable_argument_expression)
   end
 end

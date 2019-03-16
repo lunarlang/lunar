@@ -4,7 +4,7 @@ local MemberExpression = require "lunar.ast.exprs.member_expression"
 local FunctionStatement = require "lunar.ast.stats.function_statement"
 
 class ClassFunctionDeclaration << SyntaxNode
-  constructor(is_static, identifier, params, block, return_type_annotation)
+  constructor(start_pos, end_pos, is_static, identifier, params, block, return_type_annotation)
     super(SyntaxKind.class_function_declaration)
 
     self.is_static = is_static

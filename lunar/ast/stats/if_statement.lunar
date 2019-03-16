@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class IfStatement << SyntaxNode
-  constructor(expr, block)
+  constructor(start_pos, end_pos, expr, block)
     super(SyntaxKind.if_statement)
 
     self.expr = expr -- unless else branch

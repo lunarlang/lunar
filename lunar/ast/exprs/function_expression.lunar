@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class FunctionExpression << SyntaxNode
-  constructor(parameters, block, return_type_annotation)
+  constructor(start_pos, end_pos, parameters, block, return_type_annotation)
     super(SyntaxKind.function_expression)
 
     self.parameters = parameters

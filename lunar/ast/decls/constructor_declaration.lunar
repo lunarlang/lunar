@@ -11,7 +11,7 @@ local ReturnStatement = require "lunar.ast.stats.return_statement"
 local ParameterDeclaration = require "lunar.ast.decls.parameter_declaration"
 
 class ConstructorDeclaration << SyntaxNode
-  constructor(params, block)
+  constructor(start_pos, end_pos, params, block)
     super(SyntaxKind.constructor_declaration)
 
     self.params = params

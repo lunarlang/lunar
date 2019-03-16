@@ -16,7 +16,7 @@ class AssignmentStatement << SyntaxNode
     [SelfAssignmentOpKind.remainder_equal_op] = BinaryOpKind.modulus_op,
   }
 
-  constructor(variables, operator, exprs)
+  constructor(start_pos, end_pos, variables, operator, exprs)
     super(SyntaxKind.assignment_statement)
 
     self.variables = variables

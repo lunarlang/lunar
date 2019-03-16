@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class ImportValueDeclaration << SyntaxNode
-  constructor(identifier, is_type, alias_identifier)
+  constructor(start_pos, end_pos, identifier, is_type, alias_identifier)
     super(SyntaxKind.import_value_declaration)
 
     self.identifier = identifier -- Identifier

@@ -4,7 +4,7 @@ local ReturnStatement = require "lunar.ast.stats.return_statement"
 local FunctionExpression = require "lunar.ast.exprs.function_expression"
 
 class LambdaExpression << SyntaxNode
-  constructor(parameters, body, implicit_return, return_type_annotation)
+  constructor(start_pos, end_pos, parameters, body, implicit_return, return_type_annotation)
     super(SyntaxKind.lambda_expression)
 
     self.parameters = parameters

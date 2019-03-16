@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class UnaryOpExpression << SyntaxNode
-  constructor(operator, right_operand)
+  constructor(start_pos, end_pos, operator, right_operand)
     super(SyntaxKind.unary_op_expression)
 
     self.operator = operator

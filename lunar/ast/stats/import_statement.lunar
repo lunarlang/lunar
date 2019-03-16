@@ -9,7 +9,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class ImportStatement << SyntaxNode
-  constructor(path, values, side_effects)
+  constructor(start_pos, end_pos, path, values, side_effects)
     super(SyntaxKind.import_statement)
 
     self.path = path

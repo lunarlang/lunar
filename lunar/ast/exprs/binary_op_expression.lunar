@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class BinaryOpExpression << SyntaxNode
-  constructor(left_operand, operator, right_operand)
+  constructor(start_pos, end_pos, left_operand, operator, right_operand)
     super(SyntaxKind.binary_op_expression)
 
     self.left_operand = left_operand

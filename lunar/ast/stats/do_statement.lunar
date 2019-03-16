@@ -2,7 +2,7 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class DoStatement << SyntaxNode
-  constructor(block)
+  constructor(start_pos, end_pos, block)
     super(SyntaxKind.do_statement)
 
     self.block = block

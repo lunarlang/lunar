@@ -11,7 +11,7 @@ local ConstructorDeclaration = require "lunar.ast.decls.constructor_declaration"
 local MemberFieldDeclaration = require "lunar.ast.decls.member_field_declaration"
 
 class ClassStatement << SyntaxNode
-  constructor(identifier, super_identifier, members)
+  constructor(start_pos, end_pos, identifier, super_identifier, members)
     super(SyntaxKind.class_statement)
 
     self.identifier = identifier
