@@ -236,7 +236,7 @@ class Parser << BaseParser
         if self:assert(TokenType.identifier, TokenType.asterisk) then
           value = self:consume().value
           local value_decl_start_pos = self:last_consumed_pos()
-          local value_ident() = AST.Identifier.new(value_decl_start_pos, value_decl_start_pos, value)
+          local value_ident = AST.Identifier.new(value_decl_start_pos, value_decl_start_pos, value)
 
           if value == '*' and is_type then
             error("Unexpected symbol '*' after 'type'")
@@ -252,7 +252,7 @@ class Parser << BaseParser
         if self:match(TokenType.as_keyword) then
           local alias_name = self:expect(TokenType.identifier, "expected identifier after 'as'").value
           alias = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), alias_name)
-        elseif value == '*' then1
+        elseif value == '*' then
           error("expected 'as' after '*'")
         end
 
@@ -516,7 +516,7 @@ class Parser << BaseParser
             type_annotation = self:type_expression()
           end
 
-          table.insert(identifiers, AST.Identifier.new(value_ident_pos, value_ident_pos identifier_token.value, type_annotation))
+          table.insert(identifiers, AST.Identifier.new(value_ident_pos, value_ident_pos, identifier_token.value, type_annotation))
         end
 
         self:expect(TokenType.in_keyword, "Expected 'in' after identifier list")
@@ -567,7 +567,7 @@ class Parser << BaseParser
 
       local end_pos = self:last_consumed_pos()
 
-      return AST.FunctionStatement.new(start_pos, end_pos base, paramlist, block, return_type_annotation)
+      return AST.FunctionStatement.new(start_pos, end_pos, base, paramlist, block, return_type_annotation)
     end
   end
 

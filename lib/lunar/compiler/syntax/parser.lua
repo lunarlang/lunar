@@ -773,9 +773,9 @@ end
 function Parser.__index:error_near_next_token(message)
   local next_token = self:consume()
   if next_token then
-    error(message .. " near '" .. next_token.value .. "'")
+    error('[' .. next_token.line .. ":" .. next_token.column .. '] ' .. message .. " near '" .. next_token.value .. "'")
   else
-    error(message .. " near '<EOF>'")
+    error('[' .. next_token.line .. ":" .. next_token.column .. '] ' .. message .. " near '<EOF>'")
   end
 end
 return Parser
