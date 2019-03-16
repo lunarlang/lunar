@@ -7,74 +7,74 @@ describe("SecondaryExpression syntax", do
     local tokens = Lexer.new("hello()"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local base = AST.Identifier.new("hello")
+    local base = AST.Identifier.new(1, 1, "hello")
     local args = {}
 
-    assert.same(AST.FunctionCallExpression.new(base, args), result)
+    assert.same(AST.FunctionCallExpression.new(1, 3, base, args), result)
   end)
 
   it("should return a FunctionCallExpression with three NumberLiteralExpression arguments", do
     local tokens = Lexer.new("testing(1, 2, 3)"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local base = AST.Identifier.new("testing")
+    local base = AST.Identifier.new(1, 1, "testing")
     local args = {
-      AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(1)),
-      AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(2)),
-      AST.ArgumentExpression.new(AST.NumberLiteralExpression.new(3))
+      AST.ArgumentExpression.new(3, 3, AST.NumberLiteralExpression.new(3, 3, 1)),
+      AST.ArgumentExpression.new(6, 6, AST.NumberLiteralExpression.new(6, 6, 2)),
+      AST.ArgumentExpression.new(9, 9, AST.NumberLiteralExpression.new(9, 9, 3))
     }
 
-    assert.same(AST.FunctionCallExpression.new(base, args), result)
+    assert.same(AST.FunctionCallExpression.new(1, 10, base, args), result)
   end)
 
   it("should return a FunctionCallExpression with a IndexExpression using bracket syntax", do
     local tokens = Lexer.new("thank['you'](kanye)"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local index = AST.StringLiteralExpression.new("'you'")
-    local top_member = AST.IndexExpression.new(AST.Identifier.new("thank"), index)
-    local args = { AST.ArgumentExpression.new(AST.Identifier.new("kanye")) }
+    local index = AST.StringLiteralExpression.new(3, 3, "'you'")
+    local top_member = AST.IndexExpression.new(1, 4, AST.Identifier.new(1, 1, "thank"), index)
+    local args = { AST.ArgumentExpression.new(6, 6, AST.Identifier.new(6, 6, "kanye")) }
 
-    assert.same(AST.FunctionCallExpression.new(top_member, args), result)
+    assert.same(AST.FunctionCallExpression.new(1, 7, top_member, args), result)
   end)
 
   it("should return a FunctionCallExpression with dot syntax", do
     local tokens = Lexer.new("very.cool()"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local top_member = AST.MemberExpression.new(AST.Identifier.new("very"), AST.Identifier.new("cool"))
+    local top_member = AST.MemberExpression.new(1, 3, AST.Identifier.new(1, 1, "very"), AST.Identifier.new(3, 3, "cool"))
     local args = {}
 
-    assert.same(AST.FunctionCallExpression.new(top_member, args), result)
+    assert.same(AST.FunctionCallExpression.new(1, 5, top_member, args), result)
   end)
 
   it("should return a FunctionCallExpression with colon syntax", do
     local tokens = Lexer.new("very:nice()"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local top_member = AST.MemberExpression.new(AST.Identifier.new("very"), AST.Identifier.new("nice"), true)
+    local top_member = AST.MemberExpression.new(1, 3, AST.Identifier.new(1, 1, "very"), AST.Identifier.new(3, 3, "nice"), true)
     local args = {}
 
-    assert.same(AST.FunctionCallExpression.new(top_member, args), result)
+    assert.same(AST.FunctionCallExpression.new(1, 5, top_member, args), result)
   end)
 
   it("should return a FunctionCallExpression with a string argument", do
     local tokens = Lexer.new("cool'stuff'"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local base = AST.Identifier.new("cool")
-    local args = { AST.ArgumentExpression.new(AST.StringLiteralExpression.new("'stuff'")) }
+    local base = AST.Identifier.new(1, 1, "cool")
+    local args = { AST.ArgumentExpression.new(2, 2, AST.StringLiteralExpression.new(2, 2, "'stuff'")) }
 
-    assert.same(AST.FunctionCallExpression.new(base, args), result)
+    assert.same(AST.FunctionCallExpression.new(1, 2, base, args), result)
   end)
 
   it("should return a FunctionCallExpression with a table argument", do
     local tokens = Lexer.new("help{}"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local base = AST.Identifier.new("help")
-    local args = { AST.ArgumentExpression.new(AST.TableLiteralExpression.new({})) }
+    local base = AST.Identifier.new(1, 1, "help")
+    local args = { AST.ArgumentExpression.new(2, 3, AST.TableLiteralExpression.new(2, 3, {})) }
 
-    assert.same(AST.FunctionCallExpression.new(base, args), result)
+    assert.same(AST.FunctionCallExpression.new(1, 3, base, args), result)
   end)
 end)

@@ -156,9 +156,13 @@ class BaseParser
     return self.position + self:count_trivias()
   end
 
-  -- Returns the position of the last consumed token
-  function last_consumed_pos()
-    return self.position - 1
+  -- Returns the position of the last consumed nontrivial token
+  function last_nontrivial_pos()
+    for i = self.position -1, 1, -1 do
+      if not self:is_trivial(self.tokens[i]) then
+        return i
+      end
+    end
   end
 end
 

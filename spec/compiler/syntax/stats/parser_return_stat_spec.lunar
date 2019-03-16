@@ -7,24 +7,24 @@ describe("ReturnStatement syntax", do
     local tokens = Lexer.new("return"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    assert.same({ AST.ReturnStatement.new() }, result)
+    assert.same({ AST.ReturnStatement.new(1, 1) }, result)
   end)
 
   it("should return one ReturnStatement node with one expression", do
     local tokens = Lexer.new("return nil"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_expr_list = { AST.NilLiteralExpression.new() }
+    local expected_expr_list = { AST.NilLiteralExpression.new(3, 3) }
 
-    assert.same({ AST.ReturnStatement.new(expected_expr_list) }, result)
+    assert.same({ AST.ReturnStatement.new(1, 3, expected_expr_list) }, result)
   end)
 
   it("should return one ReturnStatement node with two expressions", do
     local tokens = Lexer.new("return nil, nil"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_expr_list = { AST.NilLiteralExpression.new(), AST.NilLiteralExpression.new() }
+    local expected_expr_list = { AST.NilLiteralExpression.new(3, 3), AST.NilLiteralExpression.new(6, 6) }
 
-    assert.same({ AST.ReturnStatement.new(expected_expr_list) }, result)
+    assert.same({ AST.ReturnStatement.new(1, 6, expected_expr_list) }, result)
   end)
 end)

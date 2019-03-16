@@ -106,7 +106,7 @@ class Parser << BaseParser
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'constructor'")
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.ConstructorDeclaration.new(start_pos, end_pos, params, block)
     end
@@ -120,7 +120,7 @@ class Parser << BaseParser
 
     if self:match(TokenType.function_keyword) then
       local name = self:expect(TokenType.identifier, "Expected identifier after 'function'").value
-      local name_ident = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), name)
+      local name_ident = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), name)
 
       if name == "constructor" then
         error("Unexpected 'constructor' keyword near 'function'")
@@ -139,12 +139,12 @@ class Parser << BaseParser
 
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'function " .. name .. "'")
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.ClassFunctionDeclaration.new(start_pos, end_pos, is_static, name_ident, params, block, return_type_annotation)
     elseif self:assert(TokenType.identifier) then
       local name_value = self:consume().value
-      local name = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), name_value)
+      local name = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), name_value)
 
       local type_annotation = nil
       if self:match(TokenType.colon) then
@@ -156,7 +156,7 @@ class Parser << BaseParser
         value = self:expression()
       end
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.ClassFieldDeclaration.new(start_pos, end_pos, is_static, name, type_annotation, value)
     end
@@ -188,12 +188,12 @@ class Parser << BaseParser
     if self:assert_seq("class", TokenType.identifier) then
       self:move(1)
       local name = self:expect(TokenType.identifier, "Expected identifier after 'class'").value
-      local name_ident = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), name)
+      local name_ident = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), name)
 
       local super_identifier
       if self:match(TokenType.double_left_angle) then
         local super_name = self:expect(TokenType.identifier, "Expected an identifier after '<<'").value
-        super_identifier = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), super_name)
+        super_identifier = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), super_name)
       end
 
       local members = {}
@@ -207,7 +207,7 @@ class Parser << BaseParser
       until member == nil
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'class'")
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.ClassStatement.new(start_pos, end_pos, name_ident, super_identifier, members)
     end
@@ -235,7 +235,7 @@ class Parser << BaseParser
         local value, value_ident, value_decl_start_pos
         if self:assert(TokenType.identifier, TokenType.asterisk) then
           value = self:consume().value
-          value_decl_start_pos = self:last_consumed_pos()
+          value_decl_start_pos = self:last_nontrivial_pos()
           value_ident = AST.Identifier.new(value_decl_start_pos, value_decl_start_pos, value)
 
           if value == '*' and is_type then
@@ -252,18 +252,18 @@ class Parser << BaseParser
           local alias
           if self:match(TokenType.as_keyword) then
             local alias_name = self:expect(TokenType.identifier, "expected identifier after 'as'").value
-            alias = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), alias_name)
+            alias = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), alias_name)
           elseif value == '*' then
             error("expected 'as' after '*'")
           end
 
-          local value_decl_end_pos = self:last_consumed_pos()
+          local value_decl_end_pos = self:last_nontrivial_pos()
 
           table.insert(values, AST.ImportValueDeclaration.new(value_decl_start_pos, value_decl_end_pos, value_ident, is_type, alias))
         end
       until not self:match(TokenType.comma)
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.ImportStatement.new(start_pos, end_pos, path, values)
     end
@@ -271,7 +271,7 @@ class Parser << BaseParser
     -- 'import' string
     if self:match(TokenType.import_keyword) then
       local path = self:parse_string_contents(self:expect(TokenType.string, "expected string after 'import'"))
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.ImportStatement.new(start_pos, end_pos, path, {}, true)
     end
   end
@@ -282,10 +282,10 @@ class Parser << BaseParser
     if self:match(TokenType.export_keyword) then
       -- 'export' 'function' identifier '(' [paramlist] ')'
       if self:match(TokenType.function_keyword) then
-        local func_start_pos = self:last_consumed_pos()
+        local func_start_pos = self:last_nontrivial_pos()
 
         local first_name = self:expect(TokenType.identifier, "Expected identifier after 'function'").value
-        local base = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), first_name)
+        local base = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), first_name)
 
         self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
         local paramlist = self:parameter_list()
@@ -299,7 +299,7 @@ class Parser << BaseParser
         local block = self:block()
         self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
-        local func_end_pos = self:last_consumed_pos()
+        local func_end_pos = self:last_nontrivial_pos()
         local func_stat = AST.FunctionStatement.new(func_start_pos, func_end_pos, base, paramlist, block, return_type_annotation, true)
 
         return AST.ExportStatement.new(start_pos, end_pos, func_stat)
@@ -308,7 +308,7 @@ class Parser << BaseParser
       -- 'export' class_statement
       local stat = self:class_statement()
       if stat then
-        return AST.ExportStatement.new(start_pos, self:last_consumed_pos(), stat)
+        return AST.ExportStatement.new(start_pos, self:last_nontrivial_pos(), stat)
       end
 
       -- 'export' identifier = expression
@@ -323,7 +323,7 @@ class Parser << BaseParser
         self:expect(TokenType.equal, "Declaration or statement expected")
         local expr = self:expression()
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
 
         local ident = AST.Identifier.new(variable_start_pos, variable_start_pos, name, type_annotation)
         local var_stat = AST.VariableStatement.new(variable_start_pos, end_pos, {ident}, {expr})
@@ -341,7 +341,7 @@ class Parser << BaseParser
     if primaryexpr ~= nil then
       -- immediately return this if it is a FunctionCallExpression as an ExpressionStatement
       if primaryexpr.syntax_kind == SyntaxKind.function_call_expression then
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         local test = AST.ExpressionStatement.new(start_pos, end_pos, primaryexpr)
         return test
       elseif primaryexpr.syntax_kind == SyntaxKind.member_expression
@@ -379,7 +379,7 @@ class Parser << BaseParser
         end
         local exprs = self:expression_list()
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
 
         return AST.AssignmentStatement.new(start_pos, end_pos, variables, self.self_assignment_op_map[op.value], exprs)
       else
@@ -396,7 +396,7 @@ class Parser << BaseParser
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
       
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.DoStatement.new(start_pos, end_pos, block)
     end
@@ -411,7 +411,7 @@ class Parser << BaseParser
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
       
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.WhileStatement.new(start_pos, end_pos, expr, block)
     end
@@ -425,7 +425,7 @@ class Parser << BaseParser
       self:expect(TokenType.until_keyword, "Expected 'until' to close 'repeat'")
       local expr = self:expression()
       
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.RepeatUntilStatement.new(start_pos, end_pos, block, expr)
     end
@@ -443,28 +443,28 @@ class Parser << BaseParser
       local if_statement = AST.IfStatement.new(start_pos, start_pos, expr, block)
 
       while self:match(TokenType.elseif_keyword) do
-        local elseif_start_pos = self:last_consumed_pos()
+        local elseif_start_pos = self:last_nontrivial_pos()
 
         local elseif_expr = self:expression()
         self:expect(TokenType.then_keyword, "Expected 'then' to close 'elseif'")
         local elseif_block = self:block()
 
-        local elseif_end_pos = self:last_consumed_pos()
+        local elseif_end_pos = self:last_nontrivial_pos()
 
         if_statement:push_elseif(AST.IfStatement.new(elseif_start_pos, elseif_end_pos, elseif_expr, elseif_block))
       end
 
       if self:match(TokenType.else_keyword) then
-        local else_start_pos = self:last_consumed_pos()
+        local else_start_pos = self:last_nontrivial_pos()
 
         local else_block = self:block()
 
-        local else_end_pos = self:last_consumed_pos()
+        local else_end_pos = self:last_nontrivial_pos()
         if_statement:set_else(AST.IfStatement.new(else_start_pos, else_end_pos, nil, else_block))
       end
 
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'if'")
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       if_statement.end_pos = end_pos
 
       return if_statement
@@ -476,7 +476,7 @@ class Parser << BaseParser
     -- 'for' identifier
     if self:match(TokenType.for_keyword) and self:assert(TokenType.identifier) then
       local first_name = self:consume().value
-      local first_ident_pos = self:last_consumed_pos()
+      local first_ident_pos = self:last_nontrivial_pos()
 
       local type_annotation = nil
       if self:match(TokenType.colon) then
@@ -500,7 +500,7 @@ class Parser << BaseParser
         local block = self:block()
         self:expect(TokenType.end_keyword, "Expected 'end' to close 'for'")
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
 
         return AST.RangeForStatement.new(start_pos, end_pos, first_identifier, start_expr, end_expr, incremental_expr, block)
       end
@@ -511,7 +511,7 @@ class Parser << BaseParser
 
         while self:match(TokenType.comma) do
           local value_name = self:expect(TokenType.identifier, "Expected identifier after ','").value
-          local value_ident_pos = self:last_consumed_pos()
+          local value_ident_pos = self:last_nontrivial_pos()
 
           local type_annotation = nil
           if self:match(TokenType.colon) then
@@ -527,7 +527,7 @@ class Parser << BaseParser
         local block = self:block()
         self:expect(TokenType.end_keyword, "Expected 'end' to close 'for'")
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
 
         return AST.GenericForStatement.new(start_pos, end_pos, identifiers, exprlist, block)
       end
@@ -539,20 +539,20 @@ class Parser << BaseParser
     -- 'function' identifier {'.' identifier} [':' identifier] '(' [paramlist] ')' block 'end'
     if self:match(TokenType.function_keyword) then
       local first_name = self:expect(TokenType.identifier, "Expected identifier after 'function'").value
-      local member_start_pos = self:last_consumed_pos()
+      local member_start_pos = self:last_nontrivial_pos()
       local first_identifier = AST.Identifier.new(member_start_pos, member_start_pos, first_name)
       local base = first_identifier
 
       while self:match(TokenType.dot) do
         local name = self:expect(TokenType.identifier, "Expected identifier after '.'").value
-        local identifier = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), name)
-        base = AST.MemberExpression.new(member_start_pos, self:last_consumed_pos(), base, identifier)
+        local identifier = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), name)
+        base = AST.MemberExpression.new(member_start_pos, self:last_nontrivial_pos(), base, identifier)
       end
 
       if self:match(TokenType.colon) then
         local name = self:expect(TokenType.identifier, "Expected identifier after ':'").value
-        local identifier = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), name)
-        base = AST.MemberExpression.new(member_start_pos, self:last_consumed_pos(), base, identifier, true)
+        local identifier = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), name)
+        base = AST.MemberExpression.new(member_start_pos, self:last_nontrivial_pos(), base, identifier, true)
       end
 
       self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
@@ -567,7 +567,7 @@ class Parser << BaseParser
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.FunctionStatement.new(start_pos, end_pos, base, paramlist, block, return_type_annotation)
     end
@@ -580,7 +580,7 @@ class Parser << BaseParser
       -- 'function' identifier '(' [paramlist] ')' block 'end'
       if self:match(TokenType.function_keyword) then
         local name = self:expect(TokenType.identifier, "Expected identifier after 'function'").value
-        local name_ident = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), name)
+        local name_ident = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), name)
 
         self:expect(TokenType.left_paren, "Expected '(' to start 'function'")
         local paramlist = self:parameter_list()
@@ -594,7 +594,7 @@ class Parser << BaseParser
         local block = self:block()
         self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
 
         return AST.FunctionStatement.new(start_pos, end_pos, name_ident, paramlist, block, return_type_annotation, true)
       end
@@ -608,7 +608,7 @@ class Parser << BaseParser
         repeat
           i = i + 1
           local name = self:expect(TokenType.identifier, "Expected identifier after ','").value
-          local ident_pos = self:last_consumed_pos()
+          local ident_pos = self:last_nontrivial_pos()
           local type_annotation = nil
           if self:match(TokenType.colon) then
             type_annotation = self:type_expression()
@@ -620,7 +620,7 @@ class Parser << BaseParser
           exprlist = self:expression_list()
         end
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
 
         return AST.VariableStatement.new(start_pos, end_pos, identlist, exprlist)
       end
@@ -638,7 +638,7 @@ class Parser << BaseParser
         local identifier
         if self:assert(TokenType.identifier) then
           local name = self:consume().value
-          local name_pos = self:last_consumed_pos()
+          local name_pos = self:last_nontrivial_pos()
           local type_annotation
           if self:match(TokenType.colon) then
             type_annotation = self:type_expression()
@@ -649,7 +649,7 @@ class Parser << BaseParser
           error("Expected identifier after 'declare " .. context .. "'")
         end
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
 
         return AST.DeclareGlobalStatement.new(start_pos, end_pos, identifier, false)
       elseif context == "package" then
@@ -658,13 +658,13 @@ class Parser << BaseParser
 
         local type = self:type_expression()
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         return AST.DeclarePackageStatement.new(start_pos, end_pos, path, type)
       elseif context == "returns" then
         -- 'declare' 'returns' type_expression
 
         local type = self:type_expression()
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         return AST.DeclareReturnsStatement.new(start_pos, end_pos, type)
       else
         error("Expected 'global' 'package' or 'returns' after 'declare' keyword")
@@ -685,7 +685,7 @@ class Parser << BaseParser
     local start_pos = self:next_nontrivial_pos()
     -- 'break'
     if self:match(TokenType.break_keyword) then
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.BreakStatement.new(start_pos, end_pos)
     end
 
@@ -695,11 +695,11 @@ class Parser << BaseParser
 
       -- prefer nil if there is no expressions
       if #exprlist == 0 then
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         return AST.ReturnStatement.new(start_pos, end_pos, nil)
       end
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.ReturnStatement.new(start_pos, end_pos, exprlist)
     end
   end
@@ -711,7 +711,7 @@ class Parser << BaseParser
     local expr = self:match_expression()
 
     if expr then
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.ArgumentExpression.new(start_pos, end_pos, expr)
     end
     
@@ -746,17 +746,16 @@ class Parser << BaseParser
     -- '(' expr ')'
     if self:match(TokenType.left_paren) then
       local inner_expr = self:expression()
-      local end_pos = self:last_consumed_pos()
-      local expr = AST.PrefixExpression.new(start_pos, end_pos, inner_expr)
       self:expect(TokenType.right_paren, "Expected ')' to close '('")
 
-      return expr
+      local end_pos = self:last_nontrivial_pos()
+      return AST.PrefixExpression.new(start_pos, end_pos, inner_expr)
     end
 
     -- identifier
     if self:assert(TokenType.identifier) then
       local name = self:consume().value
-      local ident_pos = self:last_consumed_pos()
+      local ident_pos = self:last_nontrivial_pos()
 
       return AST.Identifier.new(ident_pos, ident_pos, name)
     end
@@ -781,28 +780,28 @@ class Parser << BaseParser
     while true do
       if self:match(TokenType.dot) then
         local name = self:expect(TokenType.identifier, "Expected identifier after '.'").value
-        local ident = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), name)
+        local ident = AST.Identifier.new(self:last_nontrivial_pos(), self:last_nontrivial_pos(), name)
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         expr = AST.MemberExpression.new(start_pos, end_pos, expr, ident)
       elseif self:match(TokenType.left_bracket) then
         local inner_expr = self:expression()
         self:expect(TokenType.right_bracket, "Expected ']' to close '['")
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         expr = AST.IndexExpression.new(start_pos, end_pos, expr, inner_expr)
       elseif self:match(TokenType.colon) then
         local name = self:expect(TokenType.identifier, "Expected identifier after ':'").value
-        local member_end_pos = self:last_consumed_pos()
+        local member_end_pos = self:last_nontrivial_pos()
         local ident = AST.Identifier.new(member_end_pos, member_end_pos, name)
         local args = self:function_arg_list()
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         expr = AST.FunctionCallExpression.new(start_pos, end_pos,
           AST.MemberExpression.new(start_pos, member_end_pos, expr, ident, true),
           args
         )
       elseif self:assert(TokenType.left_paren, TokenType.string, TokenType.left_brace) then
         local args = self:function_arg_list()
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         expr = AST.FunctionCallExpression.new(start_pos, end_pos, expr, args)
       else
         return expr
@@ -814,28 +813,28 @@ class Parser << BaseParser
     local start_pos = self:next_nontrivial_pos()
     -- 'nil'
     if self:match(TokenType.nil_keyword) then
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.NilLiteralExpression.new(start_pos, end_pos)
     end
 
     -- 'true' | 'false'
     if self:assert(TokenType.true_keyword, TokenType.false_keyword) then
       local boolean_token = self:consume()
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.BooleanLiteralExpression.new(start_pos, end_pos, boolean_token.token_type == TokenType.true_keyword)
     end
 
     -- number
     if self:assert(TokenType.number) then
       local number_token = self:consume()
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.NumberLiteralExpression.new(start_pos, end_pos, tonumber(number_token.value))
     end
 
     -- string
     if self:assert(TokenType.string) then
       local string_token = self:consume()
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.StringLiteralExpression.new(start_pos, end_pos, string_token.value)
     end
 
@@ -843,14 +842,14 @@ class Parser << BaseParser
     if self:match(TokenType.left_brace) then
       local fieldlist = self:field_list()
       self:expect(TokenType.right_brace, "Expected '}' to close '{'")
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.TableLiteralExpression.new(start_pos, end_pos, fieldlist)
     end
 
     -- '...'
     if self:match(TokenType.triple_dot) then
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.VariableArgumentExpression.new(start_pos, end_pos)
     end
 
@@ -867,7 +866,7 @@ class Parser << BaseParser
 
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.FunctionExpression.new(start_pos, end_pos, paramlist, block, return_type_annotation)
     end
@@ -887,19 +886,19 @@ class Parser << BaseParser
         local block = self:block()
         self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         return AST.LambdaExpression.new(start_pos, end_pos, params, block, false, return_type_annotation)
       else
         local expr = self:expression()
 
-        local end_pos = self:last_consumed_pos()
+        local end_pos = self:last_nontrivial_pos()
         return AST.LambdaExpression.new(start_pos, end_pos, params, expr, true, return_type_annotation)
       end
     elseif self:match(TokenType.do_keyword) then
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'do'")
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.LambdaExpression.new(start_pos, end_pos, {}, block, false, nil)
     end
 
@@ -913,11 +912,14 @@ class Parser << BaseParser
       or self:assert(TokenType.function_keyword)
       or self:assert(TokenType.true_keyword)
       or self:assert(TokenType.false_keyword) then
-      local end_pos = self:last_consumed_pos()
-      return AST.Identifier.new(start_pos, end_pos, self:consume().value)
+      local name = self:consume().value
+      local end_pos = self:last_nontrivial_pos()
+      return AST.Identifier.new(start_pos, end_pos, name)
     end
     if self:assert(TokenType.identifier) then
-      return AST.Identifier.new(start_pos, end_pos, self:consume().value)
+      local name = self:consume().value
+      local end_pos = self:last_nontrivial_pos()
+      return AST.Identifier.new(start_pos, end_pos, name)
     else
       error("Expected identifier in type expression")
     end
@@ -978,8 +980,8 @@ class Parser << BaseParser
     local unary_op = self:get_unary_op()
     if unary_op ~= nil then
       self:consume()
-      local end_pos = self:last_consumed_pos()
       local inner_expr = self:sub_expression(unary_priority)
+      local end_pos = self:last_nontrivial_pos()
       expr = AST.UnaryOpExpression.new(start_pos, end_pos, unary_op, inner_expr)
     else
       expr = self:match_simple_expression()
@@ -994,7 +996,7 @@ class Parser << BaseParser
       end
       -- parse a new sub_expression with the right priority of this binary_op
       local next_expr = self:sub_expression(priority[binary_op][2])
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       expr = AST.BinaryOpExpression.new(start_pos, end_pos, expr, binary_op, next_expr)
 
       -- is there any binary op after this?
@@ -1008,7 +1010,7 @@ class Parser << BaseParser
         error("unexpected symbol near 'as'")
       end
       local type_expr = self:type_expression()
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       expr = AST.TypeAssertionExpression.new(start_pos, end_pos, expr, type_expr)
     end
 
@@ -1035,17 +1037,17 @@ class Parser << BaseParser
     -- identifier | '...'
     if self:assert(TokenType.identifier, TokenType.triple_dot) then
       local param = self:consume().value
-      local param_pos = self:last_consumed_pos()
+      local param_pos = self:last_nontrivial_pos()
 
       local type_annotation = nil
       if self:match(TokenType.colon) then
         type_annotation = self:type_expression()
       end
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       
       local param_ident = AST.Identifier.new(start_pos, param_pos, param, type_annotation)
-      return AST.ParameterDeclaration.new(start_pos, param_pos, param_ident)
+      return AST.ParameterDeclaration.new(start_pos, end_pos, param_ident)
     end
   end
 
@@ -1074,7 +1076,7 @@ class Parser << BaseParser
       self:expect(TokenType.equal, "Expected '=' near ']'")
       local value = self:expression()
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.IndexFieldDeclaration.new(start_pos, end_pos, key, value)
     end
@@ -1082,7 +1084,7 @@ class Parser << BaseParser
     -- identifier '=' expr
     if self:assert_seq(TokenType.identifier, TokenType.equal) then
       local key = self:expect(TokenType.identifier, "Expected identifier to start this field").value
-      local key_pos = self:last_consumed_pos()
+      local key_pos = self:last_nontrivial_pos()
 
       local type_annotation = nil
       if self:match(TokenType.colon) then
@@ -1094,7 +1096,7 @@ class Parser << BaseParser
       self:consume() -- consumes the equal token, because we asserted it earlier
       local value = self:expression()
 
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
 
       return AST.MemberFieldDeclaration.new(start_pos, end_pos, key_ident, value)
     end
@@ -1102,7 +1104,7 @@ class Parser << BaseParser
     -- expr
     local value = self:match_expression()
     if value ~= nil then
-      local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_nontrivial_pos()
       return AST.SequentialFieldDeclaration.new(start_pos, end_pos, value)
     end
   end

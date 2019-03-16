@@ -7,36 +7,36 @@ describe("PrefixExpression syntax", do
     local tokens = Lexer.new("1 + (2 + 3)"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local outer_left_operand = AST.NumberLiteralExpression.new(1)
-    local inner_left_operand = AST.NumberLiteralExpression.new(2)
-    local inner_right_operand = AST.NumberLiteralExpression.new(3)
-    local right_operand = AST.PrefixExpression.new(
-      AST.BinaryOpExpression.new(inner_left_operand, AST.BinaryOpKind.addition_op, inner_right_operand)
+    local outer_left_operand = AST.NumberLiteralExpression.new(1, 1, 1)
+    local inner_left_operand = AST.NumberLiteralExpression.new(6, 6, 2)
+    local inner_right_operand = AST.NumberLiteralExpression.new(10, 10, 3)
+    local right_operand = AST.PrefixExpression.new(5, 11,
+      AST.BinaryOpExpression.new(6, 10, inner_left_operand, AST.BinaryOpKind.addition_op, inner_right_operand)
     )
 
-    assert.same(AST.BinaryOpExpression.new(outer_left_operand, AST.BinaryOpKind.addition_op, right_operand), result)
+    assert.same(AST.BinaryOpExpression.new(1, 11, outer_left_operand, AST.BinaryOpKind.addition_op, right_operand), result)
   end)
 
   it("should return an Identifier named hello", do
     local tokens = Lexer.new("hello"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.Identifier.new("hello"), result)
+    assert.same(AST.Identifier.new(1, 1, "hello"), result)
   end)
 
   it("should return a left Identifier named hello with a right MemberExpression named world", do
     local tokens = Lexer.new("hello.world"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.MemberExpression.new(AST.Identifier.new("hello"), AST.Identifier.new("world")), result)
+    assert.same(AST.MemberExpression.new(1, 3, AST.Identifier.new(1, 1, "hello"), AST.Identifier.new(3, 3, "world")), result)
   end)
 
   it("should return a left Identifier named hello with a right IndexExpression of StringLiteralExpression whose value is 'world'", do
     local tokens = Lexer.new("hello['world']"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local index = AST.StringLiteralExpression.new("'world'")
+    local index = AST.StringLiteralExpression.new(3, 3, "'world'")
 
-    assert.same(AST.IndexExpression.new(AST.Identifier.new("hello"), index), result)
+    assert.same(AST.IndexExpression.new(1, 4, AST.Identifier.new(1, 1, "hello"), index), result)
   end)
 end)

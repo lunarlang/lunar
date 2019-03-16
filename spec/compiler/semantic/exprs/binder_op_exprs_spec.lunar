@@ -13,19 +13,19 @@ describe("Bindings of literal expressions", do
     local var_stat = result[1]
 
     local binop_expr = var_stat.exprlist[1]
-    assert.same(AST.BinaryOpExpression.new(
-      AST.NumberLiteralExpression.new(1),
+    assert.same(AST.BinaryOpExpression.new(7, 21,
+      AST.NumberLiteralExpression.new(7, 7, 1),
       AST.BinaryOpKind.and_op,
-      AST.BinaryOpExpression.new(
-        AST.BinaryOpExpression.new(
-          AST.NumberLiteralExpression.new(2),
+      AST.BinaryOpExpression.new(11, 21,
+        AST.BinaryOpExpression.new(11, 15,
+          AST.NumberLiteralExpression.new(11, 11, 2),
           AST.BinaryOpKind.addition_op,
-          AST.NumberLiteralExpression.new(3)
+          AST.NumberLiteralExpression.new(15, 15, 3)
         ),
         AST.BinaryOpKind.equal_op,
-        AST.UnaryOpExpression.new(
+        AST.UnaryOpExpression.new(19, 21,
           AST.UnaryOpKind.length_op,
-          AST.TableLiteralExpression.new({})
+          AST.TableLiteralExpression.new(20, 21, {})
         )
       )
     ), binop_expr)

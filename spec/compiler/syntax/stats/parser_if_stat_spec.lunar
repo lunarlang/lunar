@@ -7,9 +7,9 @@ describe("IfStatement syntax", do
     local tokens = Lexer.new("if true then end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_expr = AST.BooleanLiteralExpression.new(true)
+    local expected_expr = AST.BooleanLiteralExpression.new(3, 3, true)
 
-    assert.same({ AST.IfStatement.new(expected_expr, {}) }, result)
+    assert.same({ AST.IfStatement.new(1, 7, expected_expr, {}) }, result)
   end)
 
   it("should return one IfStatement node with one elseif branch", do
@@ -17,11 +17,12 @@ describe("IfStatement syntax", do
     local result = Parser.new(tokens):parse()
 
     -- since all branches here has the same
-    local expected_expr = AST.BooleanLiteralExpression.new(false)
+    local expected_expr_1 = AST.BooleanLiteralExpression.new(3, 3, false)
+    local expected_expr_2 = AST.BooleanLiteralExpression.new(9, 9, false)
 
     assert.same({
-      AST.IfStatement.new(expected_expr, {})
-        :push_elseif(AST.IfStatement.new(expected_expr, {}))
+      AST.IfStatement.new(1, 13, expected_expr_1, {})
+        :push_elseif(AST.IfStatement.new(7, 11, expected_expr_2, {}))
     }, result)
   end)
 
@@ -29,12 +30,13 @@ describe("IfStatement syntax", do
     local tokens = Lexer.new("if false then elseif false then else end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_expr = AST.BooleanLiteralExpression.new(false)
+    local expected_expr_1 = AST.BooleanLiteralExpression.new(3, 3, false)
+    local expected_expr_2 = AST.BooleanLiteralExpression.new(9, 9, false)
 
     assert.same({
-      AST.IfStatement.new(expected_expr, {})
-        :push_elseif(AST.IfStatement.new(expected_expr, {}, {}))
-        :set_else(AST.IfStatement.new(nil, {}))
+      AST.IfStatement.new(1, 15, expected_expr_1, {})
+        :push_elseif(AST.IfStatement.new(7, 11, expected_expr_2, {}, {}))
+        :set_else(AST.IfStatement.new(13, 13, nil, {}))
     }, result)
   end)
 
@@ -42,10 +44,11 @@ describe("IfStatement syntax", do
     local tokens = Lexer.new("if false then if false then end end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_expr = AST.BooleanLiteralExpression.new(false)
+    local expected_expr_1 = AST.BooleanLiteralExpression.new(3, 3, false)
+    local expected_expr_2 = AST.BooleanLiteralExpression.new(9, 9, false)
 
     assert.same({
-      AST.IfStatement.new(expected_expr, { AST.IfStatement.new(expected_expr, {}) })
+      AST.IfStatement.new(1, 15, expected_expr_1, { AST.IfStatement.new(7, 13, expected_expr_2, {}) })
     }, result)
   end)
 end)

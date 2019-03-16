@@ -11,20 +11,20 @@ describe("Bindings of literal expressions", do
     local var_stat = result[1]
 
     local table_literal_expression = var_stat.exprlist[1]
-    assert.same(AST.TableLiteralExpression.new({
-      AST.SequentialFieldDeclaration.new(
-        AST.NumberLiteralExpression.new(1)
+    assert.same(AST.TableLiteralExpression.new(7, 29, {
+      AST.SequentialFieldDeclaration.new(8, 8,
+        AST.NumberLiteralExpression.new(8, 8, 1)
       ),
-      AST.SequentialFieldDeclaration.new(
-        AST.StringLiteralExpression.new("'hello'")
+      AST.SequentialFieldDeclaration.new(11, 11,
+        AST.StringLiteralExpression.new(11, 11, "'hello'")
       ),
-      AST.IndexFieldDeclaration.new(
-        AST.TableLiteralExpression.new({}),
-        AST.NilLiteralExpression.new()
+      AST.IndexFieldDeclaration.new(14, 21,
+        AST.TableLiteralExpression.new(15, 16, {}),
+        AST.NilLiteralExpression.new(21, 21)
       ),
-      AST.MemberFieldDeclaration.new(
-        AST.Identifier.new('x'),
-        AST.BooleanLiteralExpression.new(true)
+      AST.MemberFieldDeclaration.new(24, 28,
+        AST.Identifier.new(24, 24, 'x'),
+        AST.BooleanLiteralExpression.new(28, 28, true)
       ),
     }), table_literal_expression)
   end)

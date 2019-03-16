@@ -8,9 +8,9 @@ describe("UnaryOpExpression syntax", do
     local result = Parser.new(tokens):expression()
 
     local operator = AST.UnaryOpKind.not_op
-    local operand = AST.BooleanLiteralExpression.new(false)
+    local operand = AST.BooleanLiteralExpression.new(3, 3, false)
 
-    assert.same(AST.UnaryOpExpression.new(operator, operand), result)
+    assert.same(AST.UnaryOpExpression.new(1, 3, operator, operand), result)
   end)
 
   it("should return an UnaryOpExpression node whose operand is NumberLiteralExpression and operator is negative_op", do
@@ -18,9 +18,9 @@ describe("UnaryOpExpression syntax", do
     local result = Parser.new(tokens):expression()
 
     local operator = AST.UnaryOpKind.negative_op
-    local operand = AST.NumberLiteralExpression.new(1)
+    local operand = AST.NumberLiteralExpression.new(2, 2, 1)
 
-    assert.same(AST.UnaryOpExpression.new(operator, operand), result)
+    assert.same(AST.UnaryOpExpression.new(1, 2, operator, operand), result)
   end)
 
   it("should return an UnaryOpExpression node whose operand is TableLiteralExpression and operator is length_op", do
@@ -28,9 +28,9 @@ describe("UnaryOpExpression syntax", do
     local result = Parser.new(tokens):expression()
 
     local operator = AST.UnaryOpKind.length_op
-    local operand = AST.TableLiteralExpression.new({})
+    local operand = AST.TableLiteralExpression.new(2, 3, {})
 
-    assert.same(AST.UnaryOpExpression.new(operator, operand), result)
+    assert.same(AST.UnaryOpExpression.new(1, 3, operator, operand), result)
   end)
 
   it("should guard against unfinished unary expressions", do
