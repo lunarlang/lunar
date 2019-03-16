@@ -2,8 +2,8 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class MemberFieldDeclaration << SyntaxNode
-  constructor(member_identifier, value)
-    super(SyntaxKind.member_field_declaration)
+  constructor(start_pos, end_pos, member_identifier, value)
+    super(SyntaxKind.member_field_declaration, start_pos, end_pos)
 
     self.member_identifier = member_identifier
     self.value = value

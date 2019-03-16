@@ -2,8 +2,8 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class PrefixExpression << SyntaxNode
-  constructor(expr)
-    super(SyntaxKind.prefix_expression)
+  constructor(start_pos, end_pos, expr)
+    super(SyntaxKind.prefix_expression, start_pos, end_pos)
 
     self.expr = expr
   end

@@ -2,8 +2,8 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class SequentialFieldDeclaration << SyntaxNode
-  constructor(value)
-    super(SyntaxKind.sequential_field_declaration)
+  constructor(start_pos, end_pos, value)
+    super(SyntaxKind.sequential_field_declaration, start_pos, end_pos)
 
     self.value = value
   end

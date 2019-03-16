@@ -7,8 +7,8 @@ describe("RepeatUntilStatement syntax", do
     local tokens = Lexer.new("repeat until true"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expr = AST.BooleanLiteralExpression.new(true)
+    local expr = AST.BooleanLiteralExpression.new(5, 5, true)
 
-    assert.same({ AST.RepeatUntilStatement.new({}, expr) }, result)
+    assert.same({ AST.RepeatUntilStatement.new(1, 5, {}, expr) }, result)
   end)
 end)

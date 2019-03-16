@@ -2,10 +2,10 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class FunctionStatement << SyntaxNode
-  constructor(base, parameters, block, return_type_annotation, is_local)
+  constructor(start_pos, end_pos, base, parameters, block, return_type_annotation, is_local)
     if is_local == nil then is_local = false end
 
-    super(SyntaxKind.function_statement)
+    super(SyntaxKind.function_statement, start_pos, end_pos)
 
     self.base = base -- should only be an identifier if is_local is true
     self.parameters = parameters

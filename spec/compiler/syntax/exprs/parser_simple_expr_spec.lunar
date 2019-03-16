@@ -7,52 +7,52 @@ describe("LiteralExpression syntax", do
     local tokens = Lexer.new("nil"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.NilLiteralExpression.new(), result)
+    assert.same(AST.NilLiteralExpression.new(1, 1), result)
   end)
 
   it("should return one BooleanLiteralExpression node given a value of true", do
     local tokens = Lexer.new("true"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.BooleanLiteralExpression.new(true), result)
+    assert.same(AST.BooleanLiteralExpression.new(1, 1, true), result)
   end)
 
   it("should return one BooleanLiteralExpression node given a value of false", do
     local tokens = Lexer.new("false"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.BooleanLiteralExpression.new(false), result)
+    assert.same(AST.BooleanLiteralExpression.new(1, 1, false), result)
   end)
 
   it("should return one NumberLiteralExpression node given a value of 100", do
     local tokens = Lexer.new("100"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.NumberLiteralExpression.new(100), result)
+    assert.same(AST.NumberLiteralExpression.new(1, 1, 100), result)
   end)
 
   it("should return one StringLiteralExpression node given a string value", do
     local tokens = Lexer.new("'Hello, world!'"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.StringLiteralExpression.new("'Hello, world!'"), result)
+    assert.same(AST.StringLiteralExpression.new(1, 1, "'Hello, world!'"), result)
   end)
 
   it("should return one VariableArgumentExpression node", do
     local tokens = Lexer.new("..."):tokenize()
     local result = Parser.new(tokens):expression()
 
-    assert.same(AST.VariableArgumentExpression.new(), result)
+    assert.same(AST.VariableArgumentExpression.new(1, 1), result)
   end)
 
   it("should return one FunctionExpression node whose parameters has two ParameterDeclaration nodes and a BreakStatement block", do
     local tokens = Lexer.new("function(hello, ...) break end"):tokenize()
     local result = Parser.new(tokens):expression()
 
-    local expected_params = { AST.ParameterDeclaration.new(AST.Identifier.new("hello")), AST.ParameterDeclaration.new(AST.Identifier.new("...")) }
-    local expected_block = { AST.BreakStatement.new() }
+    local expected_params = { AST.ParameterDeclaration.new(3, 3, AST.Identifier.new(3, 3, "hello")), AST.ParameterDeclaration.new(6, 6, AST.Identifier.new(6, 6, "...")) }
+    local expected_block = { AST.BreakStatement.new(9, 9) }
 
-    assert.same(AST.FunctionExpression.new(expected_params, expected_block), result)
+    assert.same(AST.FunctionExpression.new(1, 11, expected_params, expected_block), result)
   end)
 
   it("should return one TableLiteralExpression node with three FieldDeclaration nodes", do
@@ -60,12 +60,12 @@ describe("LiteralExpression syntax", do
     local result = Parser.new(tokens):expression()
 
     local expected_fields = {
-      AST.IndexFieldDeclaration.new(AST.StringLiteralExpression.new("'hello'"), AST.BooleanLiteralExpression.new(true)),
-      AST.MemberFieldDeclaration.new(AST.Identifier.new("world"), AST.BooleanLiteralExpression.new(false)),
-      AST.SequentialFieldDeclaration.new(AST.NilLiteralExpression.new()),
+      AST.IndexFieldDeclaration.new(3, 9, AST.StringLiteralExpression.new(4, 4, "'hello'"), AST.BooleanLiteralExpression.new(9, 9, true)),
+      AST.MemberFieldDeclaration.new(12, 16, AST.Identifier.new(12, 12, "world"), AST.BooleanLiteralExpression.new(16, 16, false)),
+      AST.SequentialFieldDeclaration.new(19, 19, AST.NilLiteralExpression.new(19, 19)),
     }
 
-    assert.same(AST.TableLiteralExpression.new(expected_fields), result)
+    assert.same(AST.TableLiteralExpression.new(1, 22, expected_fields), result)
   end)
 
   it("should return one LambdaExpression node with two arguments and does not implicitly return", do
@@ -73,21 +73,22 @@ describe("LiteralExpression syntax", do
     local result = Parser.new(tokens):expression()
 
     local expected_params = {
-      AST.ParameterDeclaration.new(AST.Identifier.new("a")),
-      AST.ParameterDeclaration.new(AST.Identifier.new("b"))
+      AST.ParameterDeclaration.new(2, 2, AST.Identifier.new(2, 2, "a")),
+      AST.ParameterDeclaration.new(5, 5, AST.Identifier.new(5, 5, "b"))
     }
 
     local expected_block = {
-      AST.ReturnStatement.new({
+      AST.ReturnStatement.new(10, 16, {
         AST.BinaryOpExpression.new(
-          AST.Identifier.new("a"),
+          12, 16,
+          AST.Identifier.new(12, 12, "a"),
           AST.BinaryOpKind.addition_op,
-          AST.Identifier.new("b")
+          AST.Identifier.new(16, 16, "b")
         )
       })
     }
 
-    assert.same(AST.LambdaExpression.new(expected_params, expected_block, false), result)
+    assert.same(AST.LambdaExpression.new(1, 18, expected_params, expected_block, false), result)
   end)
 
   it("should return one LambdaExpression with a return type annotation of 'number'", do
@@ -97,14 +98,14 @@ describe("LiteralExpression syntax", do
     local expected_params = {}
 
     local expected_block = {
-      AST.ReturnStatement.new({
-        AST.NumberLiteralExpression.new(1)
+      AST.ReturnStatement.new(9, 11, {
+        AST.NumberLiteralExpression.new(11, 11, 1)
       })
     }
 
-    local expected_return_annotaiton = AST.Identifier.new("number")
+    local expected_return_annotaiton = AST.Identifier.new(5, 5, "number")
 
-    assert.same(AST.LambdaExpression.new(expected_params, expected_block, false, expected_return_annotaiton), result)
+    assert.same(AST.LambdaExpression.new(1, 13, expected_params, expected_block, false, expected_return_annotaiton), result)
   end)
 
   it("should return one LambdaExpression with a return type annotation of 'number' and an implicit return", do
@@ -113,11 +114,11 @@ describe("LiteralExpression syntax", do
 
     local expected_params = {}
 
-    local expected_expr = AST.NumberLiteralExpression.new(1)
+    local expected_expr = AST.NumberLiteralExpression.new(7, 7, 1)
 
-    local expected_return_annotaiton = AST.Identifier.new("number")
+    local expected_return_annotaiton = AST.Identifier.new(5, 5, "number")
 
-    assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true, expected_return_annotaiton), result)
+    assert.same(AST.LambdaExpression.new(1, 7, expected_params, expected_expr, true, expected_return_annotaiton), result)
   end)
 
   it("should return one LambdaExpression node without any arguments and does not implicitly return", do
@@ -125,10 +126,10 @@ describe("LiteralExpression syntax", do
     local result = Parser.new(tokens):expression()
 
     local expected_block = {
-      AST.ReturnStatement.new({ AST.NumberLiteralExpression.new(1) })
+      AST.ReturnStatement.new(3, 5, { AST.NumberLiteralExpression.new(5, 5, 1) })
     }
 
-    assert.same(AST.LambdaExpression.new({}, expected_block, false), result)
+    assert.same(AST.LambdaExpression.new(1, 7, {}, expected_block, false), result)
   end)
 
   it("should return one LambdaExpression node with two arguments and does implicitly return", do
@@ -136,16 +137,17 @@ describe("LiteralExpression syntax", do
     local result = Parser.new(tokens):expression()
 
     local expected_params = {
-      AST.ParameterDeclaration.new(AST.Identifier.new("a")),
-      AST.ParameterDeclaration.new(AST.Identifier.new("b"))
+      AST.ParameterDeclaration.new(2, 2, AST.Identifier.new(2, 2, "a")),
+      AST.ParameterDeclaration.new(5, 5, AST.Identifier.new(5, 5, "b"))
     }
 
     local expected_expr = AST.BinaryOpExpression.new(
-      AST.Identifier.new("a"),
+      8, 12,
+      AST.Identifier.new(8, 8, "a"),
       AST.BinaryOpKind.addition_op,
-      AST.Identifier.new("b")
+      AST.Identifier.new(12, 12, "b")
     )
 
-    assert.same(AST.LambdaExpression.new(expected_params, expected_expr, true), result)
+    assert.same(AST.LambdaExpression.new(1, 12, expected_params, expected_expr, true), result)
   end)
 end)

@@ -2,8 +2,8 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class ExpressionStatement << SyntaxNode
-  constructor(expr)
-    super(SyntaxKind.expression_statement)
+  constructor(start_pos, end_pos, expr)
+    super(SyntaxKind.expression_statement, start_pos, end_pos)
 
     self.expr = expr
   end

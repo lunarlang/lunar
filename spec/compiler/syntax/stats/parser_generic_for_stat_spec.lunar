@@ -7,13 +7,13 @@ describe("GenericForStatement syntax", do
     local tokens = Lexer.new("for i in pairs() do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_identifiers = { AST.Identifier.new("i") }
+    local expected_identifiers = { AST.Identifier.new(3, 3, "i") }
     local expected_exprlist = {
-      AST.FunctionCallExpression.new(AST.Identifier.new("pairs"), {})
+      AST.FunctionCallExpression.new(7, 9, AST.Identifier.new(7, 7, "pairs"), {})
     }
 
     assert.same({
-      AST.GenericForStatement.new(expected_identifiers, expected_exprlist, {})
+      AST.GenericForStatement.new(1, 13, expected_identifiers, expected_exprlist, {})
     }, result)
   end)
 
@@ -21,13 +21,13 @@ describe("GenericForStatement syntax", do
     local tokens = Lexer.new("for i, v in pairs() do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_identifiers = { AST.Identifier.new("i"), AST.Identifier.new("v") }
+    local expected_identifiers = { AST.Identifier.new(3, 3, "i"), AST.Identifier.new(6, 6, "v") }
     local expected_exprlist = {
-      AST.FunctionCallExpression.new(AST.Identifier.new("pairs"), {})
+      AST.FunctionCallExpression.new(10, 12, AST.Identifier.new(10, 10, "pairs"), {})
     }
 
     assert.same({
-      AST.GenericForStatement.new(expected_identifiers, expected_exprlist, {})
+      AST.GenericForStatement.new(1, 16, expected_identifiers, expected_exprlist, {})
     }, result)
   end)
 
@@ -35,14 +35,14 @@ describe("GenericForStatement syntax", do
     local tokens = Lexer.new("for i, v in next, t do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expected_identifiers = { AST.Identifier.new("i"), AST.Identifier.new("v") }
+    local expected_identifiers = { AST.Identifier.new(3, 3, "i"), AST.Identifier.new(6, 6, "v") }
     local expected_exprlist = {
-      AST.Identifier.new("next"),
-      AST.Identifier.new("t")
+      AST.Identifier.new(10, 10, "next"),
+      AST.Identifier.new(13, 13, "t")
     }
 
     assert.same({
-      AST.GenericForStatement.new(expected_identifiers, expected_exprlist, {})
+      AST.GenericForStatement.new(1, 17, expected_identifiers, expected_exprlist, {})
     }, result)
   end)
 end)

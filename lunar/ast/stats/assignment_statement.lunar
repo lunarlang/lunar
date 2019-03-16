@@ -16,8 +16,8 @@ class AssignmentStatement << SyntaxNode
     [SelfAssignmentOpKind.remainder_equal_op] = BinaryOpKind.modulus_op,
   }
 
-  constructor(variables, operator, exprs)
-    super(SyntaxKind.assignment_statement)
+  constructor(start_pos, end_pos, variables, operator, exprs)
+    super(SyntaxKind.assignment_statement, start_pos, end_pos)
 
     self.variables = variables
     self.operator = operator
@@ -46,7 +46,7 @@ class AssignmentStatement << SyntaxNode
       if variable ~= nil then
         table.insert(variables, variable)
         local op = self.binary_op_map[self.operator]
-        table.insert(exprs, BinaryOpExpression.new(variable, op, expr))
+        table.insert(exprs, BinaryOpExpression.new(nil, nil, variable, op, expr))
       else
         -- simply insert while doing nothing with it
         table.insert(exprs, expr)
@@ -62,11 +62,11 @@ class AssignmentStatement << SyntaxNode
         local variable = self.variables[index]
         table.insert(variables, variable)
         local op = self.binary_op_map[self.operator]
-        table.insert(exprs, BinaryOpExpression.new(variable, op, NilLiteralExpression.new()))
+        table.insert(exprs, BinaryOpExpression.new(nil, nil, variable, op, NilLiteralExpression.new(nil, nil)))
       end
     end
 
-    return AssignmentStatement.new(variables, SelfAssignmentOpKind.equal_op, exprs)
+    return AssignmentStatement.new(nil, nil, variables, SelfAssignmentOpKind.equal_op, exprs)
   end
 end
 

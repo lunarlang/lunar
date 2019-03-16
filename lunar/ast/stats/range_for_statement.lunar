@@ -2,8 +2,8 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class RangeForStatement << SyntaxNode
-  constructor(identifier, start_expr, end_expr, incremental_expr, block)
-    super(SyntaxKind.range_for_statement)
+  constructor(start_pos, end_pos, identifier, start_expr, end_expr, incremental_expr, block)
+    super(SyntaxKind.range_for_statement, start_pos, end_pos)
 
     self.identifier = identifier
     self.start_expr = start_expr

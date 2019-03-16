@@ -7,8 +7,8 @@ describe("WhileStatement syntax", do
     local tokens = Lexer.new("while true do end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    local expr = AST.BooleanLiteralExpression.new(true)
+    local expr = AST.BooleanLiteralExpression.new(3, 3, true)
 
-    assert.same({ AST.WhileStatement.new(expr, {}) }, result)
+    assert.same({ AST.WhileStatement.new(1, 7, expr, {}) }, result)
   end)
 end)

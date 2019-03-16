@@ -7,14 +7,14 @@ describe("ClassStatement syntax", do
     local tokens = Lexer.new("class C end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    assert.same({ AST.ClassStatement.new(AST.Identifier.new("C"), nil, {}) }, result)
+    assert.same({ AST.ClassStatement.new(1, 5, AST.Identifier.new(3, 3, "C"), nil, {}) }, result)
   end)
 
   it("should return one ClassStatement node whose name is 'C' and inherits from 'BaseC'", do
     local tokens = Lexer.new("class C << BaseC end"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    assert.same({ AST.ClassStatement.new(AST.Identifier.new("C"), AST.Identifier.new("BaseC"), {}) }, result)
+    assert.same({ AST.ClassStatement.new(1, 9, AST.Identifier.new(3, 3, "C"), AST.Identifier.new(7, 7, "BaseC"), {}) }, result)
   end)
 
   it("should return one ClassStatement node with one instance function", do
@@ -22,8 +22,8 @@ describe("ClassStatement syntax", do
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
-        AST.ClassFunctionDeclaration.new(false, AST.Identifier.new("m"), {}, {})
+      AST.ClassStatement.new(1, 13, AST.Identifier.new(3, 3, "C"), nil, {
+        AST.ClassFunctionDeclaration.new(5, 11, false, AST.Identifier.new(7, 7, "m"), {}, {})
       })
     }, result)
   end)
@@ -33,8 +33,8 @@ describe("ClassStatement syntax", do
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
-        AST.ClassFunctionDeclaration.new(false, AST.Identifier.new("m"), {}, {}, AST.Identifier.new("nil"))
+      AST.ClassStatement.new(1, 16, AST.Identifier.new(3, 3, "C"), nil, {
+        AST.ClassFunctionDeclaration.new(5, 14, false, AST.Identifier.new(7, 7, "m"), {}, {}, AST.Identifier.new(12, 12, "nil"))
       })
     }, result)
   end)
@@ -44,8 +44,8 @@ describe("ClassStatement syntax", do
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
-        AST.ClassFunctionDeclaration.new(true, AST.Identifier.new("m"), {}, {})
+      AST.ClassStatement.new(1, 15, AST.Identifier.new(3, 3, "C"), nil, {
+        AST.ClassFunctionDeclaration.new(5, 13, true, AST.Identifier.new(9, 9, "m"), {}, {})
       })
     }, result)
   end)
@@ -55,8 +55,8 @@ describe("ClassStatement syntax", do
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ClassStatement.new(AST.Identifier.new("C"), nil, {
-        AST.ConstructorDeclaration.new({}, {})
+      AST.ClassStatement.new(1, 11, AST.Identifier.new(3, 3, "C"), nil, {
+        AST.ConstructorDeclaration.new(5, 9, {}, {})
       })
     }, result)
   end)
@@ -66,7 +66,7 @@ describe("ClassStatement syntax", do
     local result = Parser.new(tokens):parse()
 
     assert.same({
-      AST.ExpressionStatement.new(AST.FunctionCallExpression.new(AST.Identifier.new("class"), {}))
+      AST.ExpressionStatement.new(1, 3, AST.FunctionCallExpression.new(1, 3, AST.Identifier.new(1, 1, "class"), {}))
     }, result)
   end)
 end)

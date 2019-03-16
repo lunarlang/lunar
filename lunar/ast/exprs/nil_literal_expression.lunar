@@ -2,8 +2,8 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class NilLiteralExpression << SyntaxNode
-  constructor()
-    super(SyntaxKind.nil_literal_expression)
+  constructor(start_pos, end_pos)
+    super(SyntaxKind.nil_literal_expression, start_pos, end_pos)
   end
 end
 

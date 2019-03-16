@@ -4,8 +4,8 @@ local ReturnStatement = require "lunar.ast.stats.return_statement"
 local FunctionExpression = require "lunar.ast.exprs.function_expression"
 
 class LambdaExpression << SyntaxNode
-  constructor(parameters, body, implicit_return, return_type_annotation)
-    super(SyntaxKind.lambda_expression)
+  constructor(start_pos, end_pos, parameters, body, implicit_return, return_type_annotation)
+    super(SyntaxKind.lambda_expression, start_pos, end_pos)
 
     self.parameters = parameters
     self.body = body -- could be a block or a single expression
@@ -18,13 +18,13 @@ class LambdaExpression << SyntaxNode
 
     if self.implicit_return then
       -- rewrites the body to a return statement
-      block = { ReturnStatement.new({ self.body }) }
+      block = { ReturnStatement.new(nil, nil, { self.body }) }
     else
       -- compatible type, so we simply reuse it
       block = self.body
     end
 
-    return FunctionExpression.new(self.parameters, block)
+    return FunctionExpression.new(nil, nil, self.parameters, block)
   end
 end
 

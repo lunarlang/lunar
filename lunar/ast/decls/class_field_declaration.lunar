@@ -6,8 +6,8 @@ local AssignmentStatement = require "lunar.ast.stats.assignment_statement"
 local SelfAssignmentOpKind = require "lunar.ast.stats.self_assignment_op_kind"
 
 class ClassFieldDeclaration << SyntaxNode
-  constructor(is_static, identifier, type_annotation, value)
-    super(SyntaxKind.class_field_declaration)
+  constructor(start_pos, end_pos, is_static, identifier, type_annotation, value)
+    super(SyntaxKind.class_field_declaration, start_pos, end_pos)
 
     self.is_static = is_static
     self.identifier = identifier
@@ -25,11 +25,11 @@ class ClassFieldDeclaration << SyntaxNode
     if self.is_static then
       lhs = class_member_expr
     else
-      lhs = Identifier.new("self")
+      lhs = Identifier.new(nil, nil, "self")
     end
 
-    local member_expr = MemberExpression.new(lhs, self.identifier)
-    return AssignmentStatement.new({ member_expr }, SelfAssignmentOpKind.equal_op, { self.value })
+    local member_expr = MemberExpression.new(nil, nil, lhs, self.identifier)
+    return AssignmentStatement.new(nil, nil, { member_expr }, SelfAssignmentOpKind.equal_op, { self.value })
   end
 end
 

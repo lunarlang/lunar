@@ -126,9 +126,9 @@ class BaseParser
   function error_near_next_token(message)
     local next_token = self:consume()
     if next_token then
-      error(message .. " near '" .. next_token.value .. "'")
+      error(next_token.line .. ":" .. next_token.column .. ': ' .. message .. " near '" .. next_token.value .. "'")
     else
-      error(message .. " near '<EOF>'")
+      error(next_token.line .. ":" .. next_token.column .. ': ' .. message .. " near '<EOF>'")
     end
   end
 
@@ -148,6 +148,20 @@ class BaseParser
     if self:assert(...) then
       self:move(1)
       return true
+    end
+  end
+
+  -- Returns the position of the next nontrivial token
+  function next_nontrivial_pos()
+    return self.position + self:count_trivias()
+  end
+
+  -- Returns the position of the last consumed nontrivial token
+  function last_nontrivial_pos()
+    for i = self.position -1, 1, -1 do
+      if not self:is_trivial(self.tokens[i]) then
+        return i
+      end
     end
   end
 end

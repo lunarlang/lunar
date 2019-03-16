@@ -7,6 +7,6 @@ describe("BreakStatement syntax", do
     local tokens = Lexer.new("break"):tokenize()
     local result = Parser.new(tokens):parse()
 
-    assert.same({ AST.BreakStatement.new() }, result)
+    assert.same({ AST.BreakStatement.new(1, 1) }, result)
   end)
 end)

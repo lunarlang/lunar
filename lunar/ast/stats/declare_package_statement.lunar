@@ -2,8 +2,8 @@ local SyntaxKind = require "lunar.ast.syntax_kind"
 local SyntaxNode = require "lunar.ast.syntax_node"
 
 class DeclarePackageStatement << SyntaxNode
-  constructor(path, type_expr)
-    super(SyntaxKind.declare_package_statement)
+  constructor(start_pos, end_pos, path, type_expr)
+    super(SyntaxKind.declare_package_statement, start_pos, end_pos)
 
     self.path = path
     self.type_expr = type_expr
