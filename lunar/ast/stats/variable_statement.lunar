@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class VariableStatement << SyntaxNode
   constructor(start_pos, end_pos, identlist, exprlist)
-    super(SyntaxKind.variable_statement)
+    super(SyntaxKind.variable_statement, start_pos, end_pos)
 
     self.identlist = identlist
     self.exprlist = exprlist

@@ -7,7 +7,7 @@ local SelfAssignmentOpKind = require "lunar.ast.stats.self_assignment_op_kind"
 
 class ClassFieldDeclaration << SyntaxNode
   constructor(start_pos, end_pos, is_static, identifier, type_annotation, value)
-    super(SyntaxKind.class_field_declaration)
+    super(SyntaxKind.class_field_declaration, start_pos, end_pos)
 
     self.is_static = is_static
     self.identifier = identifier

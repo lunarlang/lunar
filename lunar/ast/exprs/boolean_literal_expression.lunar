@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class BooleanLiteralExpression << SyntaxNode
   constructor(start_pos, end_pos, value)
-    super(SyntaxKind.boolean_literal_expression)
+    super(SyntaxKind.boolean_literal_expression, start_pos, end_pos)
 
     self.value = value
   end

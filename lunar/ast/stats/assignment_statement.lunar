@@ -17,7 +17,7 @@ class AssignmentStatement << SyntaxNode
   }
 
   constructor(start_pos, end_pos, variables, operator, exprs)
-    super(SyntaxKind.assignment_statement)
+    super(SyntaxKind.assignment_statement, start_pos, end_pos)
 
     self.variables = variables
     self.operator = operator

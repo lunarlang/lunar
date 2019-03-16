@@ -5,7 +5,7 @@ local FunctionExpression = require "lunar.ast.exprs.function_expression"
 
 class LambdaExpression << SyntaxNode
   constructor(start_pos, end_pos, parameters, body, implicit_return, return_type_annotation)
-    super(SyntaxKind.lambda_expression)
+    super(SyntaxKind.lambda_expression, start_pos, end_pos)
 
     self.parameters = parameters
     self.body = body -- could be a block or a single expression

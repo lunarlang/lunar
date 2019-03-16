@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class UnaryOpExpression << SyntaxNode
   constructor(start_pos, end_pos, operator, right_operand)
-    super(SyntaxKind.unary_op_expression)
+    super(SyntaxKind.unary_op_expression, start_pos, end_pos)
 
     self.operator = operator
     self.right_operand = right_operand

@@ -3,8 +3,8 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class WhileStatement << SyntaxNode
   constructor(start_pos, end_pos, expr, block)
-    local super = SyntaxNode.new(SyntaxKind.while_statement)
-    local self = setmetatable(super, WhileStatement)
+    super(SyntaxKind.while_statement, start_pos, end_pos)
+    
     self.expr = expr
     self.block = block
   end

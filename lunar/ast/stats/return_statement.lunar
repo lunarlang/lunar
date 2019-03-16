@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class ReturnStatement << SyntaxNode
   constructor(start_pos, end_pos, exprlist)
-    super(SyntaxKind.return_statement)
+    super(SyntaxKind.return_statement, start_pos, end_pos)
 
     self.exprlist = exprlist
   end

@@ -5,7 +5,7 @@ class VariableArgumentExpression << SyntaxNode
   symbol -- Symbol | nil - The symbol corresponding to this identifier, initialized in binding
 
   constructor(start_pos, end_pos)
-    super(SyntaxKind.variable_argument_expression)
+    super(SyntaxKind.variable_argument_expression, start_pos, end_pos)
   end
 end
 

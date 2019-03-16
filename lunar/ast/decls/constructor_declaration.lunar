@@ -12,7 +12,7 @@ local ParameterDeclaration = require "lunar.ast.decls.parameter_declaration"
 
 class ConstructorDeclaration << SyntaxNode
   constructor(start_pos, end_pos, params, block)
-    super(SyntaxKind.constructor_declaration)
+    super(SyntaxKind.constructor_declaration, start_pos, end_pos)
 
     self.params = params
     self.block = block

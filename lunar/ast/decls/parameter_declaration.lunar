@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class ParameterDeclaration << SyntaxNode
   constructor(start_pos, end_pos, identifier)
-    super(SyntaxKind.parameter_declaration)
+    super(SyntaxKind.parameter_declaration, start_pos, end_pos)
 
     self.identifier = identifier
   end

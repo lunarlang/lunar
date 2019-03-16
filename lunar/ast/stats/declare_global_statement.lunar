@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class DeclareGlobalStatement << SyntaxNode
   constructor(start_pos, end_pos, identifier, is_type_declaration)
-    super(SyntaxKind.declare_global_statement)
+    super(SyntaxKind.declare_global_statement, start_pos, end_pos)
 
     self.identifier = identifier
     self.is_type_declaration = is_type_declaration

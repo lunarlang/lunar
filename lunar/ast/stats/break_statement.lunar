@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class BreakStatement << SyntaxNode
   constructor(start_pos, end_pos)
-    super(SyntaxKind.break_statement)
+    super(SyntaxKind.break_statement, start_pos, end_pos)
   end
 end
 

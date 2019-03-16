@@ -12,7 +12,7 @@ local MemberFieldDeclaration = require "lunar.ast.decls.member_field_declaration
 
 class ClassStatement << SyntaxNode
   constructor(start_pos, end_pos, identifier, super_identifier, members)
-    super(SyntaxKind.class_statement)
+    super(SyntaxKind.class_statement, start_pos, end_pos)
 
     self.identifier = identifier
     self.super_identifier = super_identifier

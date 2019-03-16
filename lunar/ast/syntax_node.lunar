@@ -1,8 +1,8 @@
 class SyntaxNode
   constructor(syntax_kind, start_pos, end_pos)
     self.syntax_kind = syntax_kind
-    self.start = start_pos
-    self.end = end_pos
+    self.start_pos = start_pos
+    self.end_pos = end_pos
   end
 
   function lower()

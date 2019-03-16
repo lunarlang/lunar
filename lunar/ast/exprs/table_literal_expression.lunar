@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class TableLiteralExpression << SyntaxNode
   constructor(start_pos, end_pos, fields)
-    super(SyntaxKind.table_literal_expression)
+    super(SyntaxKind.table_literal_expression, start_pos, end_pos)
 
     self.fields = fields
   end

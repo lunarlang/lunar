@@ -150,6 +150,16 @@ class BaseParser
       return true
     end
   end
+
+  -- Returns the position of the next nontrivial token
+  function next_nontrivial_pos()
+    return self.position + self:count_trivias()
+  end
+
+  -- Returns the position of the last consumed token
+  function last_consumed_pos()
+    return self.position - 1
+  end
 end
 
 return BaseParser

@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class ImportValueDeclaration << SyntaxNode
   constructor(start_pos, end_pos, identifier, is_type, alias_identifier)
-    super(SyntaxKind.import_value_declaration)
+    super(SyntaxKind.import_value_declaration, start_pos, end_pos)
 
     self.identifier = identifier -- Identifier
     self.is_type = is_type -- boolean or nil

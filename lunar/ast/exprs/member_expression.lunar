@@ -5,7 +5,7 @@ class MemberExpression << SyntaxNode
   constructor(start_pos, end_pos, base, member_identifier, has_colon)
     if has_colon == nil then has_colon = false end
 
-    super(SyntaxKind.member_expression)
+    super(SyntaxKind.member_expression, start_pos, end_pos)
 
     self.base = base
     self.member_identifier = member_identifier

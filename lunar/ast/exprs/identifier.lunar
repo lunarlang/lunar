@@ -5,7 +5,7 @@ class Identifier << SyntaxNode
   symbol -- Symbol | nil - The symbol corresponding to this identifier, initialized in binding
 
   constructor(start_pos, end_pos, name, type_annotation)
-    super(SyntaxKind.identifier)
+    super(SyntaxKind.identifier, start_pos, end_pos)
 
     self.name = name
     self.type_annotation = type_annotation

@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class GenericForStatement << SyntaxNode
   constructor(start_pos, end_pos, identifiers, exprlist, block)
-    super(SyntaxKind.generic_for_statement)
+    super(SyntaxKind.generic_for_statement, start_pos, end_pos)
 
     self.identifiers = identifiers
     self.exprlist = exprlist

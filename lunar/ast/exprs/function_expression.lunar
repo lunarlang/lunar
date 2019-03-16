@@ -3,7 +3,7 @@ local SyntaxNode = require "lunar.ast.syntax_node"
 
 class FunctionExpression << SyntaxNode
   constructor(start_pos, end_pos, parameters, block, return_type_annotation)
-    super(SyntaxKind.function_expression)
+    super(SyntaxKind.function_expression, start_pos, end_pos)
 
     self.parameters = parameters
     self.block = block
