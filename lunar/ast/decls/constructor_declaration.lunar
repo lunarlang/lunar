@@ -31,13 +31,13 @@ class ConstructorDeclaration << SyntaxNode
           local super = stat.expr
 
           -- rewrite super_stat to a variable named super that calls new on the super class
-          local super_member_expr = MemberExpression.new(class_base_identifier, Identifier.new("constructor"))
-          local super_call_expr = FunctionCallExpression.new(super_member_expr, {
-            ArgumentExpression.new(Identifier.new("self")), unpack(super.arguments)
+          local super_member_expr = MemberExpression.new(nil, nil, class_base_identifier, Identifier.new(nil, nil, "constructor"))
+          local super_call_expr = FunctionCallExpression.new(nil, nil, super_member_expr, {
+            ArgumentExpression.new(nil, nil, Identifier.new(nil, nil, "self")), unpack(super.arguments)
           })
 
           table.remove(self.block, index)
-          table.insert(self.block, 1, ExpressionStatement.new(super_call_expr))
+          table.insert(self.block, 1, ExpressionStatement.new(nil, nil, super_call_expr))
 
           break
         end
@@ -46,25 +46,25 @@ class ConstructorDeclaration << SyntaxNode
 
     local new_block = {
       -- return
-      ReturnStatement.new({
+      ReturnStatement.new(nil, nil, {
         -- ClassName.constructor()
-        FunctionCallExpression.new(MemberExpression.new(class_identifier, Identifier.new("constructor")), {
+        FunctionCallExpression.new(nil, nil, MemberExpression.new(nil, nil, class_identifier, Identifier.new(nil, nil, "constructor")), {
           -- setmetatable()
-          FunctionCallExpression.new(Identifier.new("setmetatable"), {
+          FunctionCallExpression.new(nil, nil, Identifier.new(nil, nil, "setmetatable"), {
             -- {}, ClassName
-            TableLiteralExpression.new({}), class_identifier
+            TableLiteralExpression.new(nil, nil, {}), class_identifier
           }),
           unpack(self.params)
         })
       })
     }
 
-    table.insert(self.block, ReturnStatement.new({ Identifier.new("self") }))
+    table.insert(self.block, ReturnStatement.new(nil, nil, { Identifier.new(nil, nil, "self") }))
 
     return {
-      new = FunctionStatement.new(MemberExpression.new(class_identifier, Identifier.new("new")), self.params, new_block, nil),
-      constructor = FunctionStatement.new(MemberExpression.new(class_identifier, Identifier.new("constructor")), {
-        ParameterDeclaration.new(Identifier.new("self")), unpack(self.params)
+      new = FunctionStatement.new(nil, nil, MemberExpression.new(nil, nil, class_identifier, Identifier.new(nil, nil, "new")), self.params, new_block, nil),
+      constructor = FunctionStatement.new(nil, nil, MemberExpression.new(nil, nil, class_identifier, Identifier.new(nil, nil, "constructor")), {
+        ParameterDeclaration.new(nil, nil, Identifier.new(nil, nil, "self")), unpack(self.params)
       }, self.block, nil),
     }
   end

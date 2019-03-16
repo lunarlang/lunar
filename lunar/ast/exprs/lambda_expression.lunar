@@ -18,13 +18,13 @@ class LambdaExpression << SyntaxNode
 
     if self.implicit_return then
       -- rewrites the body to a return statement
-      block = { ReturnStatement.new({ self.body }) }
+      block = { ReturnStatement.new(nil, nil, { self.body }) }
     else
       -- compatible type, so we simply reuse it
       block = self.body
     end
 
-    return FunctionExpression.new(self.parameters, block)
+    return FunctionExpression.new(nil, nil, self.parameters, block)
   end
 end
 

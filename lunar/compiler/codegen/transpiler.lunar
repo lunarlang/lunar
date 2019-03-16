@@ -1,6 +1,7 @@
 local AST = require "lunar.ast"
 local SyntaxKind = require "lunar.ast.syntax_kind"
 local BaseTranspiler = require "lunar.compiler.codegen.base_transpiler"
+local DiagnosticUtils = require "lunar.utils.diagnostic_utils"
 
 class Transpiler << BaseTranspiler
   footer_exports = nil

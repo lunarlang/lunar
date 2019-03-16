@@ -232,11 +232,11 @@ class Parser << BaseParser
         end
 
         -- identifier
-        local value
+        local value, value_ident, value_decl_start_pos
         if self:assert(TokenType.identifier, TokenType.asterisk) then
           value = self:consume().value
-          local value_decl_start_pos = self:last_consumed_pos()
-          local value_ident = AST.Identifier.new(value_decl_start_pos, value_decl_start_pos, value)
+          value_decl_start_pos = self:last_consumed_pos()
+          value_ident = AST.Identifier.new(value_decl_start_pos, value_decl_start_pos, value)
 
           if value == '*' and is_type then
             error("Unexpected symbol '*' after 'type'")
@@ -247,18 +247,20 @@ class Parser << BaseParser
           .. "'")
         end
 
-        -- alias
-        local alias
-        if self:match(TokenType.as_keyword) then
-          local alias_name = self:expect(TokenType.identifier, "expected identifier after 'as'").value
-          alias = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), alias_name)
-        elseif value == '*' then
-          error("expected 'as' after '*'")
+        if value then
+          -- alias
+          local alias
+          if self:match(TokenType.as_keyword) then
+            local alias_name = self:expect(TokenType.identifier, "expected identifier after 'as'").value
+            alias = AST.Identifier.new(self:last_consumed_pos(), self:last_consumed_pos(), alias_name)
+          elseif value == '*' then
+            error("expected 'as' after '*'")
+          end
+
+          local value_decl_end_pos = self:last_consumed_pos()
+
+          table.insert(values, AST.ImportValueDeclaration.new(value_decl_start_pos, value_decl_end_pos, value_ident, is_type, alias))
         end
-
-        local value_decl_end_pos = self:last_consumed_pos()
-
-        table.insert(values, AST.ImportValueDeclaration.new(value_decl_start_pos, value_decl_end_pos, is_type, alias))
       until not self:match(TokenType.comma)
 
       local end_pos = self:last_consumed_pos()
@@ -300,7 +302,7 @@ class Parser << BaseParser
         local func_end_pos = self:last_consumed_pos()
         local func_stat = AST.FunctionStatement.new(func_start_pos, func_end_pos, base, paramlist, block, return_type_annotation, true)
 
-        return AST.ExportStatement.new(start_pos, end_pos, func_start_pos)
+        return AST.ExportStatement.new(start_pos, end_pos, func_stat)
       end
 
       -- 'export' class_statement
@@ -325,7 +327,7 @@ class Parser << BaseParser
 
         local ident = AST.Identifier.new(variable_start_pos, variable_start_pos, name, type_annotation)
         local var_stat = AST.VariableStatement.new(variable_start_pos, end_pos, {ident}, {expr})
-        return AST.ExportStatement.new(start_pos, end_pos, ident)
+        return AST.ExportStatement.new(start_pos, end_pos, var_stat)
       end
 
       error("Expected function, class, or variable statement to follow 'export'")
@@ -516,7 +518,7 @@ class Parser << BaseParser
             type_annotation = self:type_expression()
           end
 
-          table.insert(identifiers, AST.Identifier.new(value_ident_pos, value_ident_pos, identifier_token.value, type_annotation))
+          table.insert(identifiers, AST.Identifier.new(value_ident_pos, value_ident_pos, value_name, type_annotation))
         end
 
         self:expect(TokenType.in_keyword, "Expected 'in' after identifier list")
@@ -865,7 +867,7 @@ class Parser << BaseParser
 
       local block = self:block()
       self:expect(TokenType.end_keyword, "Expected 'end' to close 'function'")
-        local end_pos = self:last_consumed_pos()
+      local end_pos = self:last_consumed_pos()
 
       return AST.FunctionExpression.new(start_pos, end_pos, paramlist, block, return_type_annotation)
     end
@@ -973,17 +975,6 @@ class Parser << BaseParser
     local start_pos = self:next_nontrivial_pos()
     local expr
 
-    -- Type assertions
-    while self:match(TokenType.as_keyword) do
-      -- Parse a type expression
-      if expr == nil then
-        error("unexpected symbol near 'as'")
-      end
-      local type_expr = self:type_expression()
-      local end_pos = self:last_consumed_pos()
-      expr = AST.TypeAssertionExpression.new(start_pos, end_pos, expr, type_expr)
-    end
-
     local unary_op = self:get_unary_op()
     if unary_op ~= nil then
       self:consume()
@@ -1008,6 +999,17 @@ class Parser << BaseParser
 
       -- is there any binary op after this?
       binary_op = self:get_binary_op()
+    end
+
+    -- Type assertions
+    while self:match(TokenType.as_keyword) do
+      -- Parse a type expression
+      if expr == nil then
+        error("unexpected symbol near 'as'")
+      end
+      local type_expr = self:type_expression()
+      local end_pos = self:last_consumed_pos()
+      expr = AST.TypeAssertionExpression.new(start_pos, end_pos, expr, type_expr)
     end
 
     return expr
@@ -1043,7 +1045,7 @@ class Parser << BaseParser
       local end_pos = self:last_consumed_pos()
       
       local param_ident = AST.Identifier.new(start_pos, param_pos, param, type_annotation)
-      return AST.ParameterDeclaration.new(start_pos, param_ident)
+      return AST.ParameterDeclaration.new(start_pos, param_pos, param_ident)
     end
   end
 
@@ -1094,7 +1096,7 @@ class Parser << BaseParser
 
       local end_pos = self:last_consumed_pos()
 
-      return AST.MemberFieldDeclaration.new(start_pos, end_pos, value)
+      return AST.MemberFieldDeclaration.new(start_pos, end_pos, key_ident, value)
     end
 
     -- expr

@@ -58,16 +58,16 @@ class ImportStatement << SyntaxNode
     end
 
     if has_value then
-      local source_id = Identifier.new(source_alias)
+      local source_id = Identifier.new(nil, nil, source_alias)
       -- local MyModule = require('path.to.my_module')
       local stats = {
-        VariableStatement.new(
+        VariableStatement.new(nil, nil, 
           {source_id},
           {
-              FunctionCallExpression.new(
-              Identifier.new("require"),
+              FunctionCallExpression.new(nil, nil, 
+              Identifier.new(nil, nil, "require"),
               {
-                ArgumentExpression.new(StringLiteralExpression.new("'" .. self.path .. "'")),
+                ArgumentExpression.new(nil, nil, StringLiteralExpression.new(nil, nil, "'" .. self.path .. "'")),
               }
             )
           }
@@ -76,10 +76,10 @@ class ImportStatement << SyntaxNode
 
       -- local MyExport = MyModule.MyExport
       for value_id, alias_id in pairs(value_map) do
-        table.insert(stats, VariableStatement.new(
+        table.insert(stats, VariableStatement.new(nil, nil, 
           {alias_id},
           {
-            MemberExpression.new(
+            MemberExpression.new(nil, nil, 
               source_id,
               value_id
             )
@@ -91,11 +91,11 @@ class ImportStatement << SyntaxNode
     elseif self.side_effects then
       -- require('path.to.my_module')
       return {
-        ExpressionStatement.new(
-          FunctionCallExpression.new(
-            Identifier.new("require"),
+        ExpressionStatement.new(nil, nil, 
+          FunctionCallExpression.new(nil, nil, 
+            Identifier.new(nil, nil, "require"),
             {
-              ArgumentExpression.new(StringLiteralExpression.new("'" .. self.path .. "'")),
+              ArgumentExpression.new(nil, nil, StringLiteralExpression.new(nil, nil, "'" .. self.path .. "'")),
             }
           )
         )

@@ -15,8 +15,8 @@ class ClassFunctionDeclaration << SyntaxNode
   end
 
   function lower(class_member_expr)
-    local new_class_member_expr = MemberExpression.new(class_member_expr, self.identifier, not self.is_static)
-    return FunctionStatement.new(new_class_member_expr, self.params, self.block, nil)
+    local new_class_member_expr = MemberExpression.new(nil, nil, class_member_expr, self.identifier, not self.is_static)
+    return FunctionStatement.new(nil, nil, new_class_member_expr, self.params, self.block, nil)
   end
 end
 

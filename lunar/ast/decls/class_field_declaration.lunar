@@ -25,11 +25,11 @@ class ClassFieldDeclaration << SyntaxNode
     if self.is_static then
       lhs = class_member_expr
     else
-      lhs = Identifier.new("self")
+      lhs = Identifier.new(nil, nil, "self")
     end
 
-    local member_expr = MemberExpression.new(lhs, self.identifier)
-    return AssignmentStatement.new({ member_expr }, SelfAssignmentOpKind.equal_op, { self.value })
+    local member_expr = MemberExpression.new(nil, nil, lhs, self.identifier)
+    return AssignmentStatement.new(nil, nil, { member_expr }, SelfAssignmentOpKind.equal_op, { self.value })
   end
 end
 
