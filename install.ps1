@@ -20,8 +20,10 @@ if (Test-Path $targetDir) {
   }
 }
 
+[Console]::WriteLine("This may take a few seconds.")
+
 $env:LUA_PATH = "./lib/?.lua;./lib/?/init.lua;$env:LUA_PATH"
-Start-Process lua -ArgumentList "$PSScriptRoot/lib/lunar/lunarc/init.lua"
+Start-Process (Get-Command lua).Source -ArgumentList "$PSScriptRoot/lib/lunar/lunarc/init.lua" -WorkingDirectory "$PSScriptRoot" -Wait -NoNewWindow
 Copy-Item -Path $binDir,$lunarDir -Destination $targetDir -Container -Recurse
 
 $env:PATH += ";" + $targetDir
