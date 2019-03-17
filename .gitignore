@@ -4,6 +4,7 @@ lib/spec
 build/*
 !build/Makefile
 !build/bin
+!build/scripts
 !build/README.md
 build/bin/*
 !build/bin/lunarc.lua
