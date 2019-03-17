@@ -4,11 +4,11 @@ set -eu
 set -o pipefail
 
 # Builds the following binaries:
-# * luacheck (Linux x86-64)
-# * luacheck32 (Linux x86)
-# * luacheck.exe (Windows x86-64)
-# * luacheck32.exe (Windows x86)
-# Should be executed from root Luacheck directory.
+# * lunarc (Linux x86-64)
+# * lunarc32 (Linux x86)
+# * lunarc.exe (Windows x86-64)
+# * lunarc32.exe (Windows x86)
+# Should be executed from root Lunar directory.
 # Resulting binaries will be in `build/bin/`.
 
 cd build
