@@ -20,7 +20,7 @@ function build {
     shift
 
     echo
-    echo "=== Building Luacheck ($label) ==="
+    echo "=== Building Lunarc ($label) ==="
     echo
 
     make clean "$@"

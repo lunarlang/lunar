@@ -1,6 +1,6 @@
 # Makefile for (cross)compiling lunarc binaries.
 # Do not use directly, run ./scripts/build-binaries.sh instead.
-# Credit to lunarc (https://github.com/mpeterv/lunarc/blob/master/build/Makefile)
+# Credit to Luacheck (https://github.com/mpeterv/luacheck/blob/master/build/Makefile)
 
 LUA_VERSION= 5.1.5
 LFS_VERSION= 1.7.0-2
