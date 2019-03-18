@@ -2,9 +2,8 @@ dist
 lib/spec
 !build/
 build/*
-!build/Makefile
+!build/build.sh
 !build/bin
-!build/scripts
 !build/README.md
 build/bin/*
 !build/bin/lunarc.lua
