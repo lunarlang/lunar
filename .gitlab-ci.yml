@@ -1,4 +1,4 @@
-image: python
+image: registry.gitlab.com/chasingspace/lunar
 
 variables:
   lua: "lua=5.1"
@@ -8,12 +8,7 @@ stages:
   - build
 
 before_script:
-  - pip install hererocks
-    && hererocks lua_install -r^ --$lua
-  - export PATH=$PATH:$PWD/lua_install/bin
-    && export LUA_PATH="$LUA_PATH;./?.lua;./?/init.lua"
-  - luarocks install luafilesystem
-  - LUA_PATH="$LUA_PATH;./lib/?.lua;./lib/?/init.lua" ./lua_install/bin/lua ./lib/lunar/lunarc/init.lua
+  - LUA_PATH="$LUA_PATH;./lib/?.lua;./lib/?/init.lua" lua ./lib/lunar/lunarc/init.lua
 
 busted:
   stage: test
@@ -21,5 +16,15 @@ busted:
     - luarocks install busted
       && luarocks install luacov
       && luarocks install luacheck
+    - export LUA_PATH="$LUA_PATH;./?.lua;./?/init.lua"
     - luacheck ./dist -q --only 011
     - busted -C ./dist --verbose --coverage
+
+build:
+  stage: build
+  script: cd ./build && chmod +x ./build.sh && ./build.sh
+  artifacts:
+    paths:
+      - ./build/bin/lunarc
+      - ./build/bin/lunarc.exe
+    expire_in: 1 week
