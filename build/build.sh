@@ -35,7 +35,7 @@ fi
 # Fetch LFS
 if [ ! -d $LFS_DIR ]; then
   echo "+ Downloading LFS $LFS_VER"
-  sudo luarocks unpack luafilesystem $LFS_VER
+  luarocks unpack luafilesystem $LFS_VER
 fi
 
 # Compile Lunar
