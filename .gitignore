@@ -1,2 +1,9 @@
 dist
 lib/spec
+!build/
+build/*
+!build/build.sh
+!build/bin
+!build/README.md
+build/bin/*
+!build/bin/lunarc.lua
