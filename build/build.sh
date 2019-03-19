@@ -1,5 +1,4 @@
 echo "! Starting to compile Lunar..."
-echo "# You will see a lot of messages, this is normal."
 
 # Versions
 LUA_VER=5.1.5
@@ -98,7 +97,6 @@ $CUR_CC -Os bin/lunarc.lua.c liblua.a lfs.a -I$LUA_DIR/src -lm -o bin/lunarc.exe
 $CUR_STRIP bin/lunarc.exe
 
 # Finished
-echo
-echo "+ Successfully compiled Lunar"
+echo "! Successfully compiled Lunar"
 echo "# Linux x64: build/bin/lunarc"
 echo "# Windows x86: build/bin/lunarc.exe"
