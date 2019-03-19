@@ -74,7 +74,7 @@ compile_lib() {
   NAME=$1;DIR=$2;O_FILES="";
   shift;shift;
   for f in $DIR/*.c; do
-    $CUR_CC -O2 -Wall -Wextra $@ -c -o ${f%.c}.o $f
+    $CUR_CC -O2 $@ -c -o ${f%.c}.o $f
     O_FILES="$O_FILES ${f%.c}.o"
   done
   $CUR_AR $NAME $O_FILES
