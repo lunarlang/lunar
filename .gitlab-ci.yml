@@ -1,4 +1,4 @@
-image: registry.gitlab.com/chasingspace/lunar
+image: registry.gitlab.com/lunarlang/lunar-build:latest
 
 variables:
   lua: "lua=5.1"
