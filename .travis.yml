@@ -25,17 +25,17 @@ script:
 before_deploy:
 - cd ./build
 - chmod +x ./build.sh
-- ./build.sh
+- "./build.sh"
 
 deploy:
   skip_cleanup: true
   provider: releases
   draft: true
   api_key:
-    secure: qj7gcwFsyCsVmoKccEfV18HVSnrPEG2FSxiCwoaJFObuSGrQvx3DEN3gRONp/jWyxDpqvb7M6zIOeZKwdkQf18rbYzkOUBzrdm9z6gTiXQrtsL3R7YVsjMVxKgEKgnxyJvVqsffH5XvtMZo5WodY6U3zAY9G1OGpEwGcYaPPY0HE99YL1cWPpCepuetw58/ggkeTToCOBm1PGfDL1BhnnMpdqpzMxvHqjucjtEgIMPB2jWa2Au4sOC6GtNrhVm39uy8GmNBRyZHpnmG2F6IID5uEFRzz8sdfzdMCXDE78Vizu3hj0u0YcpXWtI1ejmS5WdwW87fSYo6iSEvyc2+QlomYIITZzD1GY6SkC3RikMVHfmWewaAaZnbMqCgLMhBJW52137VL08gkeCvPcOptbMAYC9cdqdtzQB5Kc/wD29Wcq8MQhwGJmPVEERz+H3+sZcNMoht+GC4KswNLt5Rxl2eIYsfq0+BFzZSYI9mPYPcy415Jh/wJlm0zc54vg3gP/ms4D5IsrVDNlWDobCgsHEJ7KqJpmANF71BSCNT2N0RpchsgGdc22uT/utk8DMEHVHfMp0xR7pT3aSnG9RdNfAViEvHeLyz3F70tjDUO52j+L1GPuDd5QkX/JJxbZKqtZFGK8Mox/fvfk0b3+P8SgyXiZjJVQTmU8ufEjg3UcUs=
+    secure: ovydp5PVXNmW5Z3Ao6eXP16p+qJi7rJMZkFcaoEhmKKyBFV57LPap/tosdRaD+jktehwYQakXNc5iB3oOcrtAk/4yWgC5oKlGdLyHpf2McLqHaK3WnCQhKWs5fovh2gz1XDeYU4G9ur7gQwVSmdiu3DcC1MHByXKr/MxrqizndyQZbUJq/2gipZxMcnRsbQeBrClsFPrXA9jX89zkA5h/eN2v/UjWeTxDaK8+6BZnCk94Oj7ojJ6YNsbRtSnMP+dr5yip9+G6tcKTJpX+o2Pil2M5uhEEVFQHq2UiZZOhsQGyH/JU0WpaJIUN2ysxxlm6ECOr4y0myKuxUG132w06iayG/hk+4Rda22EhJc87FxbIsFaZ7c598HgL2bFpaumye4BM/KJoadBiCtTmTdWjzgHgWai8606j5t5W7LJi1RZvzYW+pVapzkfNpAxY7mG7TJAgRIPz7vqhCbSdGZyhAeoty66cXbFun1hGq4FGx0/tqI27Ttdbo9lng9dS0giTpICeym0xk2vwIfGpa9zr2CZGlHvZiToACCl7Tj6EGOD69lX7/CEkXiX4vD+2IhLR1sO8KNAdWapHNVxdpIstZA/8kMomUlbnxKD1HHUB09e18057aPiDrTe5ou9cA5F+X/CrLw44EOXF60aFsHAqEIfcwMNNx2fXUVkAlvwtkg=
   file:
   - "./bin/lunarc"
   - "./bin/lunarc.exe"
   on:
     branch: master
-    repo: ChasingSpace/tests
+    repo: lunarlang/lunar
