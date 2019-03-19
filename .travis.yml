@@ -1,0 +1,41 @@
+dist: xenial
+language: generic
+
+addons:
+  apt:
+    packages:
+    - lua5.1
+    - luarocks
+    - build-essential
+    - gcc-multilib
+    - mingw-w64
+
+install:
+- sudo luarocks install busted
+- sudo luarocks install luacov
+- sudo luarocks install luacheck
+- sudo luarocks install luastatic
+- export LUA_PATH="$LUA_PATH;./?.lua;./?/init.lua;";
+- LUA_PATH="$LUA_PATH;./lib/?.lua;./lib/?/init.lua" lua ./lib/lunar/lunarc/init.lua
+
+script:
+- luacheck ./dist -q --only 011
+- busted -C ./dist --verbose --coverage
+
+before_deploy:
+- cd ./build
+- chmod +x ./build.sh
+- ./build.sh
+
+deploy:
+  skip_cleanup: true
+  provider: releases
+  draft: true
+  api_key:
+    secure: qj7gcwFsyCsVmoKccEfV18HVSnrPEG2FSxiCwoaJFObuSGrQvx3DEN3gRONp/jWyxDpqvb7M6zIOeZKwdkQf18rbYzkOUBzrdm9z6gTiXQrtsL3R7YVsjMVxKgEKgnxyJvVqsffH5XvtMZo5WodY6U3zAY9G1OGpEwGcYaPPY0HE99YL1cWPpCepuetw58/ggkeTToCOBm1PGfDL1BhnnMpdqpzMxvHqjucjtEgIMPB2jWa2Au4sOC6GtNrhVm39uy8GmNBRyZHpnmG2F6IID5uEFRzz8sdfzdMCXDE78Vizu3hj0u0YcpXWtI1ejmS5WdwW87fSYo6iSEvyc2+QlomYIITZzD1GY6SkC3RikMVHfmWewaAaZnbMqCgLMhBJW52137VL08gkeCvPcOptbMAYC9cdqdtzQB5Kc/wD29Wcq8MQhwGJmPVEERz+H3+sZcNMoht+GC4KswNLt5Rxl2eIYsfq0+BFzZSYI9mPYPcy415Jh/wJlm0zc54vg3gP/ms4D5IsrVDNlWDobCgsHEJ7KqJpmANF71BSCNT2N0RpchsgGdc22uT/utk8DMEHVHfMp0xR7pT3aSnG9RdNfAViEvHeLyz3F70tjDUO52j+L1GPuDd5QkX/JJxbZKqtZFGK8Mox/fvfk0b3+P8SgyXiZjJVQTmU8ufEjg3UcUs=
+  file:
+  - "./bin/lunarc"
+  - "./bin/lunarc.exe"
+  on:
+    branch: master
+    repo: ChasingSpace/tests
