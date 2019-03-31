@@ -4,11 +4,11 @@ local ArgumentExpression = setmetatable({}, {
   __index = SyntaxNode,
 })
 ArgumentExpression.__index = setmetatable({}, SyntaxNode)
-function ArgumentExpression.new(expr)
-  return ArgumentExpression.constructor(setmetatable({}, ArgumentExpression), expr)
+function ArgumentExpression.new(start_pos, end_pos, expr)
+  return ArgumentExpression.constructor(setmetatable({}, ArgumentExpression), start_pos, end_pos, expr)
 end
-function ArgumentExpression.constructor(self, expr)
-  SyntaxNode.constructor(self, SyntaxKind.argument_expression)
+function ArgumentExpression.constructor(self, start_pos, end_pos, expr)
+  SyntaxNode.constructor(self, SyntaxKind.argument_expression, start_pos, end_pos)
   self.value = expr
   return self
 end

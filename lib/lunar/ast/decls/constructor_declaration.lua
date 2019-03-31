@@ -13,11 +13,11 @@ local ConstructorDeclaration = setmetatable({}, {
   __index = SyntaxNode,
 })
 ConstructorDeclaration.__index = setmetatable({}, SyntaxNode)
-function ConstructorDeclaration.new(params, block)
-  return ConstructorDeclaration.constructor(setmetatable({}, ConstructorDeclaration), params, block)
+function ConstructorDeclaration.new(start_pos, end_pos, params, block)
+  return ConstructorDeclaration.constructor(setmetatable({}, ConstructorDeclaration), start_pos, end_pos, params, block)
 end
-function ConstructorDeclaration.constructor(self, params, block)
-  SyntaxNode.constructor(self, SyntaxKind.constructor_declaration)
+function ConstructorDeclaration.constructor(self, start_pos, end_pos, params, block)
+  SyntaxNode.constructor(self, SyntaxKind.constructor_declaration, start_pos, end_pos)
   self.params = params
   self.block = block
   return self
@@ -27,35 +27,35 @@ function ConstructorDeclaration.__index:lower(class_identifier, class_base_ident
     for index, stat in pairs(self.block) do
       if stat.syntax_kind == SyntaxKind.expression_statement and stat.expr.syntax_kind == SyntaxKind.function_call_expression and stat.expr.base.syntax_kind == SyntaxKind.identifier and stat.expr.base.name == "super" then
         local super = stat.expr
-        local super_member_expr = MemberExpression.new(class_base_identifier, Identifier.new("constructor"))
-        local super_call_expr = FunctionCallExpression.new(super_member_expr, {
-          ArgumentExpression.new(Identifier.new("self")),
+        local super_member_expr = MemberExpression.new(nil, nil, class_base_identifier, Identifier.new(nil, nil, "constructor"))
+        local super_call_expr = FunctionCallExpression.new(nil, nil, super_member_expr, {
+          ArgumentExpression.new(nil, nil, Identifier.new(nil, nil, "self")),
           unpack(super.arguments),
         })
         table.remove(self.block, index)
-        table.insert(self.block, 1, ExpressionStatement.new(super_call_expr))
+        table.insert(self.block, 1, ExpressionStatement.new(nil, nil, super_call_expr))
         break
       end
     end
   end
   local new_block = {
-    ReturnStatement.new({
-      FunctionCallExpression.new(MemberExpression.new(class_identifier, Identifier.new("constructor")), {
-        FunctionCallExpression.new(Identifier.new("setmetatable"), {
-          TableLiteralExpression.new({}),
+    ReturnStatement.new(nil, nil, {
+      FunctionCallExpression.new(nil, nil, MemberExpression.new(nil, nil, class_identifier, Identifier.new(nil, nil, "constructor")), {
+        FunctionCallExpression.new(nil, nil, Identifier.new(nil, nil, "setmetatable"), {
+          TableLiteralExpression.new(nil, nil, {}),
           class_identifier,
         }),
         unpack(self.params),
       }),
     }),
   }
-  table.insert(self.block, ReturnStatement.new({
-    Identifier.new("self"),
+  table.insert(self.block, ReturnStatement.new(nil, nil, {
+    Identifier.new(nil, nil, "self"),
   }))
   return {
-    new = FunctionStatement.new(MemberExpression.new(class_identifier, Identifier.new("new")), self.params, new_block, nil),
-    constructor = FunctionStatement.new(MemberExpression.new(class_identifier, Identifier.new("constructor")), {
-      ParameterDeclaration.new(Identifier.new("self")),
+    new = FunctionStatement.new(nil, nil, MemberExpression.new(nil, nil, class_identifier, Identifier.new(nil, nil, "new")), self.params, new_block, nil),
+    constructor = FunctionStatement.new(nil, nil, MemberExpression.new(nil, nil, class_identifier, Identifier.new(nil, nil, "constructor")), {
+      ParameterDeclaration.new(nil, nil, Identifier.new(nil, nil, "self")),
       unpack(self.params),
     }, self.block, nil),
   }

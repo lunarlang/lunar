@@ -4,11 +4,11 @@ local FunctionStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 FunctionStatement.__index = setmetatable({}, SyntaxNode)
-function FunctionStatement.new(base, parameters, block, return_type_annotation, is_local)
-  return FunctionStatement.constructor(setmetatable({}, FunctionStatement), base, parameters, block, return_type_annotation, is_local)
+function FunctionStatement.new(start_pos, end_pos, base, parameters, block, return_type_annotation, is_local)
+  return FunctionStatement.constructor(setmetatable({}, FunctionStatement), start_pos, end_pos, base, parameters, block, return_type_annotation, is_local)
 end
-function FunctionStatement.constructor(self, base, parameters, block, return_type_annotation, is_local)
-  SyntaxNode.constructor(self, SyntaxKind.function_statement)
+function FunctionStatement.constructor(self, start_pos, end_pos, base, parameters, block, return_type_annotation, is_local)
+  SyntaxNode.constructor(self, SyntaxKind.function_statement, start_pos, end_pos)
   if is_local == nil then
     is_local = false
   end

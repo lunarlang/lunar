@@ -8,11 +8,11 @@ local AssignmentStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 AssignmentStatement.__index = setmetatable({}, SyntaxNode)
-function AssignmentStatement.new(variables, operator, exprs)
-  return AssignmentStatement.constructor(setmetatable({}, AssignmentStatement), variables, operator, exprs)
+function AssignmentStatement.new(start_pos, end_pos, variables, operator, exprs)
+  return AssignmentStatement.constructor(setmetatable({}, AssignmentStatement), start_pos, end_pos, variables, operator, exprs)
 end
-function AssignmentStatement.constructor(self, variables, operator, exprs)
-  SyntaxNode.constructor(self, SyntaxKind.assignment_statement)
+function AssignmentStatement.constructor(self, start_pos, end_pos, variables, operator, exprs)
+  SyntaxNode.constructor(self, SyntaxKind.assignment_statement, start_pos, end_pos)
   self.binary_op_map = {
     [SelfAssignmentOpKind.concatenation_equal_op] = BinaryOpKind.concatenation_op,
     [SelfAssignmentOpKind.addition_equal_op] = BinaryOpKind.addition_op,
@@ -38,7 +38,7 @@ function AssignmentStatement.__index:lower()
     if variable ~= nil then
       table.insert(variables, variable)
       local op = self.binary_op_map[self.operator]
-      table.insert(exprs, BinaryOpExpression.new(variable, op, expr))
+      table.insert(exprs, BinaryOpExpression.new(nil, nil, variable, op, expr))
     else
       table.insert(exprs, expr)
     end
@@ -48,9 +48,9 @@ function AssignmentStatement.__index:lower()
       local variable = self.variables[index]
       table.insert(variables, variable)
       local op = self.binary_op_map[self.operator]
-      table.insert(exprs, BinaryOpExpression.new(variable, op, NilLiteralExpression.new()))
+      table.insert(exprs, BinaryOpExpression.new(nil, nil, variable, op, NilLiteralExpression.new(nil, nil)))
     end
   end
-  return AssignmentStatement.new(variables, SelfAssignmentOpKind.equal_op, exprs)
+  return AssignmentStatement.new(nil, nil, variables, SelfAssignmentOpKind.equal_op, exprs)
 end
 return AssignmentStatement

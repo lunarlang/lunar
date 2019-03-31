@@ -4,11 +4,11 @@ local VariableStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 VariableStatement.__index = setmetatable({}, SyntaxNode)
-function VariableStatement.new(identlist, exprlist)
-  return VariableStatement.constructor(setmetatable({}, VariableStatement), identlist, exprlist)
+function VariableStatement.new(start_pos, end_pos, identlist, exprlist)
+  return VariableStatement.constructor(setmetatable({}, VariableStatement), start_pos, end_pos, identlist, exprlist)
 end
-function VariableStatement.constructor(self, identlist, exprlist)
-  SyntaxNode.constructor(self, SyntaxKind.variable_statement)
+function VariableStatement.constructor(self, start_pos, end_pos, identlist, exprlist)
+  SyntaxNode.constructor(self, SyntaxKind.variable_statement, start_pos, end_pos)
   self.identlist = identlist
   self.exprlist = exprlist
   return self

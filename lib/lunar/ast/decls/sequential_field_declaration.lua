@@ -4,11 +4,11 @@ local SequentialFieldDeclaration = setmetatable({}, {
   __index = SyntaxNode,
 })
 SequentialFieldDeclaration.__index = setmetatable({}, SyntaxNode)
-function SequentialFieldDeclaration.new(value)
-  return SequentialFieldDeclaration.constructor(setmetatable({}, SequentialFieldDeclaration), value)
+function SequentialFieldDeclaration.new(start_pos, end_pos, value)
+  return SequentialFieldDeclaration.constructor(setmetatable({}, SequentialFieldDeclaration), start_pos, end_pos, value)
 end
-function SequentialFieldDeclaration.constructor(self, value)
-  SyntaxNode.constructor(self, SyntaxKind.sequential_field_declaration)
+function SequentialFieldDeclaration.constructor(self, start_pos, end_pos, value)
+  SyntaxNode.constructor(self, SyntaxKind.sequential_field_declaration, start_pos, end_pos)
   self.value = value
   return self
 end

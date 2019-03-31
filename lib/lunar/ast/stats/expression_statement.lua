@@ -4,11 +4,11 @@ local ExpressionStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 ExpressionStatement.__index = setmetatable({}, SyntaxNode)
-function ExpressionStatement.new(expr)
-  return ExpressionStatement.constructor(setmetatable({}, ExpressionStatement), expr)
+function ExpressionStatement.new(start_pos, end_pos, expr)
+  return ExpressionStatement.constructor(setmetatable({}, ExpressionStatement), start_pos, end_pos, expr)
 end
-function ExpressionStatement.constructor(self, expr)
-  SyntaxNode.constructor(self, SyntaxKind.expression_statement)
+function ExpressionStatement.constructor(self, start_pos, end_pos, expr)
+  SyntaxNode.constructor(self, SyntaxKind.expression_statement, start_pos, end_pos)
   self.expr = expr
   return self
 end

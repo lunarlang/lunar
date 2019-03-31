@@ -4,11 +4,11 @@ local IfStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 IfStatement.__index = setmetatable({}, SyntaxNode)
-function IfStatement.new(expr, block)
-  return IfStatement.constructor(setmetatable({}, IfStatement), expr, block)
+function IfStatement.new(start_pos, end_pos, expr, block)
+  return IfStatement.constructor(setmetatable({}, IfStatement), start_pos, end_pos, expr, block)
 end
-function IfStatement.constructor(self, expr, block)
-  SyntaxNode.constructor(self, SyntaxKind.if_statement)
+function IfStatement.constructor(self, start_pos, end_pos, expr, block)
+  SyntaxNode.constructor(self, SyntaxKind.if_statement, start_pos, end_pos)
   self.expr = expr
   self.block = block
   self.elseif_branches = {}

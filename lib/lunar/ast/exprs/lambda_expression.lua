@@ -6,11 +6,11 @@ local LambdaExpression = setmetatable({}, {
   __index = SyntaxNode,
 })
 LambdaExpression.__index = setmetatable({}, SyntaxNode)
-function LambdaExpression.new(parameters, body, implicit_return, return_type_annotation)
-  return LambdaExpression.constructor(setmetatable({}, LambdaExpression), parameters, body, implicit_return, return_type_annotation)
+function LambdaExpression.new(start_pos, end_pos, parameters, body, implicit_return, return_type_annotation)
+  return LambdaExpression.constructor(setmetatable({}, LambdaExpression), start_pos, end_pos, parameters, body, implicit_return, return_type_annotation)
 end
-function LambdaExpression.constructor(self, parameters, body, implicit_return, return_type_annotation)
-  SyntaxNode.constructor(self, SyntaxKind.lambda_expression)
+function LambdaExpression.constructor(self, start_pos, end_pos, parameters, body, implicit_return, return_type_annotation)
+  SyntaxNode.constructor(self, SyntaxKind.lambda_expression, start_pos, end_pos)
   self.parameters = parameters
   self.body = body
   self.implicit_return = implicit_return
@@ -21,13 +21,13 @@ function LambdaExpression.__index:lower()
   local block
   if self.implicit_return then
     block = {
-      ReturnStatement.new({
+      ReturnStatement.new(nil, nil, {
         self.body,
       }),
     }
   else
     block = self.body
   end
-  return FunctionExpression.new(self.parameters, block)
+  return FunctionExpression.new(nil, nil, self.parameters, block)
 end
 return LambdaExpression

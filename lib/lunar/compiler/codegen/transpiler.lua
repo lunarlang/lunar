@@ -1,6 +1,7 @@
 local AST = require("lunar.ast")
 local SyntaxKind = require("lunar.ast.syntax_kind")
 local BaseTranspiler = require("lunar.compiler.codegen.base_transpiler")
+local DiagnosticUtils = require("lunar.utils.diagnostic_utils")
 local Transpiler = setmetatable({}, {
   __index = BaseTranspiler,
 })
@@ -299,6 +300,8 @@ function Transpiler.__index:visit_footer_exports(stat)
     self:indent()
     for i = 1, (#self.footer_exports) do
       self:iwrite()
+      self:visit_identifier(self.footer_exports[i])
+      self:write(" = ")
       self:visit_identifier(self.footer_exports[i])
       self:writeln(",")
     end
