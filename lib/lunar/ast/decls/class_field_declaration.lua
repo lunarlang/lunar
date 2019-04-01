@@ -8,11 +8,11 @@ local ClassFieldDeclaration = setmetatable({}, {
   __index = SyntaxNode,
 })
 ClassFieldDeclaration.__index = setmetatable({}, SyntaxNode)
-function ClassFieldDeclaration.new(is_static, identifier, type_annotation, value)
-  return ClassFieldDeclaration.constructor(setmetatable({}, ClassFieldDeclaration), is_static, identifier, type_annotation, value)
+function ClassFieldDeclaration.new(start_pos, end_pos, is_static, identifier, type_annotation, value)
+  return ClassFieldDeclaration.constructor(setmetatable({}, ClassFieldDeclaration), start_pos, end_pos, is_static, identifier, type_annotation, value)
 end
-function ClassFieldDeclaration.constructor(self, is_static, identifier, type_annotation, value)
-  SyntaxNode.constructor(self, SyntaxKind.class_field_declaration)
+function ClassFieldDeclaration.constructor(self, start_pos, end_pos, is_static, identifier, type_annotation, value)
+  SyntaxNode.constructor(self, SyntaxKind.class_field_declaration, start_pos, end_pos)
   self.is_static = is_static
   self.identifier = identifier
   self.type_annotation = type_annotation
@@ -27,10 +27,10 @@ function ClassFieldDeclaration.__index:lower(class_member_expr)
   if self.is_static then
     lhs = class_member_expr
   else
-    lhs = Identifier.new("self")
+    lhs = Identifier.new(nil, nil, "self")
   end
-  local member_expr = MemberExpression.new(lhs, self.identifier)
-  return AssignmentStatement.new({
+  local member_expr = MemberExpression.new(nil, nil, lhs, self.identifier)
+  return AssignmentStatement.new(nil, nil, {
     member_expr,
   }, SelfAssignmentOpKind.equal_op, {
     self.value,

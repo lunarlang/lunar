@@ -13,38 +13,38 @@ local ClassStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 ClassStatement.__index = setmetatable({}, SyntaxNode)
-function ClassStatement.new(identifier, super_identifier, members)
-  return ClassStatement.constructor(setmetatable({}, ClassStatement), identifier, super_identifier, members)
+function ClassStatement.new(start_pos, end_pos, identifier, super_identifier, members)
+  return ClassStatement.constructor(setmetatable({}, ClassStatement), start_pos, end_pos, identifier, super_identifier, members)
 end
-function ClassStatement.constructor(self, identifier, super_identifier, members)
-  SyntaxNode.constructor(self, SyntaxKind.class_statement)
+function ClassStatement.constructor(self, start_pos, end_pos, identifier, super_identifier, members)
+  SyntaxNode.constructor(self, SyntaxKind.class_statement, start_pos, end_pos)
   self.identifier = identifier
   self.super_identifier = super_identifier
   self.members = members
   return self
 end
 function ClassStatement.__index:lower()
-  local empty_table = TableLiteralExpression.new({})
-  local class_def = VariableStatement.new({
+  local empty_table = TableLiteralExpression.new(nil, nil, {})
+  local class_def = VariableStatement.new(nil, nil, {
     self.identifier,
   }, {}, {})
-  local setmt_base = Identifier.new("setmetatable")
+  local setmt_base = Identifier.new(nil, nil, "setmetatable")
   if self.super_identifier ~= nil then
-    table.insert(class_def.exprlist, FunctionCallExpression.new(setmt_base, {
+    table.insert(class_def.exprlist, FunctionCallExpression.new(nil, nil, setmt_base, {
       empty_table,
-      TableLiteralExpression.new({
-        MemberFieldDeclaration.new(Identifier.new("__index"), self.super_identifier),
+      TableLiteralExpression.new(nil, nil, {
+        MemberFieldDeclaration.new(nil, nil, Identifier.new(nil, nil, "__index"), self.super_identifier),
       }),
     }))
   else
     table.insert(class_def.exprlist, empty_table)
   end
-  local class_index = MemberExpression.new(self.identifier, Identifier.new("__index"))
-  local class_index_def = AssignmentStatement.new({
+  local class_index = MemberExpression.new(nil, nil, self.identifier, Identifier.new(nil, nil, "__index"))
+  local class_index_def = AssignmentStatement.new(nil, nil, {
     class_index,
   }, SelfAssignmentOpKind.equal_op, {})
   if self.super_identifier ~= nil then
-    table.insert(class_index_def.exprs, FunctionCallExpression.new(setmt_base, {
+    table.insert(class_index_def.exprs, FunctionCallExpression.new(nil, nil, setmt_base, {
       empty_table,
       self.super_identifier,
     }))
@@ -61,7 +61,7 @@ function ClassStatement.__index:lower()
       table.insert(member.is_static and statics or instances, member)
     end
   end
-  ctor_decl = ctor_decl or ConstructorDeclaration.new({}, {})
+  ctor_decl = ctor_decl or ConstructorDeclaration.new(nil, nil, {}, {})
   ctor_decl = ctor_decl:lower(self.identifier, self.super_identifier)
   local index = 0
   for _, member in pairs(instance_fields) do

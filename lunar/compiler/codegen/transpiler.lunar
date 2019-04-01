@@ -353,6 +353,8 @@ class Transpiler << BaseTranspiler
       for i = 1, #self.footer_exports do
         self:iwrite()
         self:visit_identifier(self.footer_exports[i])
+        self:write(" = ")
+        self:visit_identifier(self.footer_exports[i])
         self:writeln(",")
       end
       self:dedent()

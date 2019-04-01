@@ -4,11 +4,11 @@ local TypeAssertionExpression = setmetatable({}, {
   __index = SyntaxNode,
 })
 TypeAssertionExpression.__index = setmetatable({}, SyntaxNode)
-function TypeAssertionExpression.new(base, type)
-  return TypeAssertionExpression.constructor(setmetatable({}, TypeAssertionExpression), base, type)
+function TypeAssertionExpression.new(start_pos, end_pos, base, type)
+  return TypeAssertionExpression.constructor(setmetatable({}, TypeAssertionExpression), start_pos, end_pos, base, type)
 end
-function TypeAssertionExpression.constructor(self, base, type)
-  SyntaxNode.constructor(self, SyntaxKind.type_assertion_expression)
+function TypeAssertionExpression.constructor(self, start_pos, end_pos, base, type)
+  SyntaxNode.constructor(self, SyntaxKind.type_assertion_expression, start_pos, end_pos)
   self.base = base
   self.type = type
   return self

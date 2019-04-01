@@ -4,11 +4,11 @@ local NumberLiteralExpression = setmetatable({}, {
   __index = SyntaxNode,
 })
 NumberLiteralExpression.__index = setmetatable({}, SyntaxNode)
-function NumberLiteralExpression.new(value)
-  return NumberLiteralExpression.constructor(setmetatable({}, NumberLiteralExpression), value)
+function NumberLiteralExpression.new(start_pos, end_pos, value)
+  return NumberLiteralExpression.constructor(setmetatable({}, NumberLiteralExpression), start_pos, end_pos, value)
 end
-function NumberLiteralExpression.constructor(self, value)
-  SyntaxNode.constructor(self, SyntaxKind.number_literal_expression)
+function NumberLiteralExpression.constructor(self, start_pos, end_pos, value)
+  SyntaxNode.constructor(self, SyntaxKind.number_literal_expression, start_pos, end_pos)
   self.value = value
   return self
 end

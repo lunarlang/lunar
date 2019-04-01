@@ -4,11 +4,11 @@ local ExportStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 ExportStatement.__index = setmetatable({}, SyntaxNode)
-function ExportStatement.new(body)
-  return ExportStatement.constructor(setmetatable({}, ExportStatement), body)
+function ExportStatement.new(start_pos, end_pos, body)
+  return ExportStatement.constructor(setmetatable({}, ExportStatement), start_pos, end_pos, body)
 end
-function ExportStatement.constructor(self, body)
-  SyntaxNode.constructor(self, SyntaxKind.export_statement)
+function ExportStatement.constructor(self, start_pos, end_pos, body)
+  SyntaxNode.constructor(self, SyntaxKind.export_statement, start_pos, end_pos)
   self.body = body
   return self
 end

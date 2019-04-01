@@ -4,11 +4,11 @@ local BinaryOpExpression = setmetatable({}, {
   __index = SyntaxNode,
 })
 BinaryOpExpression.__index = setmetatable({}, SyntaxNode)
-function BinaryOpExpression.new(left_operand, operator, right_operand)
-  return BinaryOpExpression.constructor(setmetatable({}, BinaryOpExpression), left_operand, operator, right_operand)
+function BinaryOpExpression.new(start_pos, end_pos, left_operand, operator, right_operand)
+  return BinaryOpExpression.constructor(setmetatable({}, BinaryOpExpression), start_pos, end_pos, left_operand, operator, right_operand)
 end
-function BinaryOpExpression.constructor(self, left_operand, operator, right_operand)
-  SyntaxNode.constructor(self, SyntaxKind.binary_op_expression)
+function BinaryOpExpression.constructor(self, start_pos, end_pos, left_operand, operator, right_operand)
+  SyntaxNode.constructor(self, SyntaxKind.binary_op_expression, start_pos, end_pos)
   self.left_operand = left_operand
   self.operator = operator
   self.right_operand = right_operand

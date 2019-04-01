@@ -11,11 +11,11 @@ local ImportStatement = setmetatable({}, {
   __index = SyntaxNode,
 })
 ImportStatement.__index = setmetatable({}, SyntaxNode)
-function ImportStatement.new(path, values, side_effects)
-  return ImportStatement.constructor(setmetatable({}, ImportStatement), path, values, side_effects)
+function ImportStatement.new(start_pos, end_pos, path, values, side_effects)
+  return ImportStatement.constructor(setmetatable({}, ImportStatement), start_pos, end_pos, path, values, side_effects)
 end
-function ImportStatement.constructor(self, path, values, side_effects)
-  SyntaxNode.constructor(self, SyntaxKind.import_statement)
+function ImportStatement.constructor(self, start_pos, end_pos, path, values, side_effects)
+  SyntaxNode.constructor(self, SyntaxKind.import_statement, start_pos, end_pos)
   self.path = path
   self.values = values
   self.side_effects = side_effects
@@ -53,28 +53,28 @@ function ImportStatement.__index:lower()
     end
   end
   if has_value then
-    local source_id = Identifier.new(source_alias)
+    local source_id = Identifier.new(nil, nil, source_alias)
     local stats = {
-      VariableStatement.new({
+      VariableStatement.new(nil, nil, {
         source_id,
       }, {
-        FunctionCallExpression.new(Identifier.new("require"), {
-          ArgumentExpression.new(StringLiteralExpression.new("'" .. self.path .. "'")),
+        FunctionCallExpression.new(nil, nil, Identifier.new(nil, nil, "require"), {
+          ArgumentExpression.new(nil, nil, StringLiteralExpression.new(nil, nil, "'" .. self.path .. "'")),
         }),
       }),
     }
     for value_id, alias_id in pairs(value_map) do
-      table.insert(stats, VariableStatement.new({
+      table.insert(stats, VariableStatement.new(nil, nil, {
         alias_id,
       }, {
-        MemberExpression.new(source_id, value_id),
+        MemberExpression.new(nil, nil, source_id, value_id),
       }))
     end
     return stats
   elseif self.side_effects then
     return {
-      ExpressionStatement.new(FunctionCallExpression.new(Identifier.new("require"), {
-        ArgumentExpression.new(StringLiteralExpression.new("'" .. self.path .. "'")),
+      ExpressionStatement.new(nil, nil, FunctionCallExpression.new(nil, nil, Identifier.new(nil, nil, "require"), {
+        ArgumentExpression.new(nil, nil, StringLiteralExpression.new(nil, nil, "'" .. self.path .. "'")),
       })),
     }
   else

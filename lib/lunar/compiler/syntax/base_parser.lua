@@ -98,6 +98,14 @@ function BaseParser.__index:expect(token_type, reason)
   end
   error(("%d:%d %s; got %s"):format(token.line, token.column, reason, token.value), 0)
 end
+function BaseParser.__index:error_near_next_token(message)
+  local next_token = self:consume()
+  if next_token then
+    error(next_token.line .. ":" .. next_token.column .. ': ' .. message .. " near '" .. next_token.value .. "'")
+  else
+    error(next_token.line .. ":" .. next_token.column .. ': ' .. message .. " near '<EOF>'")
+  end
+end
 function BaseParser.__index:consume()
   local token = self:peek()
   self:move(1)
@@ -110,6 +118,16 @@ function BaseParser.__index:match(...)
   if self:assert(...) then
     self:move(1)
     return true
+  end
+end
+function BaseParser.__index:next_nontrivial_pos()
+  return self.position + self:count_trivias()
+end
+function BaseParser.__index:last_nontrivial_pos()
+  for i = self.position - 1, 1, (-1) do
+    if (not self:is_trivial(self.tokens[i])) then
+      return i
+    end
   end
 end
 return BaseParser

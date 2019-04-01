@@ -4,11 +4,11 @@ local IndexFieldDeclaration = setmetatable({}, {
   __index = SyntaxNode,
 })
 IndexFieldDeclaration.__index = setmetatable({}, SyntaxNode)
-function IndexFieldDeclaration.new(key, value)
-  return IndexFieldDeclaration.constructor(setmetatable({}, IndexFieldDeclaration), key, value)
+function IndexFieldDeclaration.new(start_pos, end_pos, key, value)
+  return IndexFieldDeclaration.constructor(setmetatable({}, IndexFieldDeclaration), start_pos, end_pos, key, value)
 end
-function IndexFieldDeclaration.constructor(self, key, value)
-  SyntaxNode.constructor(self, SyntaxKind.index_field_declaration)
+function IndexFieldDeclaration.constructor(self, start_pos, end_pos, key, value)
+  SyntaxNode.constructor(self, SyntaxKind.index_field_declaration, start_pos, end_pos)
   self.key = key
   self.value = value
   return self

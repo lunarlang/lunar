@@ -4,11 +4,11 @@ local UnaryOpExpression = setmetatable({}, {
   __index = SyntaxNode,
 })
 UnaryOpExpression.__index = setmetatable({}, SyntaxNode)
-function UnaryOpExpression.new(operator, right_operand)
-  return UnaryOpExpression.constructor(setmetatable({}, UnaryOpExpression), operator, right_operand)
+function UnaryOpExpression.new(start_pos, end_pos, operator, right_operand)
+  return UnaryOpExpression.constructor(setmetatable({}, UnaryOpExpression), start_pos, end_pos, operator, right_operand)
 end
-function UnaryOpExpression.constructor(self, operator, right_operand)
-  SyntaxNode.constructor(self, SyntaxKind.unary_op_expression)
+function UnaryOpExpression.constructor(self, start_pos, end_pos, operator, right_operand)
+  SyntaxNode.constructor(self, SyntaxKind.unary_op_expression, start_pos, end_pos)
   self.operator = operator
   self.right_operand = right_operand
   return self

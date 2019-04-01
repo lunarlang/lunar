@@ -4,11 +4,11 @@ local MemberExpression = setmetatable({}, {
   __index = SyntaxNode,
 })
 MemberExpression.__index = setmetatable({}, SyntaxNode)
-function MemberExpression.new(base, member_identifier, has_colon)
-  return MemberExpression.constructor(setmetatable({}, MemberExpression), base, member_identifier, has_colon)
+function MemberExpression.new(start_pos, end_pos, base, member_identifier, has_colon)
+  return MemberExpression.constructor(setmetatable({}, MemberExpression), start_pos, end_pos, base, member_identifier, has_colon)
 end
-function MemberExpression.constructor(self, base, member_identifier, has_colon)
-  SyntaxNode.constructor(self, SyntaxKind.member_expression)
+function MemberExpression.constructor(self, start_pos, end_pos, base, member_identifier, has_colon)
+  SyntaxNode.constructor(self, SyntaxKind.member_expression, start_pos, end_pos)
   if has_colon == nil then
     has_colon = false
   end
