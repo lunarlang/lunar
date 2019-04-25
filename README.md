@@ -12,6 +12,8 @@
 
 </div>
 
+**THIS PROJECT IS NOW ABANDONED IN FAVOR OF ROBLOX'S TYPED LUA.** Maybe it will be picked up in the future again, but the main motivation drive is gone now.
+
 ## Goals: what we want
   - embeds most idioms into the language (default args, named varargs, classes, etc)
   - implements type checking and type inference
